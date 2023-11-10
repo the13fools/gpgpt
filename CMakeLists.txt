@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(example)
+project(gpgpt)
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -64,7 +64,11 @@ else()
 endif()
 
 # Find Eigen
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+# find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+
 
 # Add polyscope
 message("\n\n == Init dependencies \n")
@@ -118,9 +122,35 @@ endif()
 
 # Add your project files
 # file(GLOB SRC_FILES *.cpp)
+
+
+
+
+
+
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp)
-add_executable(${PROJECT_NAME} ${SRC_FILES})
+
+add_library(${PROJECT_NAME} ${SRCFILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(${PROJECT_NAME} PUBLIC TinyAD polyscope Eigen3::Eigen igl::core )
-# tinyad needs C++17 (not sure if that means this project does too)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} igl::core polyscope TinyAD) # ${SUITESPARSE_LIBRARIES})
+
+set_target_properties(gpgpt PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+install(TARGETS ${PROJECT_NAME})
+
+message(${PROJECT_NAME})
+message("====== Adding Tools ======")
+
+add_subdirectory(tools/01_basic_test)
+
+
+
+# add_executable(${PROJECT_NAME} ${SRC_FILES})
+# target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+# target_link_libraries(${PROJECT_NAME} PUBLIC TinyAD polyscope Eigen3::Eigen igl::core )
+# # tinyad needs C++17 (not sure if that means this project does too)
+# target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

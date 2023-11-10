@@ -4,7 +4,7 @@ Use this starter project to accelerate your geometry processing research, yester
 
 Welcome to the repository for the wonderful, wonderous, GPGPT!
 
-# GPGPT: the Geometry Processing General Purpose Toolkit!  
+# The General Purpose Geometry Processing Toolkit!  
 
 This is an example project which minimally mixes a maximal number of independently useful libraries.  Put ur rings together captin planet.  
 
