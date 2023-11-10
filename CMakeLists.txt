@@ -157,6 +157,7 @@ message(${PROJECT_NAME})
 message("====== Adding Tools ======")
 
 add_subdirectory(tools/01_basic_test)
+add_subdirectory(tools/02_tiny_ad_test)
 
 
 
