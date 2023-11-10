@@ -117,7 +117,8 @@ endif()
 # add_subdirectory("/Users/fool/Documents/mint/polyscope/build/src")
 
 # Add your project files
-file(GLOB SRC_FILES *.cpp)
+# file(GLOB SRC_FILES *.cpp)
+file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp)
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(${PROJECT_NAME} PUBLIC TinyAD polyscope Eigen3::Eigen igl::core )
