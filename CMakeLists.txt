@@ -140,6 +140,7 @@ FetchContent_MakeAvailable(polyscope)
 
 
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp)
+file(GLOB FRONTENDFILES src/gpgpt_frontend/*.cpp src/gpgpt_frontend/*.h src/gpgpt_frontend/*.hpp)
 
 add_library(${PROJECT_NAME} ${SRCFILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -159,6 +160,8 @@ message("====== Adding Tools ======")
 add_subdirectory(tools/01_basic_test)
 add_subdirectory(tools/02_tiny_ad_test)
 add_subdirectory(tools/03_disk_bvp_v1)
+add_subdirectory(tools/04_disk_mint2d_v1)
+
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})
