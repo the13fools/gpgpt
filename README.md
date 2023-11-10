@@ -1,8 +1,29 @@
-# libigl 🤝 TinyAD
+# 🤝 libigl 🤝 TinyAD 🤝 Polyscope 🤝 Physics thread 🤝
 
 A small example project mixing [libigl](https://github.com/libigl/libigl/) and
-[TinyAD](https://github.com/patr-schm/TinyAD).  Launches the libigl viewer while
-in a separate thread optimizing an armadillo mesh's parametrization.
+[TinyAD](https://github.com/patr-schm/TinyAD) and [polyscope](polyscope.run) and [a physics thread](https://github.com/evouga/libigl-example-physics-project).
+
+Intended to generate animation traces which can be visualized by polyscope, or if you want higher fidelity, by a path tracer like the one in blender, using scripts like this (toolbox)[https://github.com/HTDerekLiu/BlenderToolbox].
+
+animations can then be produced using some ffmpeg scripts we also bake in.  
+
+TODO, a solver, maybe nasoq.  Enzyme, the autodiff tool.  what else?  
+
+Use this starter project and accelerate your geometry processing research yesterday, with gpgpt.  
+
+--------
+
+COMING SOON!  
+
+GPTGP-1 $20/month no additional functionality.  
+
+--------
+
+This example repository tries to be extremely easy to install, batteries included.  Sorry for making you download stuff each time, if you know enough to get mad about this, you can help improve the make files ;).  
+
+--------
+
+This repository includes a lot of gpt generated code, but its a cyborg project with lots of other snippets mixed in.  It's partially an experiment of working with a large language model.  
 
 ## Compile
 

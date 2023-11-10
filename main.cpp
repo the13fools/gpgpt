@@ -1,176 +1,175 @@
-/*
- * Adapted from:
- * This file is part of TinyAD and released under the MIT license.
- * Author: Patrick Schmidt
- */
+#include "polyscope/polyscope.h"
+
+#include <igl/PI.h>
+#include <igl/avg_edge_length.h>
+#include <igl/barycenter.h>
+#include <igl/boundary_loop.h>
+#include <igl/exact_geodesic.h>
+#include <igl/gaussian_curvature.h>
+#include <igl/invert_diag.h>
+#include <igl/lscm.h>
+#include <igl/massmatrix.h>
+#include <igl/per_vertex_normals.h>
 #include <igl/readOBJ.h>
 
-#include <TinyAD/ScalarFunction.hh>
-#include <TinyAD/Utils/NewtonDirection.hh>
-#include <TinyAD/Utils/NewtonDecrement.hh>
-#include <TinyAD/Utils/LineSearch.hh>
+#include "polyscope/messages.h"
+#include "polyscope/point_cloud.h"
+#include "polyscope/surface_mesh.h"
 
+#include <iostream>
+#include <unordered_set>
+#include <utility>
 
-#include <igl/harmonic.h>
-#include <igl/boundary_loop.h>
-#include <igl/per_vertex_normals.h>
-#include <igl/map_vertices_to_circle.h>
+// #include "args/args.hxx"
+// #include "json/json.hpp"
 
-#include <igl/opengl/glfw/Viewer.h>
-#include <thread>
-#include <mutex>
+// The mesh, Eigen representation
+Eigen::MatrixXd meshV;
+Eigen::MatrixXi meshF;
 
-/**
- * Compute tutte embedding with boundary on circle.
- * Per-vertex 2D coordinates returned as n_vertices-by-2 matrix.
- */
-inline Eigen::MatrixXd tutte_embedding(
-    const Eigen::MatrixXd& _V,
-    const Eigen::MatrixXi& _F)
-{
-  Eigen::VectorXi b; // #constr boundary constraint indices
-  Eigen::MatrixXd bc; // #constr-by-2 2D boundary constraint positions
-  Eigen::MatrixXd P; // #V-by-2 2D vertex positions
-  igl::boundary_loop(_F, b); // Identify boundary vertices
-  igl::map_vertices_to_circle(_V, b, bc); // Set boundary vertex positions
-  igl::harmonic(_F, b, bc, 1, P); // Compute interior vertex positions
+// Options for algorithms
+int iVertexSource = 7;
 
-  return P;
+void addCurvatureScalar() {
+  using namespace Eigen;
+  using namespace std;
+
+  VectorXd K;
+  igl::gaussian_curvature(meshV, meshF, K);
+  SparseMatrix<double> M, Minv;
+  igl::massmatrix(meshV, meshF, igl::MASSMATRIX_TYPE_DEFAULT, M);
+  igl::invert_diag(M, Minv);
+  K = (Minv * K).eval();
+
+  polyscope::getSurfaceMesh("input mesh")
+      ->addVertexScalarQuantity("gaussian curvature", K,
+                                polyscope::DataType::SYMMETRIC);
 }
 
+void computeDistanceFrom() {
+  Eigen::VectorXi VS, FS, VT, FT;
+  // The selected vertex is the source
+  VS.resize(1);
+  VS << iVertexSource;
+  // All vertices are the targets
+  VT.setLinSpaced(meshV.rows(), 0, meshV.rows() - 1);
+  Eigen::VectorXd d;
+  igl::exact_geodesic(meshV, meshF, VS, FS, VT, FT, d);
 
-/**
- * Injectively map a disk-topology triangle mesh to the plane
- * and optimize the symmetric Dirichlet energy via projected Newton.
- */
-int main()
-{
-  // Read mesh and compute Tutte embedding
-  Eigen::MatrixXd V; // #V-by-3 3D vertex positions
-  Eigen::MatrixXi F; // #F-by-3 indices into V
-  igl::readOBJ(std::string(SOURCE_PATH) + "/armadillo_cut_low.obj", V, F);
-  Eigen::MatrixXd P = tutte_embedding(V, F); // #V-by-2 2D vertex positions
-                                             //
-  bool redraw = false;
-  std::mutex m;
-  std::thread optimization_thread(
-    [&]()
-    {
-      // Pre-compute triangle rest shapes in local coordinate systems
-      std::vector<Eigen::Matrix2d> rest_shapes(F.rows());
-      for (int f_idx = 0; f_idx < F.rows(); ++f_idx)
-      {
-        // Get 3D vertex positions
-        Eigen::Vector3d ar_3d = V.row(F(f_idx, 0));
-        Eigen::Vector3d br_3d = V.row(F(f_idx, 1));
-        Eigen::Vector3d cr_3d = V.row(F(f_idx, 2));
+  polyscope::getSurfaceMesh("input mesh")
+      ->addVertexDistanceQuantity(
+          "distance from vertex " + std::to_string(iVertexSource), d);
+}
 
-        // Set up local 2D coordinate system
-        Eigen::Vector3d n = (br_3d - ar_3d).cross(cr_3d - ar_3d);
-        Eigen::Vector3d b1 = (br_3d - ar_3d).normalized();
-        Eigen::Vector3d b2 = n.cross(b1).normalized();
+void computeParameterization() {
+  using namespace Eigen;
+  using namespace std;
 
-        // Express a, b, c in local 2D coordiante system
-        Eigen::Vector2d ar_2d(0.0, 0.0);
-        Eigen::Vector2d br_2d((br_3d - ar_3d).dot(b1), 0.0);
-        Eigen::Vector2d cr_2d((cr_3d - ar_3d).dot(b1), (cr_3d - ar_3d).dot(b2));
+  // Fix two points on the boundary
+  VectorXi bnd, b(2, 1);
+  igl::boundary_loop(meshF, bnd);
 
-        // Save 2-by-2 matrix with edge vectors as colums
-        rest_shapes[f_idx] = TinyAD::col_mat(br_2d - ar_2d, cr_2d - ar_2d);
-      };
-
-      // Set up function with 2D vertex positions as variables.
-      auto func = TinyAD::scalar_function<2>(TinyAD::range(V.rows()));
-
-      // Add objective term per face. Each connecting 3 vertices.
-      func.add_elements<3>(TinyAD::range(F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
-          {
-          // Evaluate element using either double or TinyAD::Double
-          using T = TINYAD_SCALAR_TYPE(element);
-
-          // Get variable 2D vertex positions
-          Eigen::Index f_idx = element.handle;
-          Eigen::Vector2<T> a = element.variables(F(f_idx, 0));
-          Eigen::Vector2<T> b = element.variables(F(f_idx, 1));
-          Eigen::Vector2<T> c = element.variables(F(f_idx, 2));
-
-          // Triangle flipped?
-          Eigen::Matrix2<T> M = TinyAD::col_mat(b - a, c - a);
-          if (M.determinant() <= 0.0)
-          return (T)INFINITY;
-
-          // Get constant 2D rest shape of f
-          Eigen::Matrix2d Mr = rest_shapes[f_idx];
-          double A = 0.5 * Mr.determinant();
-
-          // Compute symmetric Dirichlet energy
-          Eigen::Matrix2<T> J = M * Mr.inverse();
-          return A * (J.squaredNorm() + J.inverse().squaredNorm());
-          });
-
-      // Assemble inital x vector from P matrix.
-      // x_from_data(...) takes a lambda function that maps
-      // each variable handle (vertex index) to its initial 2D value (Eigen::Vector2d).
-      Eigen::VectorXd x = func.x_from_data([&] (int v_idx) {
-          return P.row(v_idx);
-          });
-
-      // Projected Newton
-      TinyAD::LinearSolver solver;
-      int max_iters = 1000;
-      double convergence_eps = 1e-2;
-      for (int i = 0; i < max_iters; ++i)
-      {
-        auto [f, g, H_proj] = func.eval_with_hessian_proj(x);
-        TINYAD_DEBUG_OUT("Energy in iteration " << i << ": " << f);
-        Eigen::VectorXd d = TinyAD::newton_direction(g, H_proj, solver);
-        if (TinyAD::newton_decrement(d, g) < convergence_eps)
-          break;
-        x = TinyAD::line_search(x, d, f, g, func);
-        func.x_to_data(x, [&] (int v_idx, const Eigen::Vector2d& p) {
-            P.row(v_idx) = p;
-            });
-        {
-          std::lock_guard<std::mutex> lock(m);
-          redraw = true;
-        }
-      }
-      TINYAD_DEBUG_OUT("Final energy: " << func.eval(x));
-
-      // Write final x vector to P matrix.
-      // x_to_data(...) takes a lambda function that writes the final value
-      // of each variable (Eigen::Vector2d) back to our P matrix.
-    });
-
-
-  // View resulting parametrization
-  igl::opengl::glfw::Viewer viewer;
-  viewer.core().is_animating = true;
-  viewer.data().set_mesh(P, F);
-  viewer.core().camera_zoom = 2;
-  viewer.data().show_lines = false;
-  Eigen::MatrixXd N;
-  igl::per_vertex_normals(V,F,N);
-  viewer.data().set_colors( ((N.array()*0.5)+0.5).eval());
-  viewer.callback_pre_draw = [&] (igl::opengl::glfw::Viewer& viewer)
-  {
-    if(redraw)
-    {
-      viewer.data().set_vertices(P);
-      viewer.core().align_camera_center(P);
-      viewer.core().camera_zoom = 2;
-      {
-        std::lock_guard<std::mutex> lock(m);
-        redraw = false;
-      }
-    }
-    return false;
-  };
-  viewer.launch();
-  if(optimization_thread.joinable())
-  {
-    optimization_thread.join();
+  if (bnd.size() == 0) {
+    polyscope::warning("mesh has no boundary, cannot parameterize");
+    return;
   }
+
+  b(0) = bnd(0);
+  b(1) = bnd((int) round(bnd.size() / 2.));
+  MatrixXd bc(2, 2);
+  bc << 0, 0, 1, 0;
+
+  // LSCM parametrization
+  Eigen::MatrixXd V_uv;
+  igl::lscm(meshV, meshF, b, bc, V_uv);
+
+  polyscope::getSurfaceMesh("input mesh")
+      ->addVertexParameterizationQuantity("LSCM parameterization", V_uv);
+}
+
+void computeNormals() {
+  Eigen::MatrixXd N_vertices;
+  igl::per_vertex_normals(meshV, meshF, N_vertices);
+
+  polyscope::getSurfaceMesh("input mesh")
+      ->addVertexVectorQuantity("libIGL vertex normals", N_vertices);
+}
+
+void callback() {
+
+  static int numPoints = 2000;
+  static float param = 3.14;
+
+  ImGui::PushItemWidth(100);
+
+  // Curvature
+  if (ImGui::Button("add curvature")) {
+    addCurvatureScalar();
+  }
+  
+  // Normals 
+  if (ImGui::Button("add normals")) {
+    computeNormals();
+  }
+
+  // Param
+  if (ImGui::Button("add parameterization")) {
+    computeParameterization();
+  }
+
+  // Geodesics
+  if (ImGui::Button("compute distance")) {
+    computeDistanceFrom();
+  }
+  ImGui::SameLine();
+  ImGui::InputInt("source vertex", &iVertexSource);
+
+  ImGui::PopItemWidth();
+}
+
+int main(int argc, char **argv) {
+  // Configure the argument parser
+  // args::ArgumentParser parser("A simple demo of Polyscope with libIGL.\nBy "
+  //                             "Nick Sharp (nsharp@cs.cmu.edu)",
+  //                             "");
+  // args::Positional<std::string> inFile(parser, "mesh", "input mesh");
+
+  // // Parse args
+  // try {
+  //   parser.ParseCLI(argc, argv);
+  // } catch (args::Help) {
+  //   std::cout << parser;
+  //   return 0;
+  // } catch (args::ParseError e) {
+  //   std::cerr << e.what() << std::endl;
+
+  //   std::cerr << parser;
+  //   return 1;
+  // }
+
+  // Options
+  polyscope::options::autocenterStructures = true;
+  polyscope::view::windowWidth = 1024;
+  polyscope::view::windowHeight = 1024;
+
+  // Initialize polyscope
+  polyscope::init();
+
+  // std::string filename = args::get(inFile);
+  std::string filename = "armadillo_cut_low.obj";
+  std::cout << "loading: " << filename << std::endl;
+
+  // Read the mesh
+  igl::readOBJ(filename, meshV, meshF);
+
+  // Register the mesh with Polyscope
+  polyscope::registerSurfaceMesh("input mesh", meshV, meshF);
+
+  // Add the callback
+  polyscope::state::userCallback = callback;
+
+  // Show the gui
+  polyscope::show();
 
   return 0;
 }
