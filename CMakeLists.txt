@@ -3,6 +3,8 @@ project(gpgpt)
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+set(default_build_type "RelWithDebInfo")
+
 
 
 # Maybe stop from CMAKEing in the wrong place
@@ -17,6 +19,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 ### Compiler options
 set( CMAKE_EXPORT_COMPILE_COMMANDS 1 ) # Emit a compile flags file to support completion engines 
+
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # using Clang (linux or apple) or GCC
@@ -68,6 +71,13 @@ endif()
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
+# find_package (SuiteSparse 5.12 NO_MODULE)
+message("build with suite-sparse")
+find_package(SuiteSparse REQUIRED)
+include_directories(${SUITESPARSE_INCLUDE_DIRS})
+
+
+
 
 
 # Add polyscope
@@ -110,10 +120,11 @@ FetchContent_GetProperties(tinyad)
 if(NOT polyscope_POPULATED)
   # Fetch the content using previously declared details
   FetchContent_Populate(polyscope)
-  message(STATUS "polyscope_SOURCE_DIR: ${tinyad_SOURCE_DIR}")
-  message(STATUS "polyscope_BINARY_DIR: ${tinyad_BINARY_DIR}")
+  message(STATUS "polyscope_SOURCE_DIR: ${polyscope_SOURCE_DIR}")
+  message(STATUS "polyscope_BINARY_DIR: ${polyscope_BINARY_DIR}")
   add_subdirectory(${polyscope_SOURCE_DIR} ${polyscope_BINARY_DIR})
 endif()
+FetchContent_MakeAvailable(polyscope)
 
 # add_subdirectory("/Userss/fool/Documents/mint/polyscope/build/src")
 
@@ -134,7 +145,7 @@ add_library(${PROJECT_NAME} ${SRCFILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} igl::core polyscope TinyAD) # ${SUITESPARSE_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} igl::core polyscope TinyAD ${SUITESPARSE_LIBRARIES})
 
 set_target_properties(gpgpt PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)

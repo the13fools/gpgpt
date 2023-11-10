@@ -9,10 +9,7 @@
 
 #include <Eigen/LU>
 
-#include <Eigen/Dense>
-#include <Eigen/SparseCholesky>
-// #include <Eigen/CholmodSupport>
-#include <chrono>
+
 
 class VizHook : public PhysicsHook
 {
@@ -52,6 +49,9 @@ public:
 		k_scale = 1.;
 		dt_scale = 1.;
 
+    
+
+         
 
 
     }
@@ -74,7 +74,9 @@ public:
 
     virtual void renderRenderGeometry()
     {
-		polyscope::getSurfaceMesh()->updateVertexPositions(renderQ);
+
+        polyscope::getSurfaceMesh("cur state")->updateVertexPositions(renderQ);
+		// polyscope::getSurfaceMesh()->updateVertexPositions(renderQ);
         // polyscope::getSurfaceMesh()->centerBoundingBox();
         // polyscope::getSurfaceMesh()->resetTransform();
         // polyscope::view::resetCameraToHomeView();
