@@ -1,10 +1,23 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.1)
 project(gpgpt)
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(default_build_type "RelWithDebInfo")
 
+# Set a default build type if none was specified
+set(default_build_type "Release")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+  set(default_build_type "RelWithDebInfo")
+endif()
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
 
 
 # Maybe stop from CMAKEing in the wrong place
@@ -22,10 +35,12 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS 1 ) # Emit a compile flags file to support co
 
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  # set(CMAKE_CXX_COMPILER /usr/bin/clang++-9)
+  set(CMAKE_CXX_COMPILER /usr/bin/clang++-9 CACHE PATH "" FORCE) # https://stackoverflow.com/a/17275650
   # using Clang (linux or apple) or GCC
   message("Using clang/gcc compiler flags")
-  SET(BASE_CXX_FLAGS "-std=c++11 -Wall -Wextra -g3")
-  SET(DISABLED_WARNINGS " -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-missing-braces")
+  SET(BASE_CXX_FLAGS "-std=c++17 -Wall -Wextra -g3")
+  SET(DISABLED_WARNINGS " -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-missing-braces -Wunused-local-typedef -Wsign-compare -Wunused-private-field -Wmacro-redefined")
   SET(TRACE_INCLUDES " -H -Wno-error=unused-command-line-argument")
 
   if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -116,7 +131,7 @@ FetchContent_Declare(
 )
 #FetchContent_MakeAvailable(tinyad)
 
-FetchContent_GetProperties(tinyad)
+FetchContent_GetProperties(polyscope)
 if(NOT polyscope_POPULATED)
   # Fetch the content using previously declared details
   FetchContent_Populate(polyscope)
@@ -125,6 +140,10 @@ if(NOT polyscope_POPULATED)
   add_subdirectory(${polyscope_SOURCE_DIR} ${polyscope_BINARY_DIR})
 endif()
 FetchContent_MakeAvailable(polyscope)
+
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
+FetchContent_MakeAvailable(json)
 
 # add_subdirectory("/Userss/fool/Documents/mint/polyscope/build/src")
 
@@ -142,11 +161,11 @@ FetchContent_MakeAvailable(polyscope)
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp)
 file(GLOB FRONTENDFILES src/gpgpt_frontend/*.cpp src/gpgpt_frontend/*.h src/gpgpt_frontend/*.hpp)
 
-add_library(${PROJECT_NAME} ${SRCFILES})
+add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} igl::core polyscope TinyAD ${SUITESPARSE_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} igl::core polyscope TinyAD ${SUITESPARSE_LIBRARIES} stdc++fs nlohmann_json::nlohmann_json)
 
 set_target_properties(gpgpt PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)

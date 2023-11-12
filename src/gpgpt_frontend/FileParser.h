@@ -31,8 +31,8 @@ public:
     // Retrieve the largest file's data
     bool parseLargestFile(Eigen::VectorXd& data, FileType fileType);
 
-    // Load an .obj file if found
-    bool parseObjFile(Eigen::MatrixXd& V, Eigen::MatrixXi& F);
+    // // Load an .obj file if found
+    // bool parseObjFile(Eigen::MatrixXd& V, Eigen::MatrixXi& F);
 
     // Update the current directory path
     void setDirectoryPath(const std::string& directoryPath);

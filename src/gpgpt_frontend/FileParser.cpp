@@ -1,8 +1,15 @@
 #include "FileParser.h"
+// #include <experimental/filesystem>
 #include <filesystem>
+
 #include <algorithm>
 
+#include <igl/readOBJ.h>
+
+
+// namespace fs = std::experimental::filesystem;
 namespace fs = std::filesystem;
+
 
 FileParser::FileParser(const std::string& directoryPath)
     : directoryPath(directoryPath) {
@@ -10,19 +17,19 @@ FileParser::FileParser(const std::string& directoryPath)
 }
 
 void FileParser::scanDirectory() {
-    for (const auto& entry : fs::directory_iterator(directoryPath)) {
-        if (entry.is_regular_file()) {
-            std::string filename = entry.path().filename().string();
-            if (filename.ends_with(".bfra")) {
-                bfraFiles.push_back(entry.path().string());
-            } else if (filename.ends_with(".bmom")) {
-                bmomFiles.push_back(entry.path().string());
-            } else if (filename.ends_with(".obj") && objFilePath.empty()) {
-                objFilePath = entry.path().string(); // Assuming only one .obj file
-            }
-        }
-    }
-    findLargestIDFile();
+    // for (const auto& entry : fs::directory_iterator(directoryPath)) {
+    //     if (entry.is_regular_file()) {
+    //         std::string filename = entry.path().filename().string();
+    //         if (filename.ends_with(".bfra")) {
+    //             bfraFiles.push_back(entry.path().string());
+    //         } else if (filename.ends_with(".bmom")) {
+    //             bmomFiles.push_back(entry.path().string());
+    //         } else if (filename.ends_with(".obj") && objFilePath.empty()) {
+    //             objFilePath = entry.path().string(); // Assuming only one .obj file
+    //         }
+    //     }
+    // }
+    // findLargestIDFile();
 }
 
 void FileParser::findLargestIDFile() {
@@ -68,7 +75,8 @@ bool FileParser::parseFileWithID(Eigen::VectorXd& data, FileType fileType, int f
             return deserializeVector(data, filePath);
         case FileType::FRA:
         case FileType::MOM:
-            return readTextFile(filePath, data);
+            // return readTextFile(filePath, data);
+            break;
         case FileType::OBJ:
             // Handle OBJ file parsing
             break;
@@ -100,7 +108,8 @@ bool FileParser::parseLargestFile(Eigen::VectorXd& data, FileType fileType) {
             return deserializeVector(data, filePath);
         case FileType::FRA:
         case FileType::MOM:
-            return readTextFile(filePath, data);
+            // return readTextFile(filePath, data);
+            break;
         case FileType::OBJ:
             // Handle OBJ file parsing
             break;
@@ -112,17 +121,17 @@ bool FileParser::parseLargestFile(Eigen::VectorXd& data, FileType fileType) {
     return false; // Return false for unsupported file types (e.g., OBJ)
 }
 
-bool FileParser::parseObjFile(Eigen::MatrixXd& V, Eigen::MatrixXi& F) {
-    if (!objFilePath.empty()) {
-        // Implement the parsing logic for the .obj file using libigl
-        if (igl::readOBJ(objFilePath, V, F)) {
-            return true; // Parsing successful
-        } else {
-            return false; // Parsing failed
-        }
-    }
-    return false; // .obj file not found
-}
+// bool FileParser::parseObjFile(Eigen::MatrixXd& V, Eigen::MatrixXi& F) {
+//     if (!objFilePath.empty()) {
+//         // Implement the parsing logic for the .obj file using libigl
+//         if (igl::readOBJ(objFilePath, V, F)) {
+//             return true; // Parsing successful
+//         } else {
+//             return false; // Parsing failed
+//         }
+//     }
+//     return false; // .obj file not found
+// }
 
 void FileParser::setDirectoryPath(const std::string& directoryPath) {
     this->directoryPath = directoryPath;

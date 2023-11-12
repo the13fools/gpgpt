@@ -3,6 +3,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
+// #include "polyscope/deps/json/include/json.hpp"
 
 using json = nlohmann::json;
 

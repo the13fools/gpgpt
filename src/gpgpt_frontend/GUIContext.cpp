@@ -1,5 +1,7 @@
 #include "GUIContext.h"
-#include "ImGui/imgui.h"
+// #include "ImGui/imgui.h"
+#include "imgui.h"
+
 
 // Constructor initializing the app state and setting default bounds
 GUIContext::GUIContext(AppState* state) : appState(state) {

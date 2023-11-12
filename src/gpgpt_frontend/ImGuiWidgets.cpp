@@ -1,6 +1,8 @@
 #include "ImGuiWidgets.h"
 #include "imgui.h"
-#include "Polyscope.h"
+// #include "Polyscope.h"
+#include "polyscope/polyscope.h"
+#include "FieldView.h"
 
 namespace ImGuiWidgets {
 
@@ -18,7 +20,7 @@ namespace ImGuiWidgets {
 
         for (int i = 0; i < Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
-            const char* fieldName = FieldViewToString(field).c_str();
+            const char* fieldName = fieldViewToString(field).c_str();
             bool* active = &appState.fieldViewActive[field];
 
             ImGui::Checkbox(fieldName, active);
@@ -30,8 +32,8 @@ namespace ImGuiWidgets {
     void ShowRunInfo(AppState& appState) {
         ImGui::Text("Run Info:");
 
-        ImGui::Text("Current Frame: %d", appState.currentFrameIndex);
-        ImGui::Text("Current Moment: %d", appState.currentMomentIndex);
+        // ImGui::Text("Current Frame: %d", appState.currentFrameIndex);
+        // ImGui::Text("Current Moment: %d", appState.currentMomentIndex);
 
         // Add other run information as needed
     }
@@ -40,10 +42,10 @@ namespace ImGuiWidgets {
     void DrawFileLoader(AppState& appState) {
         ImGui::Text("File Loader:");
 
-        ImGui::InputText("Directory", &appState.currentDirectory);
+        // ImGui::InputText("Directory", &appState.directoryPath);
         if (ImGui::Button("Load Files")) {
             appState.refreshFileLists();
-            appState.setDefaultFileIndices();
+            // appState.setDefaultFileIndices();
         }
     }
 
@@ -51,16 +53,16 @@ namespace ImGuiWidgets {
     void AddFieldViewScalarsToPolyscope(AppState& appState) {
         for (int i = 0; i < Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
-            std::string fieldName = FieldViewToString(field);
-            std::vector<double> scalarValues(appState.fieldData[field].begin(), appState.fieldData[field].end());
+            std::string fieldName = fieldViewToString(field);
+            // std::vector<double> scalarValues(appState.fieldData[field].begin(), appState.fieldData[field].end());
 
             // Calculate bounds (10th and 90th percentiles)
-            float minBound = appState.fieldBounds[field].first;
-            float maxBound = appState.fieldBounds[field].second;
+            float minBound = appState.fieldBounds[field].lower;
+            float maxBound = appState.fieldBounds[field].upper;
 
             // Add the scalar quantity with bounds to Polyscope
-            auto scalarQ = polyscope::getVolumeMesh("my mesh")->addVertexScalarQuantity(fieldName, scalarValues);
-            scalarQ->setMapRange({minBound, maxBound});
+            // auto scalarQ = polyscope::getVolumeMesh("my mesh")->addVertexScalarQuantity(fieldName, scalarValues);
+            // scalarQ->setMapRange({minBound, maxBound});
         }
     }
 
@@ -70,10 +72,10 @@ namespace ImGuiWidgets {
 
         for (int i = 0; i < Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
-            const char* fieldName = FieldViewToString(field).c_str();
+            const char* fieldName = fieldViewToString(field).c_str();
             bool* active = &appState.fieldViewActive[field];
-            float* minVal = &appState.fieldViewBounds[field].first;
-            float* maxVal = &appState.fieldViewBounds[field].second;
+            float* minVal = &appState.fieldBounds[field].lower;
+            float* maxVal = &appState.fieldBounds[field].upper;
 
             ImGui::Checkbox(fieldName, active);
             ImGui::SameLine();
@@ -86,14 +88,14 @@ namespace ImGuiWidgets {
     // Function to display a field view scrubber in ImGui
     void ShowFieldViewScrubber(AppState& appState, Field_View& currentField) {
         ImGui::Text("Field View Scrubber:");
-        ImGui::Text("Current Field: %s", FieldViewToString(currentField).c_str());
+        ImGui::Text("Current Field: %s", fieldViewToString(currentField).c_str());
 
         // Display a combo box to select the current field view
-        if (ImGui::BeginCombo("Select Field View", FieldViewToString(currentField).c_str())) {
+        if (ImGui::BeginCombo("Select Field View", fieldViewToString(currentField).c_str())) {
             for (int i = 0; i < Element_COUNT; ++i) {
                 Field_View field = static_cast<Field_View>(i);
                 bool is_selected = (currentField == field);
-                if (ImGui::Selectable(FieldViewToString(field).c_str(), is_selected)) {
+                if (ImGui::Selectable(fieldViewToString(field).c_str(), is_selected)) {
                     currentField = field; // Update the current field view
                 }
                 if (is_selected) {
@@ -110,12 +112,12 @@ namespace ImGuiWidgets {
         ImGui::PlotLines(label, &values[0], static_cast<int>(values.size()), 0, NULL, minY, maxY, ImVec2(0, 80));
     }
 
-        void ShowMainGUI(AppState& appState) {
+    void ShowMainGUI(AppState& appState) {
         // Begin the main ImGui window
         ImGui::Begin("Main Window");
 
         // Display file scrubber for selecting files
-        ShowFileScrubber(appState.currentFileIndex, 0, appState.fileList.size() - 1);
+        // ShowFileScrubber(appState.currentFileIndex, 0, appState.fileList.size() - 1);
 
         // Display checkboxes with min and max sliders for field views
         ShowFieldViewCheckboxesWithSliders(appState);
@@ -124,10 +126,10 @@ namespace ImGuiWidgets {
         ShowRunInfo(appState);
 
         // Display a plot for run_step_times
-        ShowPlot(appState.run_step_times, "Step Times", 0.0f, 100.0f);
+        // ShowPlot(appState.run_step_times, "Step Times", 0.0f, 100.0f);
 
         // Display a plot for run_energy
-        ShowPlot(appState.run_energy, "Energy", 0.0f, 100.0f);
+        // ShowPlot(appState.run_energy, "Energy", 0.0f, 100.0f);
 
         // Additional GUI elements or widgets can be added here
 
