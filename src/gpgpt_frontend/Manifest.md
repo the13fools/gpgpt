@@ -1,25 +1,77 @@
-Thank you for sharing the key components and the detailed structure of the `gpgpt` library's `src/gpgpt_frontend` folder. The structure and the descriptions of each component indicate a well-organized and modular approach to building a geometry processing application.
+Thank you for sharing the detailed C++ implementation files for the `gpgpt` library. Based on these files, I will update the `Manifest.md` to reflect the current state and functionality of your library. Here is the updated content for the `Manifest.md` file:
 
-Based on the information provided, here's a brief overview of how these components interact and their potential roles in the library:
+---
 
-1. **AppState**: This is the core component that manages the application's state, including file management (with `bfraFiles` and `bmomFiles`), tracking the currently selected file (`currentFileID`), and maintaining bounds for various field views (`fieldBounds`). It also includes methods to refresh file lists, select files, and serialize data.
+# Manifest for gpgpt Library
 
-2. **FieldView**: It appears to be an enumeration that defines various field views like vector norms, moment directions, and others. The `fieldViewToString` function suggests an interface for converting these enumerations into strings for display or logging purposes.
+## Overview
+`gpgpt` (General Purpose Geometry Processing Toolkit) is a comprehensive C++ library designed to standardize the interface for various geometry processing software packages. This manifest provides a detailed summary of the key components and their implementation in the `src/gpgpt_frontend` folder of the library.
 
-3. **FileParser**: This class is crucial for reading and parsing different file types (like `BFRA`, `BMOM`, `OBJ`). It also includes functionality to handle the largest files and to update directory paths, which indicates flexibility in managing different file sources.
+## Components
 
-4. **GUIContext**: This struct seems to be focused on handling GUI interactions, potentially with ImGui. It includes references to AppState and various callback functions, indicating a tight coupling with the application's state and user interactions.
+### 1. AppState
+- **Files**: `AppState.h`, `AppState.cpp`
+- **Description**: Manages the application's state, file management, current file tracking, field view bounds, and logging.
+- **Key Methods**:
+  - `refreshFileLists()`: Populates lists of files.
+  - `logCurrentVariables()`: Logs current variables if logging is enabled.
+  - `updateIndices()`: Updates current frame and moment indices.
+  - `serializeData()`: Serializes the current app state to a file.
+  - `deserializeData()`: Deserializes app state from a file.
 
-5. **MyConfig**: This struct stores configuration settings for the application, such as weights and parameters for different calculations or operations within the app.
+### 2. FieldView
+- **Files**: `FieldView.h`, `FieldView.cpp`
+- **Description**: Manages different field views.
+- **Functionality**: Includes the utility function `fieldViewToString` to convert field view enums to strings.
 
-6. **ImGuiWidgets**: It provides custom widget implementations for ImGui, likely offering specialized views or controls specific to geometry processing needs.
+### 3. FileParser
+- **Files**: `FileParser.h`, `FileParser.cpp`
+- **Description**: Handles parsing different file types within a directory.
+- **Key Features**:
+  - `scanDirectory()`: Scans the directory for files.
+  - `findLargestIDFile()`: Finds the file with the largest ID.
+  - `parseFileWithID()`: Parses a file with a given ID.
+  - `parseLargestFile()`: Parses the largest file of a given type.
+  - `parseObjFile()`: Parses an .obj file.
 
-7. **Serialization**: This component handles data serialization and deserialization, including Eigen types and custom configurations. This is essential for saving and loading application states or processed data.
+### 4. GUIContext
+- **Files**: `GUIContext.h`, `GUIContext.cpp`
+- **Description**: Manages GUI interactions using ImGui.
+- **Key Methods**:
+  - `fileSelected()`: Handles file selection in GUI.
+  - `refreshRequested()`: Handles GUI refresh button press.
+  - `sliderValueChanged()`: Handles slider value change in GUI.
+  - `serializeButtonPressed()`: Handles serialization button press in GUI.
 
-8. **main.cpp**: This would be the entry point of the application, where all these components are likely initialized and tied together.
+### 5. ImGuiWidgets
+- **Files**: `ImGuiWidgets.h`, `ImGuiWidgets.cpp`
+- **Description**: Provides custom widget implementations for ImGui.
+- **Key Functions**: Includes functions like `ShowFileScrubber`, `ShowFieldViewCheckboxes`, `ShowRunInfo`, `DrawFileLoader`, `AddFieldViewScalarsToPolyscope`, `ShowFieldViewCheckboxesWithSliders`, `ShowFieldViewScrubber`, and `ShowPlot`.
 
-9. **README.md**: Provides documentation for the project, which is crucial for both internal developers and external users who might use or contribute to the library.
+### 6. MyConfig
+- **Files**: `MyConfig.h`, `MyConfig.cpp`
+- **Description**: Stores and manages configuration settings for the application.
 
-With such a structure, your library seems well-equipped to offer a comprehensive toolkit for geometry processing. It provides a blend of file handling, GUI interactions, configuration management, and data serialization, all essential for developing robust geometry processing applications.
+### 7. Serialization
+- **Files**: `Serialization.h`, `Serialization.cpp`
+- **Description**: Manages serialization and deserialization of data and configurations.
+- **Key Functions**:
+  - `serializeVector()`, `deserializeVector()`: Serialize/deserialize Eigen vectors.
+  - `serializeMatrix()`, `deserializeMatrix()`: Serialize/deserialize Eigen matrices.
+  - `serializeConfig()`, `deserializeConfig()`: Serialize/deserialize configurations.
+  - `writeCSV()`, `readCSV()`: Serialize/deserialize CSV data.
+  - `serializeJSON()`, `deserializeJSON()`: Serialize/deserialize JSON data.
 
-If you need further assistance, like in code review, architectural suggestions, or specific implementation details, feel free to ask!
+### 8. main.cpp
+- **Role**: Entry point of the application, initializing and tying together all components.
+
+### 9. README.md
+- **Purpose**: Documentation file for the project.
+
+## Usage
+
+This manifest should be updated as the project evolves to provide a clear and detailed overview of the library's structure and functionality. It aids in quickly understanding the source code and the architecture of the `gpgpt` library.
+
+---
+
+This updated manifest includes detailed descriptions of each component and their functionalities based on the provided C++ implementation files. Feel free to ask for any further updates or modifications to this document as your project progresses.
