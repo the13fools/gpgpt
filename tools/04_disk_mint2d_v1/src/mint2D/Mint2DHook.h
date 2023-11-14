@@ -146,7 +146,7 @@ public:
         std::string cur_log_folder;
 
 
-        int max_iters = 5000;
+        int max_iters = 15000;
         int cur_iter = 0;
         int inner_loop_iter = 0;
         double convergence_eps = 1e-10;

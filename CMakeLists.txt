@@ -36,7 +36,7 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS 1 ) # Emit a compile flags file to support co
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # set(CMAKE_CXX_COMPILER /usr/bin/clang++-9)
-  set(CMAKE_CXX_COMPILER /usr/bin/clang++-9 CACHE PATH "" FORCE) # https://stackoverflow.com/a/17275650
+  # set(CMAKE_CXX_COMPILER /usr/bin/clang++-9 CACHE PATH "" FORCE) # https://stackoverflow.com/a/17275650
   # using Clang (linux or apple) or GCC
   message("Using clang/gcc compiler flags")
   SET(BASE_CXX_FLAGS "-std=c++17 -Wall -Wextra -g3")
@@ -180,7 +180,7 @@ add_subdirectory(tools/01_basic_test)
 add_subdirectory(tools/02_tiny_ad_test)
 add_subdirectory(tools/03_disk_bvp_v1)
 add_subdirectory(tools/04_disk_mint2d_v1)
-
+add_subdirectory(tools/05_mint2d_gpgpt_hook)
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})

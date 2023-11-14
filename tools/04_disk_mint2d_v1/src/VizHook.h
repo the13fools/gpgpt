@@ -58,8 +58,8 @@ public:
       // cur_mesh_name = "circle_subdiv";
 
       // cur_mesh_name = "circle";
-      cur_mesh_name = "circle_irreg";
-      // cur_mesh_name = "circle_irreg_20000";
+      // cur_mesh_name = "circle_irreg";
+      cur_mesh_name = "circle_irreg_20000";
 
 
       // cur_mesh_name = "circle_1000";
