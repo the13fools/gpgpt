@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.1)
-project(04_disk_mint2d_v1)
+project(05_disk_gpgpt_v1)
 
 # Find Eigen
 find_package(Eigen3 3.3 REQUIRED)
 find_package(OpenMP REQUIRED)
 
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp )	 
-file(GLOB FRONTENDFILES src/mint2D/*.cpp src/mint2D/*.h src/mint2D/*.hpp )
+file(GLOB FRONTENDFILES src/mint2D_gpgpt_hook/*.cpp src/mint2D_gpgpt_hook/*.h src/mint2D_gpgpt_hook/*.hpp )
 
 add_executable(${PROJECT_NAME}  ${SRCFILES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ../../src ../../lib src/mint2D)
+target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ../../src ../../lib src/mint2D_gpgpt_hook)
 
 target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES})
 # add_subdirectory()
