@@ -67,7 +67,7 @@ void Mint2DHook::updateRenderGeometry() {
 
 
     // Update the vertex positions and other data in Polyscope
-    polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
+    // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
     // Log data if necessary
@@ -77,6 +77,16 @@ void Mint2DHook::updateRenderGeometry() {
 
         // Additional logging for any other fields in AppState as needed
     }
+
+
+    // Update all of the calculated quantities of metadata.  
+
+
+    // Advance simulation statistics in gui. 
+
+
+
+
 
     // // Handle the gui_free case for the Field_View enum
     // if (appState->currentElement == Field_View::gui_free) {
