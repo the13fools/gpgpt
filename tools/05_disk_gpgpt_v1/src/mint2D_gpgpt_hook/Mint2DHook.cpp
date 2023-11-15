@@ -119,27 +119,35 @@ void Mint2DHook::updateRenderGeometry() {
         
         // polyscope::requestRedraw();   
 
-        polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
+        std::cout << "render renderGeometry" << std::endl;
+
+        // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
     // Depending on the current element view, render different quantities
     switch (appState->current_element) {
         case Field_View::vec_norms:
+         std::cout << "render norms_vec" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Vector", appState->norms_vec)->setEnabled(true);
             break;
         case Field_View::delta_norms:
+         std::cout << "render norms_delta" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Delta", appState->norms_delta)->setEnabled(true);
             break;
         case Field_View::vec_dirch:
+         std::cout << "render smoothness_primal" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Primal", appState->smoothness_primal)->setEnabled(true);
             break;
         case Field_View::moment_dirch:
+         std::cout << "render smoothness_sym" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Moment", appState->smoothness_sym)->setEnabled(true);
             break;
         case Field_View::primal_curl_residual:
+         std::cout << "render primal_curl" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Primal Residual", appState->curls_primal)->setEnabled(true);
             break;
         case Field_View::sym_curl_residual:
+         std::cout << "render sym_curl" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Symmetric Residual", appState->curls_sym)->setEnabled(true);
             break;
         case Field_View::gui_free:
@@ -153,7 +161,8 @@ void Mint2DHook::updateRenderGeometry() {
         // Update other visualization properties based on AppState
         // Example: Vector field visualization
         if (appState->showVectorField) {
-            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", appState->frames);
+             std::cout << "show vector field" << std::endl;
+            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", appState->renderFrames);
             // vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
             // vectorField->setEnabled(true);
         }
@@ -171,6 +180,8 @@ void Mint2DHook::updateRenderGeometry() {
 
 void Mint2DHook::initSimulation() {
     // Load mesh using igl::readOBJ
+        // igl::readOBJ("/home/josh/Documents/mint_redux/geometry-processing-starter-kit/tools/shared/" + cur_mesh_name + ".obj", V, F);
+
     FileParser fileParser(appState->directoryPath);
 
     Eigen::MatrixXd V; // Temporary storage for vertices
@@ -192,8 +203,11 @@ void Mint2DHook::initSimulation() {
         // }
     } else {
         // Load default mesh and set default config
-        if (!igl::readOBJ(appState->objFilePath.value_or("default_mesh.obj"), V, F)) {
-            std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or("default_mesh.obj") << std::endl;
+        std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
+
+        std::cout << default_path << std::endl;
+        if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {
+            std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
             return;
         }
 
@@ -208,9 +222,25 @@ void Mint2DHook::initSimulation() {
 
     // fieldViewActive = 
 
+    std::cout << "V.rows() " << V.rows() << "F.rows()" << F.rows() << std::endl;
+ 
     // Set mesh data to AppState
     appState->V = V;
     appState->F = F;
+
+    appState->renderFrames = Eigen::MatrixXd::Zero(F.rows(), 3);
+
+    appState->frames = Eigen::MatrixXd::Zero(F.rows(), 2);
+    appState->moments = Eigen::MatrixXd::Zero(F.rows(), 0);
+    appState->deltas = Eigen::MatrixXd::Zero(F.rows(), 4);
+    //   metadata = Eigen::MatrixXd::Zero(F.rows(), 2);
+    appState->norms_vec = Eigen::VectorXd::Zero(F.rows());
+    appState->norms_delta = Eigen::VectorXd::Zero(F.rows());
+    appState->curls_sym = Eigen::VectorXd::Zero(F.rows());
+    appState->curls_primal = Eigen::VectorXd::Zero(F.rows());
+    appState->smoothness_primal = Eigen::VectorXd::Zero(F.rows());
+    appState->smoothness_sym = Eigen::VectorXd::Zero(F.rows());
+
 
     // Initialize other parameters and logging folder
     // initializeOtherParameters();
@@ -424,28 +454,28 @@ bool Mint2DHook::simulateOneStep() {
 }
 
 
-void Mint2DHook::reset() {
-    // Resetting simulation parameters to default or initial values
-    appState->currentIteration = 0;
-    appState->maxIterations = 5000; // Default maximum iterations
-    appState->convergenceEpsilon = 1e-10;
+// void Mint2DHook::reset() {
+//     // Resetting simulation parameters to default or initial values
+//     appState->currentIteration = 0;
+//     appState->maxIterations = 5000; // Default maximum iterations
+//     appState->convergenceEpsilon = 1e-10;
 
-    // Resetting mesh data
-    appState->frames.setZero(appState->F.rows(), 2);
-    appState->deltas.setZero(appState->F.rows(), 4);
-    appState->curls_primal.setZero(appState->F.rows());
-    appState->curls_sym.setZero(appState->F.rows());
-    appState->smoothness_primal.setZero(appState->F.rows());
-    appState->smoothness_sym.setZero(appState->F.rows());
+//     // Resetting mesh data
+//     appState->frames.setZero(appState->F.rows(), 2);
+//     appState->deltas.setZero(appState->F.rows(), 4);
+//     appState->curls_primal.setZero(appState->F.rows());
+//     appState->curls_sym.setZero(appState->F.rows());
+//     appState->smoothness_primal.setZero(appState->F.rows());
+//     appState->smoothness_sym.setZero(appState->F.rows());
 
-    // Reinitialize the boundary conditions if needed
-    initBoundaryConditions();
+//     // Reinitialize the boundary conditions if needed
+//     initBoundaryConditions();
 
-    // Optionally, re-register mesh with Polyscope if visualization needs a reset
-    polyscope::removeAllStructures();
-    polyscope::registerSurfaceMesh("c", appState->V, appState->F);
-    polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
-}
+//     // Optionally, re-register mesh with Polyscope if visualization needs a reset
+//     polyscope::removeAllStructures();
+//     polyscope::registerSurfaceMesh("c", appState->V, appState->F);
+//     polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
+// }
 
 
 

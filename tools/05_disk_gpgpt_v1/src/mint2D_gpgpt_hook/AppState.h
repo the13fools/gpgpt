@@ -24,8 +24,8 @@ using Field_View = Views::Field_View;
 
 // Struct to hold bounds for each field view quantity
 struct FieldBounds {
-    float upper = std::numeric_limits<float>::max();
-    float lower = std::numeric_limits<float>::lowest();
+    float upper = 0; // std::numeric_limits<float>::max();
+    float lower = 1; //std::numeric_limits<float>::lowest();
 };
 
 // AppState holds the state of the application
@@ -58,6 +58,7 @@ public:
 
 
     // derived variables 
+    Eigen::MatrixXd renderFrames;
     Eigen::VectorXd norms_vec;
     Eigen::VectorXd norms_delta;
     Eigen::VectorXd norms_moment; // TODO 

@@ -72,14 +72,16 @@ namespace ImGuiWidgets {
 
         for (int i = 0; i < Views::Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
-            const char* fieldName = fieldViewToString(field).c_str();
+            const char* fieldName = fieldViewToFileStub(field).c_str();
             bool* active = &appState.fieldViewActive[field];
             float* minVal = &appState.fieldBounds[field].lower;
             float* maxVal = &appState.fieldBounds[field].upper;
 
+            std::cout << fieldName << std::endl;
+
             ImGui::Checkbox(fieldName, active);
             ImGui::SameLine();
-            ImGui::SliderFloat(fieldName, minVal, 0.0f, 1.0f);
+            ImGui::SliderFloat((std::string(fieldName) + " (Lower Bound)").c_str(), minVal, 0.0f, 1.0f);
             ImGui::SameLine();
             ImGui::SliderFloat((std::string(fieldName) + " (Upper Bound)").c_str(), maxVal, 0.0f, 1.0f);
         }
@@ -123,7 +125,7 @@ namespace ImGuiWidgets {
         ShowFieldViewCheckboxesWithSliders(appState);
 
         // Display run information
-        ShowRunInfo(appState);
+        // ShowRunInfo(appState);
 
         // Display a plot for run_step_times
         // ShowPlot(appState.run_step_times, "Step Times", 0.0f, 100.0f);

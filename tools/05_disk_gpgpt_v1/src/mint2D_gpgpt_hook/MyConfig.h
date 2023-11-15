@@ -6,6 +6,7 @@
 #include <string>
 
 struct MyConfig {
+    MyConfig();
     double w_bound;
     double w_smooth;
     double w_smooth_vector;

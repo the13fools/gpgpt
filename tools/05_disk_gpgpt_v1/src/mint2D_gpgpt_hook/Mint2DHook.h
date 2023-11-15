@@ -28,7 +28,7 @@ public:
     virtual void initSimulation();
     virtual bool simulateOneStep();
 
-    void reset();
+    // void reset();
     void initializeLogFolder(); 
     void initializeOtherParameters(); 
     void initBoundaryConditions();
