@@ -6,6 +6,8 @@
 
 #include <igl/readOBJ.h>
 
+#include "Serialization.h" // Include the Serialization header
+
 
 // namespace fs = std::experimental::filesystem;
 namespace fs = std::filesystem;

@@ -10,52 +10,74 @@
 #include <limits>
 
 #include "MyConfig.h"
+#include "FieldView.h"
+
+using Field_View = Views::Field_View;
 
 // Enum for identifying field view quantities
-enum Field_View {
-    vec_norms, delta_norms, vec_dirch, moment_dirch, primal_curl_residual, sym_curl_residual, gui_free, Element_COUNT
-};
+// enum Field_View {
+//     vec_norms, delta_norms, vec_dirch, moment_dirch, primal_curl_residual, sym_curl_residual, gui_free, Element_COUNT
+// };
+// Views::
+
+// enum Field_View : unsigned int;
 
 // Struct to hold bounds for each field view quantity
 struct FieldBounds {
-    double upper = std::numeric_limits<double>::max();
-    double lower = std::numeric_limits<double>::lowest();
+    float upper = std::numeric_limits<float>::max();
+    float lower = std::numeric_limits<float>::lowest();
 };
 
 // AppState holds the state of the application
 class AppState {
 public:
-    std::string logFolderPath;
-    std::string directoryPath;
+
+    // File IO state 
+    std::string directoryPath;  // this is where files are loaded from 
+    std::string logFolderPath;  // this is where the output gets saved.  
+                                // When load from a directory logFolderPath defaults to same directory, can change this.
     std::string meshName;
     std::vector<std::string> bfraFiles;
     std::vector<std::string> bmomFiles;
     std::optional<std::string> objFilePath;
     int currentFileID = 0;
-    std::unordered_map<Field_View, FieldBounds> fieldBounds;
-    bool fieldViewActive [8] = {false};
-    bool shouldLogData = true;
-    Field_View current_element;
 
+
+
+    // Init variables 
+    Eigen::MatrixXd V; // Vertex positions
+    Eigen::MatrixXi F; // Face indices
+    MyConfig* config;
     Eigen::VectorXi boundaryFaces;
+
+
     // Optimization variables
     Eigen::MatrixXd frames;
     Eigen::MatrixXd moments; // TODO implement this!
     Eigen::MatrixXd deltas;
 
+
+    // derived variables 
     Eigen::VectorXd norms_vec;
     Eigen::VectorXd norms_delta;
-    Eigen::VectorXd norms_moment;
+    Eigen::VectorXd norms_moment; // TODO 
     Eigen::VectorXd curls_primal;
     Eigen::VectorXd curls_sym;
     Eigen::VectorXd smoothness_primal;
     Eigen::VectorXd smoothness_sym;
-    Eigen::MatrixXd V; // Vertex positions
-    Eigen::MatrixXi F; // Face indices
 
-    MyConfig* config;
 
-// give these better names
+    // GUI state 
+    std::unordered_map<Field_View, FieldBounds> fieldBounds;
+    bool fieldViewActive [8] = {false};
+    bool shouldLogData = true;
+    Field_View current_element;
+    bool showVectorField;
+
+    bool LogToFile(); // Log based on fieldViewActive state
+
+
+    // simulation metadata 
     int currentIteration; 
     int maxIterations;
     int innerLoopIteration;
@@ -64,10 +86,12 @@ public:
     double identityWeight;
     bool isConverged;
 
+    // give these better names
+
     // Constructor
     AppState();
 
-    bool logToFile();
+
 
     // Methods for managing AppState
     void refreshFileLists();
@@ -82,48 +106,4 @@ public:
 
 #endif // APPSTATE_H
 
-/*
 
-       Serialization::serializeMatrix(appState->frames, appState->logFolderPath + "/frames.bfra");
-        Serialization::serializeMatrix(appState->deltas, appState->logFolderPath + "/deltas.bmom");
-
-    
-
-          // Here, we'll also log relevant data to files based on the fieldViewActive flags
-
-        // Log other Eigen::Vectors based on fieldViewActive flags
-        for (int i = 0; i < Field_View::Element_COUNT; ++i) {
-            if (appState->fieldViewActive[i]) {
-                // Determine the file path based on the field view
-                Field_View cfv = static_cast<Field_View>(i);
-                std::string stub = fieldViewToFileStub(cvf);
-                std::string filePath = appState->logFolderPath + "/" + stub + "_" + std::to_string(appState->currentFileID + 100000) + ".bfra"; // better to call these bdat
-
-                // Serialize the corresponding Eigen::Vector
-                switch (static_cast<Field_View>(i)) {
-                    case Field_View::vec_norms:
-                        Serialization::serializeVector(appState->norms_vec, filePath);
-                        break;
-                    case Field_View::delta_norms:
-                        Serialization::serializeVector(appState->norms_delta, filePath);
-                        break;
-                    case Field_View::vec_dirch:
-                        Serialization::serializeVector(appState->smoothness_primal, filePath);
-                        break;
-                    case Field_View::moment_dirch:
-                        Serialization::serializeVector(appState->smoothness_sym, filePath);
-                        break;
-                    case Field_View::primal_curl_residual:
-                        Serialization::serializeVector(appState->curls_primal, filePath);
-                        break;
-                    case Field_View::sym_curl_residual:
-                        Serialization::serializeVector(appState->curls_sym, filePath);
-                        break;
-                    // ... handle other Field_View cases as needed
-                    default:
-                        break; // Unknown or unsupported field view
-                }
-            }
-        }
-
-*/

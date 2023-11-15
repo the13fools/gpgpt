@@ -20,8 +20,7 @@ public:
         appState = state;
     //   current_element = Field_View::vec_norms;
     }
-    virtual ~Mint2DHook();
-
+    virtual ~Mint2DHook(){}
     
     virtual void drawGUI();
     virtual void updateRenderGeometry();
@@ -49,6 +48,7 @@ public:
 
 
 
+    AppState* renderState; // Pointer to AppState instance
     AppState* appState; // Pointer to AppState instance
 
 

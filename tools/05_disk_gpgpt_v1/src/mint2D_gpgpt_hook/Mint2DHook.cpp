@@ -56,24 +56,27 @@ void Mint2DHook::drawGUI() {
 void Mint2DHook::updateRenderGeometry() {
     // Update visualization data based on current state in appState
 
-    appState_->renderData.frames.resize(appState_->simulationData.frames.rows(), 3);
-    appState_->renderData.frames << appState_->simulationData.frames, Eigen::MatrixXd::Zero(appState_->simulationData.frames.rows(), 1);
+    // appState->renderData.frames.resize(appState->simulationData.frames.rows(), 3);
+    // appState->renderData.frames << appState->simulationData.frames, Eigen::MatrixXd::Zero(appState->simulationData.frames.rows(), 1);
 
-    appState_->renderData.deltas = appState_->simulationData.deltas;
-    appState_->renderData.vec_curl = appState_->simulationData.curls_primal;
-    appState_->renderData.sym_curl = appState_->simulationData.curls_sym;
-    appState_->renderData.frame_smoothness = appState_->simulationData.smoothness_primal;
-    appState_->renderData.moment_smoothness = appState_->simulationData.smoothness_sym;
+    // appState->renderData.deltas = appState->simulationData.deltas;
+    // appState->renderData.vec_curl = appState->simulationData.curls_primal;
+    // appState->renderData.sym_curl = appState->simulationData.curls_sym;
+    // appState->renderData.frame_smoothness = appState->simulationData.smoothness_primal;
+    // appState->renderData.moment_smoothness = appState->simulationData.smoothness_sym;
 
 
     // Update the vertex positions and other data in Polyscope
     // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
+
+    renderState = new AppState(*appState);
+
     // Log data if necessary
     if (appState->shouldLogData) {
         // Serialize and save the frame data
-        appState->logToFile();
+        appState->LogToFile();
 
         // Additional logging for any other fields in AppState as needed
     }
@@ -120,24 +123,24 @@ void Mint2DHook::updateRenderGeometry() {
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
     // Depending on the current element view, render different quantities
-    switch (appState->currentElement) {
+    switch (appState->current_element) {
         case Field_View::vec_norms:
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Vector Norms", appState->frameNorms)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Vector", appState->norms_vec)->setEnabled(true);
             break;
         case Field_View::delta_norms:
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Delta Norms", appState->deltaNorms)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Delta", appState->norms_delta)->setEnabled(true);
             break;
         case Field_View::vec_dirch:
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Vector Dirichlet", appState->frameSmoothness)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Primal", appState->smoothness_primal)->setEnabled(true);
             break;
         case Field_View::moment_dirch:
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Moment Dirichlet", appState->momentSmoothness)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Moment", appState->smoothness_sym)->setEnabled(true);
             break;
         case Field_View::primal_curl_residual:
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Primal Curl Residual", appState->curlsPrimal)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Primal Residual", appState->curls_primal)->setEnabled(true);
             break;
         case Field_View::sym_curl_residual:
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Symmetric Curl Residual", appState->curlsSym)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Symmetric Residual", appState->curls_sym)->setEnabled(true);
             break;
         case Field_View::gui_free:
             // Implement logic for gui_free if required
@@ -150,7 +153,7 @@ void Mint2DHook::updateRenderGeometry() {
         // Update other visualization properties based on AppState
         // Example: Vector field visualization
         if (appState->showVectorField) {
-            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", appState->vectorField);
+            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", appState->frames);
             // vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
             // vectorField->setEnabled(true);
         }

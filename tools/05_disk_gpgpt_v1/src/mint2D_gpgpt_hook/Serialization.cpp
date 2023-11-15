@@ -8,7 +8,7 @@
 using json = nlohmann::json;
 
 // Serialize Eigen vector to a binary file
-bool serializeVector(const Eigen::VectorXd& vec, const std::string& filepath) {
+bool Serialization::serializeVector(const Eigen::VectorXd& vec, const std::string& filepath) {
     try {
         std::ofstream outFile(filepath, std::ios::binary);
         if (!outFile.is_open()) {
@@ -31,7 +31,7 @@ bool serializeVector(const Eigen::VectorXd& vec, const std::string& filepath) {
 }
 
 // Deserialize Eigen vector from a binary file
-bool deserializeVector(Eigen::VectorXd& vec, const std::string& filepath) {
+bool Serialization::deserializeVector(Eigen::VectorXd& vec, const std::string& filepath) {
     try {
         std::ifstream inFile(filepath, std::ios::binary);
         if (!inFile.is_open()) {
@@ -55,7 +55,7 @@ bool deserializeVector(Eigen::VectorXd& vec, const std::string& filepath) {
 }
 
 // Serialize Eigen matrix to a binary file
-bool serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath) {
+bool Serialization::serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath) {
     try {
         std::ofstream outFile(filepath, std::ios::binary);
         if (!outFile.is_open()) {
@@ -80,7 +80,7 @@ bool serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath) {
 }
 
 // Deserialize Eigen matrix from a binary file
-bool deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath) {
+bool Serialization::deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath) {
     try {
         std::ifstream inFile(filepath, std::ios::binary);
         if (!inFile.is_open()) {
@@ -105,7 +105,7 @@ bool deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath) {
 }
 
 // Serialize MyConfig struct to a JSON file
-bool serializeConfig(const MyConfig& config, const std::string& filepath) {
+bool Serialization::serializeConfig(const MyConfig& config, const std::string& filepath) {
     try {
         json j;
         j["w_bound"] = config.w_bound;
@@ -135,7 +135,7 @@ bool serializeConfig(const MyConfig& config, const std::string& filepath) {
 }
 
 // Deserialize MyConfig struct from a JSON file
-bool deserializeConfig(MyConfig& config, const std::string& filepath) {
+bool Serialization::deserializeConfig(MyConfig& config, const std::string& filepath) {
     try {
         std::ifstream inFile(filepath);
         if (!inFile.is_open()) {
@@ -165,7 +165,7 @@ bool deserializeConfig(MyConfig& config, const std::string& filepath) {
 }
 
 // Serialize a vector of doubles to a CSV file
-bool writeCSV(const std::vector<double>& data, const std::string& filepath) {
+bool Serialization::writeCSV(const std::vector<double>& data, const std::string& filepath) {
     try {
         std::ofstream outFile(filepath);
         if (!outFile.is_open()) {
@@ -186,7 +186,7 @@ bool writeCSV(const std::vector<double>& data, const std::string& filepath) {
 }
 
 // Deserialize a vector of doubles from a CSV file
-bool readCSV(std::vector<double>& data, const std::string& filepath) {
+bool Serialization::readCSV(std::vector<double>& data, const std::string& filepath) {
     try {
         std::ifstream inFile(filepath);
         if (!inFile.is_open()) {
@@ -209,38 +209,38 @@ bool readCSV(std::vector<double>& data, const std::string& filepath) {
     }
 }
 
-// Serialize JSON data to a JSON file (using nlohmann/json)
-bool serializeJSON(const nlohmann::json& jsonData, const std::string& filepath) {
-    try {
-        std::ofstream outFile(filepath);
-        if (!outFile.is_open()) {
-            std::cerr << "Error: Unable to open file for writing JSON: " << filepath << std::endl;
-            return false;
-        }
+// // Serialize JSON data to a JSON file (using nlohmann/json)
+// bool Serialization::serializeJSON(const nlohmann::json& jsonData, const std::string& filepath) {
+//     try {
+//         std::ofstream outFile(filepath);
+//         if (!outFile.is_open()) {
+//             std::cerr << "Error: Unable to open file for writing JSON: " << filepath << std::endl;
+//             return false;
+//         }
 
-        outFile << jsonData.dump(4); // Pretty-print with 4 spaces of indentation
-        outFile.close();
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: Unable to serialize JSON data to file: " << e.what() << std::endl;
-        return false;
-    }
-}
+//         outFile << jsonData.dump(4); // Pretty-print with 4 spaces of indentation
+//         outFile.close();
+//         return true;
+//     } catch (const std::exception& e) {
+//         std::cerr << "Error: Unable to serialize JSON data to file: " << e.what() << std::endl;
+//         return false;
+//     }
+// }
 
-// Deserialize JSON data from a JSON file (using nlohmann/json)
-bool deserializeJSON(nlohmann::json& jsonData, const std::string& filepath) {
-    try {
-        std::ifstream inFile(filepath);
-        if (!inFile.is_open()) {
-            std::cerr << "Error: Unable to open file for reading JSON: " << filepath << std::endl;
-            return false;
-        }
+// // Deserialize JSON data from a JSON file (using nlohmann/json)
+// bool Serialization::deserializeJSON(nlohmann::json& jsonData, const std::string& filepath) {
+//     try {
+//         std::ifstream inFile(filepath);
+//         if (!inFile.is_open()) {
+//             std::cerr << "Error: Unable to open file for reading JSON: " << filepath << std::endl;
+//             return false;
+//         }
 
-        inFile >> jsonData;
-        inFile.close();
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: Unable to deserialize JSON data from file: " << e.what() << std::endl;
-        return false;
-    }
-}
+//         inFile >> jsonData;
+//         inFile.close();
+//         return true;
+//     } catch (const std::exception& e) {
+//         std::cerr << "Error: Unable to deserialize JSON data from file: " << e.what() << std::endl;
+//         return false;
+//     }
+// }

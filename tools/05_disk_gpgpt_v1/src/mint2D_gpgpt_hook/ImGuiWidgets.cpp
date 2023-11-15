@@ -18,7 +18,7 @@ namespace ImGuiWidgets {
     void ShowFieldViewCheckboxes(AppState& appState) {
         ImGui::Text("Field Views:");
 
-        for (int i = 0; i < Element_COUNT; ++i) {
+        for (int i = 0; i < Views::Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
             const char* fieldName = fieldViewToString(field).c_str();
             bool* active = &appState.fieldViewActive[field];
@@ -51,7 +51,7 @@ namespace ImGuiWidgets {
 
     // Function to add field view scalars to Polyscope
     void AddFieldViewScalarsToPolyscope(AppState& appState) {
-        for (int i = 0; i < Element_COUNT; ++i) {
+        for (int i = 0; i < Views::Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
             std::string fieldName = fieldViewToString(field);
             // std::vector<double> scalarValues(appState.fieldData[field].begin(), appState.fieldData[field].end());
@@ -70,7 +70,7 @@ namespace ImGuiWidgets {
     void ShowFieldViewCheckboxesWithSliders(AppState& appState) {
         ImGui::Text("Field Views with Sliders:");
 
-        for (int i = 0; i < Element_COUNT; ++i) {
+        for (int i = 0; i < Views::Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
             const char* fieldName = fieldViewToString(field).c_str();
             bool* active = &appState.fieldViewActive[field];
@@ -92,7 +92,7 @@ namespace ImGuiWidgets {
 
         // Display a combo box to select the current field view
         if (ImGui::BeginCombo("Select Field View", fieldViewToString(currentField).c_str())) {
-            for (int i = 0; i < Element_COUNT; ++i) {
+            for (int i = 0; i < Views::Element_COUNT; ++i) {
                 Field_View field = static_cast<Field_View>(i);
                 bool is_selected = (currentField == field);
                 if (ImGui::Selectable(fieldViewToString(field).c_str(), is_selected)) {
