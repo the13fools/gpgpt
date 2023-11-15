@@ -24,5 +24,6 @@ enum Field_View {
  * @return The name of the field view as a string.
  */
 std::string fieldViewToString(Field_View view);
+std::string fieldViewToFileStub(Field_View view);
 
 #endif // FIELDVIEW_H
