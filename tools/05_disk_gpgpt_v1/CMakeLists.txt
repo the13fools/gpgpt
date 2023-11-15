@@ -3,7 +3,7 @@ project(05_disk_gpgpt_v1)
 
 # Find Eigen
 find_package(Eigen3 3.3 REQUIRED)
-find_package(OpenMP REQUIRED)
+# find_package(OpenMP REQUIRED)
 
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp )	 
 file(GLOB FRONTENDFILES src/mint2D_gpgpt_hook/*.cpp src/mint2D_gpgpt_hook/*.h src/mint2D_gpgpt_hook/*.hpp )
@@ -22,7 +22,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_S
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
 
-target_link_libraries(${PROJECT_NAME} gpgpt polyscope TinyAD igl::core OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} gpgpt polyscope TinyAD igl::core) # OpenMP::OpenMP_CXX)
 
 # add_dependencies(${PROJECT_NAME}  ${FRONTENDFILES})
 

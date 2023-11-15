@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.9)
 project(gpgpt)
 
+
+# set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 
@@ -36,11 +38,15 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS 1 ) # Emit a compile flags file to support co
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # set(CMAKE_CXX_COMPILER /usr/bin/clang++-9)
+
+  # message(${which g++})
   # set(CMAKE_CXX_COMPILER /usr/bin/clang++-9 CACHE PATH "" FORCE) # https://stackoverflow.com/a/17275650
   # using Clang (linux or apple) or GCC
   message("Using clang/gcc compiler flags")
   SET(BASE_CXX_FLAGS "-std=c++17 -Wall -Wextra -g3")
-  SET(DISABLED_WARNINGS " -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-missing-braces -Wunused-local-typedef -Wsign-compare -Wunused-private-field -Wmacro-redefined")
+  SET(DISABLED_WARNINGS " -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-missing-braces -Wunused-local-typedefs -Wsign-compare -Wbuiltin-macro-redefined")
+
+  # SET(DISABLED_WARNINGS " -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-missing-braces -Wunused-local-typedef -Wsign-compare -Wunused-private-field -Wmacro-redefined")
   SET(TRACE_INCLUDES " -H -Wno-error=unused-command-line-argument")
 
   if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -123,13 +129,15 @@ if(NOT tinyad_POPULATED)
   add_subdirectory(${tinyad_SOURCE_DIR} ${tinyad_BINARY_DIR})
 endif()
 
+####################################
+
 include(FetchContent)
 FetchContent_Declare(
   polyscope
   GIT_REPOSITORY https://github.com/nmwsharp/polyscope.git
   GIT_TAG 2cd38b7496a1e8ff79f615920de2980295bedef7
 )
-#FetchContent_MakeAvailable(tinyad)
+#FetchContent_MakeAvailable(polyscope)
 
 FetchContent_GetProperties(polyscope)
 if(NOT polyscope_POPULATED)
@@ -165,7 +173,7 @@ add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} igl::core polyscope TinyAD ${SUITESPARSE_LIBRARIES} stdc++fs nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} stdc++fs nlohmann_json::nlohmann_json)
 
 set_target_properties(gpgpt PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
@@ -180,7 +188,7 @@ add_subdirectory(tools/01_basic_test)
 add_subdirectory(tools/02_tiny_ad_test)
 add_subdirectory(tools/03_disk_bvp_v1)
 add_subdirectory(tools/04_disk_mint2d_v1)
-add_subdirectory(tools/05_mint2d_gpgpt_hook)
+add_subdirectory(tools/05_disk_gpgpt_v1)
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})

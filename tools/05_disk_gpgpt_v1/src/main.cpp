@@ -36,18 +36,18 @@ void resetSimulation()
     if (!hook)
         return;
 
-  double w_bound_prev = hook->w_bound;
-  double w_smooth_prev = hook->w_smooth;
-  double w_curl_prev = hook->w_curl;
-  double w_s_perp_prev = hook->w_s_perp;
+  // double w_bound_prev = hook->w_bound;
+  // double w_smooth_prev = hook->w_smooth;
+  // double w_curl_prev = hook->w_curl;
+  // double w_s_perp_prev = hook->w_s_perp;
 
     std::cout << "try to reset" << std::endl;
     hook->reset();
 
-  hook->w_bound = w_bound_prev;
-  hook->w_smooth = w_smooth_prev;
-  hook->w_curl = w_curl_prev;
-  hook->w_s_perp = w_s_perp_prev;
+  // hook->w_bound = w_bound_prev;
+  // hook->w_smooth = w_smooth_prev;
+  // hook->w_curl = w_curl_prev;
+  // hook->w_s_perp = w_s_perp_prev;
 
 }
 

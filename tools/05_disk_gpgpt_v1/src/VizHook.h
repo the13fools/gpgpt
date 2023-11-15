@@ -38,8 +38,8 @@
 class VizHook : public Mint2DHook
 {
 public:
-    VizHook() : Mint2DHook() {
-      current_element = Field_View::vec_norms;
+    VizHook() : Mint2DHook(new AppState()) {
+      appState->current_element = Field_View::vec_norms;
     }
 
 
@@ -68,6 +68,15 @@ public:
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
        Mint2DHook::initSimulation();
+
+     double w_bound = 10000;
+        double w_smooth = 1;
+        double w_smooth_vector = 0; 
+        double w_curl = 0;
+        double w_s_perp = 0;
+
+        double w_attenuate = 1;
+
 
   
 
@@ -113,10 +122,10 @@ public:
 
 
 
-      vc.d().frames.resize(frames.rows(), 3);
-      vc.d().frames << frames, Eigen::MatrixXd::Zero(frames.rows(), 1);
+      appState->frames.resize(frames.rows(), 3);
+      appState->frames << frames, Eigen::MatrixXd::Zero(frames.rows(), 1);
 
-      polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("orig normals", vc.d().frames); //   ( ((N.array()*0.5)+0.5).eval());
+      polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("orig normals", appState->frames); //   ( ((N.array()*0.5)+0.5).eval());
       // polyscope::getSurfaceMesh()->addFaceScalarQuantity("vec_norms", frames.rowwise().squaredNorm())->setEnabled(true); //   ( ((N.array()*0.5)+0.5).eval());
 
 
@@ -236,8 +245,8 @@ public:
           T delta_rescale = 1.;
           // std::cout << delta_rescale << std::endl;
 
-          smoothness_primal(f_idx) = TinyAD::to_passive(primal_dirichlet_term);
-          smoothness_sym(f_idx) = TinyAD::to_passive(dirichlet_term);
+          appState->smoothness_primal(f_idx) = TinyAD::to_passive(primal_dirichlet_term);
+          appState->smoothness_sym(f_idx) = TinyAD::to_passive(dirichlet_term);
 
           // T delta_dirichlet = (a_delta+b_delta+c_delta-3*delta).squaredNorm()*delta_rescale;
 
@@ -259,7 +268,7 @@ public:
           curl_term +=  pow(eb.dot(bbt ) - eb.dot(currcurrt ),2);
           curl_term +=  pow(ec.dot(cct ) - ec.dot(currcurrt ),2);
 
-          curls_sym(f_idx) = TinyAD::to_passive(curl_term);
+          appState->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
 
 
           Eigen::Vector2<T> ea_primal = e_projs_primal.at(cur_surf.data().faceEdges(f_idx, 0));
@@ -270,7 +279,7 @@ public:
           curl_term_primal +=  pow(eb_primal.dot(b) - eb_primal.dot(curr),2);
           curl_term_primal +=  pow(ec_primal.dot(c) - ec_primal.dot(curr),2);
 
-          curls_primal(f_idx) = TinyAD::to_passive(curl_term_primal);
+          appState->curls_primal(f_idx) = TinyAD::to_passive(curl_term_primal);
 
           // curl_term += 1e-5*abs(curl_term - metadata(1));
 

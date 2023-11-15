@@ -27,6 +27,16 @@
 #include <TinyAD/Utils/LineSearch.hh>
 #include <iostream>
 #include <chrono>
+#include "ImGuiWidgets.h"
+
+#include "polyscope/polyscope.h"
+#include "polyscope/surface_mesh.h"
+
+#include <igl/readOBJ.h>
+
+#include "date.h"
+
+#include "MyConfig.h"
 
 
 void Mint2DHook::drawGUI() {
@@ -63,7 +73,7 @@ void Mint2DHook::updateRenderGeometry() {
 
     // Update the vertex positions and other data in Polyscope
     polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
-    polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
+    // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
     // Log data if necessary
     if (appState->shouldLogData) {
@@ -94,17 +104,40 @@ void Mint2DHook::updateRenderGeometry() {
         // Additional logging for any other fields in AppState as needed
     }
 
-    // Handle the gui_free case for the Field_View enum
-    if (appState->currentElement == Field_View::gui_free) {
-        // Implementation for gui_free case
-        if (appState->customVisualizationEnabled) {
-            // Custom visualization logic
-        }
-    }
+    // // Handle the gui_free case for the Field_View enum
+    // if (appState->currentElement == Field_View::gui_free) {
+    //     // Implementation for gui_free case
+    //     if (appState->customVisualizationEnabled) {
+    //         // Custom visualization logic
+    //     }
+    // }
 
     // Request a redraw in Polyscope to update the visualization
     polyscope::requestRedraw();
 }
+
+
+    // Need to fill out viewer for each of: Field_View { vec_dirch, moment_dirch, sym_curl_residual, primal_curl_residual,
+    void Mint2DHook::renderRenderGeometry()
+    {
+		// polyscope::getSurfaceMesh("c")->updateVertexPositions(renderP);
+        
+        polyscope::getSurfaceMesh("c")->centerBoundingBox();
+        polyscope::getSurfaceMesh("c")->resetTransform();
+
+        // polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("vec_norms", appState->frame_norms)->setEnabled(true);
+        polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("vec_norms", appState->curls_primal)->setEnabled(true);
+
+
+        
+        polyscope::requestRedraw();   
+              
+
+
+
+
+    }
+
 
 
 
@@ -116,16 +149,19 @@ void Mint2DHook::initSimulation() {
     Eigen::MatrixXi F; // Temporary storage for faces
 
     // Check if .bfra and .bmom files exist
-    bool bfraExists = fileParser.parseLargestFile(appState->bfraData, FileType::BFRA);
-    bool bmomExists = fileParser.parseLargestFile(appState->bmomData, FileType::BMOM);
+    // bool bfraExists = fileParser.parseLargestFile((appState->frames), FileType::BFRA);
+    // bool bmomExists = fileParser.parseLargestFile((appState->deltas), FileType::BMOM);
+
+    bool bfraExists = false;
+    bool bmomExists = false;
 
     // Load mesh and config
     if (bfraExists && bmomExists) {
         // Deserialize configuration from a file
-        if (!deserializeConfig(appState->config, appState->directoryPath + "/config.json")) {
-            std::cerr << "Failed to load config from " << appState->directoryPath + "/config.json" << std::endl;
-            // Handle error, possibly set default config
-        }
+        // if (!Serialization::deserializeConfig(appState->config, appState->directoryPath + "/config.json")) {
+        //     std::cerr << "Failed to load config from " << appState->directoryPath + "/config.json" << std::endl;
+        //     // Handle error, possibly set default config
+        // }
     } else {
         // Load default mesh and set default config
         if (!igl::readOBJ(appState->objFilePath.value_or("default_mesh.obj"), V, F)) {
@@ -134,21 +170,23 @@ void Mint2DHook::initSimulation() {
         }
 
         // Set default configuration
-        appState->config = MyConfig(); // Assign default values to the config
+        appState->config = new MyConfig(); // Assign default values to the config
 
-        // Serialize default config to a file
-        if (!serializeConfig(appState->config, appState->directoryPath + "/config.json")) {
-            std::cerr << "Failed to save default config to " << appState->directoryPath + "/config.json" << std::endl;
-        }
+        // // Serialize default config to a file
+        // if (!Serialization::serializeConfig(appState->config, appState->directoryPath + "/config.json")) {
+        //     std::cerr << "Failed to save default config to " << appState->directoryPath + "/config.json" << std::endl;
+        // }
     }
+
+    // fieldViewActive = 
 
     // Set mesh data to AppState
     appState->V = V;
     appState->F = F;
 
     // Initialize other parameters and logging folder
-    initializeOtherParameters();
-    initializeLogFolder();
+    // initializeOtherParameters();
+    // initializeLogFolder();
 
     // Register mesh with Polyscope
     polyscope::registerSurfaceMesh("c", appState->V, appState->F);
@@ -308,52 +346,53 @@ void Mint2DHook::initSimulation() {
 
 
 bool Mint2DHook::simulateOneStep() {
-    if (appState->currentIteration < appState->maxIterations) {
-        appState->currentIteration++;
-        appState->innerLoopIteration++;
+    return false;
+    // if (appState->currentIteration < appState->maxIterations) {
+    //     appState->currentIteration++;
+    //     appState->innerLoopIteration++;
 
-        auto startTime = std::chrono::high_resolution_clock::now();
+    //     auto startTime = std::chrono::high_resolution_clock::now();
 
-        // Perform optimization step using TinyAD
-        auto [f, g, H_proj] = appState->optimizationFunction.eval_with_derivatives(appState->optimizationVariables);
-        std::cout << "Energy in iteration " << appState->currentIteration << ": " << f << std::endl;
+    //     // Perform optimization step using TinyAD
+    //     auto [f, g, H_proj] = appState->optimizationFunction.eval_with_derivatives(appState->optimizationVariables);
+    //     std::cout << "Energy in iteration " << appState->currentIteration << ": " << f << std::endl;
 
-        Eigen::VectorXd d;
-        double decrement;
+    //     Eigen::VectorXd d;
+    //     double decrement;
 
-        try {
-            updateOptimizationParameters();
-            d = TinyAD::newton_direction(g, H_proj, appState->solver, appState->identityWeight);
-            decrement = TinyAD::newton_decrement(d, g);
-            checkAndUpdateConvergence(decrement, f);
-        } catch (const std::exception& e) {
-            std::cerr << "Optimization error: " << e.what() << std::endl;
-            return false;
-        }
+    //     try {
+    //         updateOptimizationParameters();
+    //         d = TinyAD::newton_direction(g, H_proj, appState->solver, appState->identityWeight);
+    //         decrement = TinyAD::newton_decrement(d, g);
+    //         checkAndUpdateConvergence(decrement, f);
+    //     } catch (const std::exception& e) {
+    //         std::cerr << "Optimization error: " << e.what() << std::endl;
+    //         return false;
+    //     }
 
-        appState->optimizationVariables = TinyAD::line_search(appState->optimizationVariables, d, f, g, appState->optimizationFunction, 1.0, 0.8, 512, 1e-3);
+    //     appState->optimizationVariables = TinyAD::line_search(appState->optimizationVariables, d, f, g, appState->optimizationFunction, 1.0, 0.8, 512, 1e-3);
 
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        std::cout << "Iteration took " << duration.count() << "ms" << std::endl;
+    //     auto endTime = std::chrono::high_resolution_clock::now();
+    //     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    //     std::cout << "Iteration took " << duration.count() << "ms" << std::endl;
 
-        // Update visualization data
-        updateVisualizationData();
+    //     // Update visualization data
+    //     updateVisualizationData();
 
-        // Check for final logging and other conditions
-        finalizeIteration();
+    //     // Check for final logging and other conditions
+    //     finalizeIteration();
 
-        return true;
-    } else if (appState->currentIteration == appState->maxIterations) {
-        std::cout << "Final energy: " << appState->optimizationFunction.eval(appState->optimizationVariables) << std::endl;
-        appState->currentIteration++;
-        // Final logging and cleanup
-        // ...
-        return false;
-    } else {
-        this->pause();
-        return false;
-    }
+    //     return true;
+    // } else if (appState->currentIteration == appState->maxIterations) {
+    //     std::cout << "Final energy: " << appState->optimizationFunction.eval(appState->optimizationVariables) << std::endl;
+    //     appState->currentIteration++;
+    //     // Final logging and cleanup
+    //     // ...
+    //     return false;
+    // } else {
+    //     this->pause();
+    //     return false;
+    // }
 }
 
 
