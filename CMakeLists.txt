@@ -209,8 +209,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
 
 if(APPLE) # AND USE_OpenMP)
   target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json c++experimental) # stdc++fs
-endif()
-else # AND USE_OpenMP)
+else() # AND USE_OpenMP)
   target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json stdc++fs) # 
 endif()
 
@@ -228,7 +227,7 @@ add_subdirectory(tools/01_basic_test)
 add_subdirectory(tools/02_tiny_ad_test)
 add_subdirectory(tools/03_disk_bvp_v1)
 add_subdirectory(tools/04_disk_mint2d_v1)
-# add_subdirectory(tools/05_disk_gpgpt_v1)
+add_subdirectory(tools/05_disk_gpgpt_v1)
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})
