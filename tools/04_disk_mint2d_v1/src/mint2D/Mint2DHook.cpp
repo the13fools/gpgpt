@@ -186,8 +186,10 @@
 void Mint2DHook::initSimulation()
 {
 
+    igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/" + cur_mesh_name + ".obj", V, F);
+
     // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/" + cur_mesh_name + ".obj", V, F);
-    igl::readOBJ("/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj", V, F);
+    // igl::readOBJ("/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj", V, F);
 
       // igl::readOBJ(std::string(SOURCE_PATH) + "/circle_subdiv.obj", V, F);
       // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_1000.obj", V, F);

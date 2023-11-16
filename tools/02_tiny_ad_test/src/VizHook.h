@@ -37,7 +37,7 @@ public:
     virtual void initSimulation()
     {
 
-      igl::readOBJ(std::string(SOURCE_PATH) + "/armadillo_cut_low.obj", V, F);
+      igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/armadillo_cut_low.obj", V, F);
     // igl::readOBJ(std::string(SOURCE_PATH) + "/decimated-max.obj", V, F);
     //  igl::readOBJ(std::string(SOURCE_PATH) + "/inspired_mesh.obj", V, F);
 
