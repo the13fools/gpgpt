@@ -20,7 +20,11 @@ public:
         appState = state;
     //   current_element = Field_View::vec_norms;
     }
-    virtual ~Mint2DHook(){}
+    virtual ~Mint2DHook(){
+        delete appState;
+        delete renderState;
+        delete opt;
+    }
     
     virtual void drawGUI();
     virtual void updateRenderGeometry();
@@ -47,10 +51,13 @@ public:
     Eigen::VectorXi bound_face_idx; // the faces on the boundary, for now let tinyAD do the boundary enforcement 
 
 
-
-    AppState* renderState; // Pointer to AppState instance
     AppState* appState; // Pointer to AppState instance
-
+    AppState* renderState; // We clone visualization data to a different object, and update it in a threadsafe manner.  
+    
+    // This is an interface to take optimization steps with respect to a set objective.
+    // there is some magic going on under the hood mostly involving the tinyAD library at the moment.
+    // this wrapper is templated and can instead inject your own autodiff framework or solver instead.
+    ADFuncRunner* opt; 
 
 private:
     void updateOptimizationParameters();

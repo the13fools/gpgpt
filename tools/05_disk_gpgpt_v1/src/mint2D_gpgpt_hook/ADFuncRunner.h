@@ -1,5 +1,5 @@
-#ifndef ADHOOK_H
-#define ADHOOK_H
+#ifndef ADFUNCRUNNER_H
+#define ADFUNCRUNNER_H
 
 // #include "polyscope/polyscope.h"
 
@@ -35,6 +35,19 @@ class ADFuncRunner
     void take_newton_step(const Eigen::VectorXd &x);
 
 
+//// Mostly shouldn't touch this but if you want to speed up convergence can do your own regualization updates
+    void set_identity_weight(double set) { identity_weight = set; }
+    double set_identity_weight() { return identity_weight; }
+
+    // void clear_state()
+    // {
+    //     _cur_x = _cur_x * 0;
+    //     _fun_val = -1;
+    //     _grad.clear();
+    //     _hess.clear();
+    // }
+
+
     public: 
         bool useProjHessian = true;
         double prev_energy = -100000.;
@@ -52,9 +65,6 @@ class ADFuncRunner
         TinyAD::LinearSolver<double> solver; // make this changable 
 
 
-        // config flags 
-
-
         // cached quantities 
 
         double _fun_val; 
@@ -64,21 +74,6 @@ class ADFuncRunner
 }; 
 
 
-/// This class wraps your tiny ad func in a templated way to allow for taking newton steps in sequence
-class ADFunc_TinyAD_Instance : public ADFuncRunner { 
-            // ScalarFunction _f; public: 
-            // FuncEvaluator(f) : _f(f) {} 
-            // In practice: use f to evaluate the function, gradient, and hessian 
-            
-    double eval_func_local(const VectorXd &x) override { return x.squaredNorm(); } 
-    VectorXd eval_grad_local(const VectorXd &x) override { return Matrix::Ones(); } 
-    MatrixXd eval_hess_local(const VectorXd &x) override { return Matrix::Identity(x.size(), x.size()); } 
-
-
-    decltype(TinyAD::scalar_function<N>(TinyAD::range(1))) _func;
-
-
-}; 
             
 
 ///// TODO:  Add enzyme connector here  
@@ -103,13 +98,7 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
 #endif
 
 
-    // void clear_state()
-    // {
-    //     _cur_x = _cur_x * 0;
-    //     _fun_val = -1;
-    //     _grad.clear();
-    //     _hess.clear();
-    // }
+
 
     // double eval_func(const Eigen::VectorXd &x) { return eval_func_local(x); } 
     // Eigen::VectorXd eval_grad(const Eigen::VectorXd &x) { return eval_grad_local(x); } 
