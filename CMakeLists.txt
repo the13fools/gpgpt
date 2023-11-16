@@ -37,6 +37,7 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS 1 ) # Emit a compile flags file to support co
 
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+
   # set(CMAKE_CXX_COMPILER /usr/bin/clang++-9)
 
   # message(${which g++})
@@ -86,6 +87,38 @@ else()
   # unrecognized
   message( FATAL_ERROR "Unrecognized compiler [${CMAKE_CXX_COMPILER_ID}]" )
 endif()
+
+
+# set(CMAKE_C_COMPILER "/usr/local/Cellar/llvm/5.0.1/bin/clang")
+# set(CMAKE_CXX_COMPILER "/usr/local/Cellar/llvm/5.0.1/bin/clang++")
+
+# OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" ON)
+
+# Find OpenMP
+if(APPLE) # AND USE_OpenMP)
+    set(OPENMP_LIBRARIES "/usr/local/Cellar/llvm/5.0.1/lib")
+    set(OPENMP_INCLUDES "/usr/local/Cellar/llvm/5.0.1/include")
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        set(OpenMP_C "${CMAKE_C_COMPILER}")
+        set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
+        set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
+        set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+        set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+        set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      set(OpenMP_CXX "${CMAKE_CXX_COMPILER}")
+      set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
+      set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5")
+      set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+      set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+      set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
+    endif()
+endif()
+
+
+
+
 
 # Find Eigen
 # find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -173,7 +206,14 @@ add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} stdc++fs nlohmann_json::nlohmann_json)
+
+if(APPLE) # AND USE_OpenMP)
+  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json c++experimental) # stdc++fs
+endif()
+else # AND USE_OpenMP)
+  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json stdc++fs) # 
+endif()
+
 
 set_target_properties(gpgpt PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
@@ -188,7 +228,7 @@ add_subdirectory(tools/01_basic_test)
 add_subdirectory(tools/02_tiny_ad_test)
 add_subdirectory(tools/03_disk_bvp_v1)
 add_subdirectory(tools/04_disk_mint2d_v1)
-add_subdirectory(tools/05_disk_gpgpt_v1)
+# add_subdirectory(tools/05_disk_gpgpt_v1)
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})
