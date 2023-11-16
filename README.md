@@ -92,3 +92,22 @@ x = [
 And use a corresponding ordering for gradients and Hessians.
 
 This is ignorable if you're using the provided `func.x_from_data` and `func.x_to_data`. However, if you're mixing in your own gradients, Hessians, constraint projections, subspace bases, then take care!
+
+
+# MAC BUILD DETAILS 
+
+Oh boy, this was quite tricky to pin down.  
+
+Thank you eerii .  Anonomous internet comments really came through here.  
+
+https://github.com/glfw/glfw/issues/1743#issuecomment-1229177189
+
+For now until we improve the cmake file we added the following to our ~/.zshrc
+
+export CC=$(which clang)
+export CXX=$(which g++-13)
+export OpenMP_ROOT=$(brew --prefix)/opt/libomp
+
+
+BTW, todo: how to enable gdb on mac https://stackoverflow.com/a/10441587
+

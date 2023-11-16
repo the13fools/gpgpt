@@ -203,7 +203,9 @@ void Mint2DHook::initSimulation() {
         // }
     } else {
         // Load default mesh and set default config
-        std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
+        std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + cur_mesh_name + ".obj";
+
+        // std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
 
         std::cout << default_path << std::endl;
         if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {

@@ -35,4 +35,4 @@ build/*
 
 imgui.ini
 .vscode
-.DS_Store
+*.DS_Store
