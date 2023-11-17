@@ -78,10 +78,10 @@
             {
                std::cout << "*** diagonally regularized hessian not PSD. failed to produce a descent direction.  Falling back on SVD projected hessian + increasing regularization weight. ***" << std::endl;
 
-              auto [f_h, g_h, H_proj_h] = func.eval_with_hessian_proj(x);
-              f = f_h;
-              g = g_h;
-              H_proj = H_proj_h;
+              this->eval_func_and_proj_hess_to_psd_local(x);
+              f = this->get_fval_at_x(); // maybe don't need these two lines 
+              g = this->get_grad_at_x();
+              H_proj = this->get_hessian_at_x();
               d = TinyAD::newton_direction(g, H_proj, solver);
               dec = TinyAD::newton_decrement(d, g);
               if ( !useProjHessian )
@@ -90,7 +90,7 @@
                 assert(false); // this should never happen
             }
 
-            x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
+            _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
 
             
             // 

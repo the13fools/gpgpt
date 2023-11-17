@@ -18,6 +18,8 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
             // ScalarFunction _f; public: 
             // FuncEvaluator(f) : _f(f) {} 
             // In practice: use f to evaluate the function, gradient, and hessian 
+
+    ~ADFunc_TinyAD_Instance(){};
             
     double eval_func_local(const Eigen::VectorXd &x){
         _fun_val = _func.eval(x);

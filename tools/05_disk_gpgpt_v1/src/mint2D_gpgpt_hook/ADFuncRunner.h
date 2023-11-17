@@ -10,10 +10,12 @@
 
 class ADFuncRunner 
 { 
+    public: 
     virtual double eval_func_local(const Eigen::VectorXd &x) = 0; 
     
     virtual void eval_func_with_derivatives(const Eigen::VectorXd &x) = 0; 
     virtual void eval_func_and_proj_hess_to_psd_local(const Eigen::VectorXd &x) = 0; 
+    virtual ~ADFuncRunner();
 
     // virtual Eigen::VectorXd eval_grad_local(const Eigen::VectorXd &x) = 0; 
     // virtual Eigen::MatrixXd eval_hess_local(const Eigen::VectorXd &x) = 0; 
