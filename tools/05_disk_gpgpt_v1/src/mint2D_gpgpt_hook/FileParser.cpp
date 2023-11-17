@@ -18,20 +18,27 @@ FileParser::FileParser(const std::string& directoryPath)
     scanDirectory();
 }
 
+// https://stackoverflow.com/a/2072890
+inline bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
 void FileParser::scanDirectory() {
-    // for (const auto& entry : fs::directory_iterator(directoryPath)) {
-    //     if (entry.is_regular_file()) {
-    //         std::string filename = entry.path().filename().string();
-    //         if (filename.ends_with(".bfra")) {
-    //             bfraFiles.push_back(entry.path().string());
-    //         } else if (filename.ends_with(".bmom")) {
-    //             bmomFiles.push_back(entry.path().string());
-    //         } else if (filename.ends_with(".obj") && objFilePath.empty()) {
-    //             objFilePath = entry.path().string(); // Assuming only one .obj file
-    //         }
-    //     }
-    // }
-    // findLargestIDFile();
+    for (const auto& entry : fs::directory_iterator(directoryPath)) {
+        if (entry.is_regular_file()) {
+            std::string filename = entry.path().filename().string();
+            if (ends_with(filename, ".bfra")) {
+                bfraFiles.push_back(entry.path().string());
+            } else if (ends_with(filename, ".bmom")) {
+                bmomFiles.push_back(entry.path().string());
+            } else if (ends_with(filename, ".obj") && objFilePath.empty()) {
+                objFilePath = entry.path().string(); // Assuming only one .obj file
+            }
+        }
+    }
+    findLargestIDFile();
 }
 
 void FileParser::findLargestIDFile() {

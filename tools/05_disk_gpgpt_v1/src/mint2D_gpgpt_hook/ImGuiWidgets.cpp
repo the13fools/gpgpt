@@ -122,7 +122,7 @@ namespace ImGuiWidgets {
         // ShowFileScrubber(appState.currentFileIndex, 0, appState.fileList.size() - 1);
 
         // Display checkboxes with min and max sliders for field views
-        ShowFieldViewCheckboxesWithSliders(appState);
+        // ShowFieldViewCheckboxesWithSliders(appState);
 
         // Display run information
         // ShowRunInfo(appState);
