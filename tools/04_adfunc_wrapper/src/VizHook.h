@@ -40,9 +40,9 @@ public:
     virtual void initSimulation()
     {
 
-      // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle.obj", V, F);
+      igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle.obj", V, F);
       // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_1000.obj", V, F);
-      igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_pent_hole2.obj", V, F);
+      // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_pent_hole2.obj", V, F);
       // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_pent_little_hole.obj", V, F);
       
 
@@ -185,6 +185,9 @@ public:
           return frames.row(f_idx);
           });
 
+
+        adhook._func = &func;
+
     }
 
 
@@ -203,16 +206,18 @@ public:
         {
             cur_iter++;
 
-            auto [f, g, H_proj] = func.eval_with_hessian_proj(x);
-            TINYAD_DEBUG_OUT("Energy in iteration " << cur_iter << ": " << f);
+            x = adhook.take_newton_step(x);
 
-            Eigen::VectorXd d = TinyAD::newton_direction(g, H_proj, solver);
-            if (TinyAD::newton_decrement(d, g) < convergence_eps)
-            cur_iter = max_iters; // break
-            x = TinyAD::line_search(x, d, f, g, func);
+            // auto [f, g, H_proj] = func.eval_with_hessian_proj(x);
+            // TINYAD_DEBUG_OUT("Energy in iteration " << cur_iter << ": " << f);
 
-            ///// Move this out 
-            func.x_to_data(x, [&] (int f_idx, const Eigen::Vector2d& v) {
+            // Eigen::VectorXd d = TinyAD::newton_direction(g, H_proj, solver);
+            if (adhook._dec < convergence_eps)
+              cur_iter = max_iters; // break
+            // x = TinyAD::line_search(x, d, f, g, func);
+
+            // ///// Move this out 
+            adhook._func->x_to_data(x, [&] (int f_idx, const Eigen::Vector2d& v) {
                 frames.row(f_idx) = v;
                 // if (bound_face_idx(f_idx) == 1)
                 // {
@@ -261,7 +266,6 @@ public:
   double w_curl;
   double w_s_perp;
 
-  ADFunc_TinyAD_Instance<2> blah;
 
 private:
   // Read mesh and compute Tutte embedding
@@ -272,6 +276,7 @@ private:
   Eigen::MatrixXd frames_orig;
 
   Surface cur_surf;
+
 
 
   
@@ -285,6 +290,8 @@ private:
   std::vector<Eigen::Matrix2d> rest_shapes;
 
   decltype(TinyAD::scalar_function<2>(TinyAD::range(1))) func;
+  ADFunc_TinyAD_Instance<2> adhook;
+
 
   Eigen::VectorXd x;
 

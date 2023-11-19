@@ -209,20 +209,22 @@ FetchContent_MakeAvailable(json)
 
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp)
 file(GLOB FRONTENDFILES src/gpgpt_frontend/*.cpp src/gpgpt_frontend/*.h src/gpgpt_frontend/*.hpp)
+file(GLOB ADWRAPPERFILES src/ADWrapper/*.cpp src/ADWrapper/*.h src/ADWrapper/*.hpp)
 
-add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES})
+
+add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES} ${ADWRAPPERFILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
 
 if(APPLE) # AND USE_OpenMP)
-  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json stdc++fs) # stdc++fs
+  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD stdc++fs) # stdc++fs
 else() # AND USE_OpenMP)
-  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json stdc++fs) # c++experimental
+  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD stdc++fs) # c++experimental
 endif()
 
 
-set_target_properties(gpgpt PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
 
@@ -236,7 +238,7 @@ add_subdirectory(tools/02_tiny_ad_test)
 add_subdirectory(tools/03_disk_bvp_v1)
 add_subdirectory(tools/04_adfunc_wrapper)
 # add_subdirectory(tools/04_disk_mint2d_v1)
-# add_subdirectory(tools/05_disk_gpgpt_v1)
+add_subdirectory(tools/05_disk_gpgpt_v1)
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})

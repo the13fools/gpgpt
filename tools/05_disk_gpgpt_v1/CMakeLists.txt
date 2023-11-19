@@ -7,11 +7,15 @@ find_package(Eigen3 3.3 REQUIRED)
 
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp )	 
 file(GLOB FRONTENDFILES src/mint2D_gpgpt_hook/*.cpp src/mint2D_gpgpt_hook/*.h src/mint2D_gpgpt_hook/*.hpp )
+# file(GLOB ADWRAPPER ../src/04_adfunc_wrapper/ADWrapper/*.cpp ../src/04_adfunc_wrapper/ADWrapper/*.h )
 
 add_executable(${PROJECT_NAME}  ${SRCFILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ../../src ../../lib src/mint2D_gpgpt_hook)
-
 target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES})
+# target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES} ${ADWRAPPER})
+
+
+
 # add_subdirectory()
 # add_subdirectory(../libs/TinyAD)
 

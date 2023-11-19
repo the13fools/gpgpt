@@ -10,9 +10,9 @@ add_executable(${PROJECT_NAME} ${SRCFILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ../../src)
 # add_subdirectory(../libs/TinyAD)
 
-file(GLOB FRONTENDFILES src/ADWrapper/*.cpp src/ADWrapper/*.h )
+# file(GLOB FRONTENDFILES src/ADWrapper/*.cpp src/ADWrapper/*.h )
 # message(STATUS "FRONTENDFILES: ${FRONTENDFILES}")
-target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES})
+# target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES})
 
 # Use C++17
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")

@@ -15,7 +15,10 @@ class ADFuncRunner
     
     virtual void eval_func_with_derivatives(const Eigen::VectorXd &x) = 0; 
     virtual void eval_func_and_proj_hess_to_psd_local(const Eigen::VectorXd &x) = 0; 
-    virtual ~ADFuncRunner();
+
+
+    ADFuncRunner() = default;
+    virtual ~ADFuncRunner() {};
 
     // virtual Eigen::VectorXd eval_grad_local(const Eigen::VectorXd &x) = 0; 
     // virtual Eigen::MatrixXd eval_hess_local(const Eigen::VectorXd &x) = 0; 
@@ -34,7 +37,7 @@ class ADFuncRunner
     Eigen::SparseMatrix<double> get_hessian_at_x() { return _hess; } 
 
 
-    void take_newton_step(const Eigen::VectorXd &x);
+    Eigen::VectorXd take_newton_step(const Eigen::VectorXd &x);
 
 
 //// Mostly shouldn't touch this but if you want to speed up convergence can do your own regualization updates
@@ -55,12 +58,14 @@ class ADFuncRunner
         double prev_energy = -100000.;
         double identity_weight = 1e-8;  // This term controls how much identity we add to the hessian to make it psd.  
 
+        // current state  
+        Eigen::VectorXd _cur_x;
+        Eigen::VectorXd _newton_dir;
+        double _dec;
 
 
     protected: 
 
-        // current state  
-        Eigen::VectorXd _cur_x;
 
         // runner state 
         bool x_curr_is_new = false;
