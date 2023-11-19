@@ -27,10 +27,6 @@ public:
 
     virtual void drawGUI()
     {
-	//	ImGui::SliderFloat("k scale", &k_scale, 0.0001f, 2.0f, "k * %.3f");
-	//	ImGui::SliderFloat("dt scale", &dt_scale, 0.0001f, 2.0f, "dt * %.3f");
-		// ImGui::InputFloat("k scale", &k_scale);
-		// ImGui::InputFloat("dt scale", &dt_scale);
 
     ImGui::InputDouble("Smoothness Weight", &w_smooth);
     ImGui::InputDouble("S Perp Weight", &w_s_perp);
@@ -52,11 +48,6 @@ public:
       cur_surf = Surface(V, F);
 
 
-     
-      // P = tutte_embedding(V, F); 
-
-      // std::cout << "v size " <<  V.size() << " f size " << F.size() << " p size " << P.size() <<std::endl;
-
       cur_iter = 0; 
 
 
@@ -66,8 +57,8 @@ public:
       w_curl = 1e5;
  
       polyscope::removeAllStructures();
-      // renderP.resize(P.rows(), 3);
-      // renderP << P, Eigen::MatrixXd::Zero(P.rows(), 1);
+    
+
       renderP = V;
       renderF = F; 
 
@@ -78,12 +69,7 @@ public:
 
       frames = Eigen::MatrixXd::Zero(F.rows(), 2);
 
-      // frames = Eigen::MatrixXd::Random(F.rows(), 2);
-
-
-      // bound_edges.resize(F.rows(),2);
-      // const Eigen::MatrixXi blah = F;
-
+ 
       Eigen::MatrixXi bound_edges;
 
       Eigen::MatrixXi K;
@@ -199,28 +185,6 @@ public:
 
     }
 
-    //     /**
-    //  * Compute tutte embedding with boundary on circle.
-    //  * Per-vertex 2D coordinates returned as n_vertices-by-2 matrix.
-    //  * 
-    //  * helper function
-    //  */
-    // Eigen::MatrixXd tutte_embedding(
-    //     const Eigen::MatrixXd& _V,
-    //     const Eigen::MatrixXi& _F)
-    // {
-    // Eigen::VectorXi b; // #constr boundary constraint indices
-    // Eigen::MatrixXd bc; // #constr-by-2 2D boundary constraint positions
-    // Eigen::MatrixXd P; // #V-by-2 2D vertex positions
-    // igl::boundary_loop(_F, b); // Identify boundary vertices
-    // igl::map_vertices_to_circle(_V, b, bc); // Set boundary vertex positions
-    // igl::harmonic(_F, b, bc, 1, P); // Compute interior vertex positions
-
-    // // P.resize(P.rows(),3);
-
-    // return P;
-    // }
-
 
     virtual void updateRenderGeometry()
     {
@@ -244,23 +208,6 @@ public:
             if (TinyAD::newton_decrement(d, g) < convergence_eps)
             cur_iter = max_iters; // break
             x = TinyAD::line_search(x, d, f, g, func);
-
-/*
-
-
-            // Eigen::VectorXd d = cg_solver.compute(H_proj + 1e-8 * TinyAD::identity<double>(x.size())).solve(-g);
-            auto H_proj_reg = H_proj + 1e-4 * TinyAD::identity<double>(x.size());
-            Eigen::VectorXd d = cg_solver.compute(H_proj_reg).solve(-g);
-            if (TinyAD::newton_decrement(d, g) < convergence_eps)
-                cur_iter = max_iters;
-
-            x = TinyAD::line_search(x, d, f, g, func);
-            // // Eigen::VectorXd d = TinyAD::newton_direction(g, H_proj, solver);
-            // if (TinyAD::newton_decrement(d, g) < convergence_eps)
-            // cur_iter = max_iters; // break
-            // x = TinyAD::line_search(x, d, f, g, func);
-
-*/
 
             ///// Move this out 
             func.x_to_data(x, [&] (int f_idx, const Eigen::Vector2d& v) {
@@ -343,7 +290,6 @@ private:
   double convergence_eps = 1e-8;
 
   TinyAD::LinearSolver<double> solver;
-  // Eigen::ConjugateGradient<Eigen::SparseMatrix<double>> cg_solver;
 
 
     
