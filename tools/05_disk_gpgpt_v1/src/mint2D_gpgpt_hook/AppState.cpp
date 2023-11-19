@@ -17,6 +17,8 @@ AppState::AppState()
 void AppState::refreshFileLists() {
     FileParser fileParser(directoryPath);
 
+
+
     // // Refresh bfraFiles and bmomFiles
     // fileParser.parseBfraFiles(bfraFiles);
     // fileParser.parseBmomFiles(bmomFiles);
@@ -30,7 +32,10 @@ void AppState::refreshFileLists() {
 
 bool AppState::LogToFile()
 {
-           Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames.bfra");
+        
+
+
+        Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames.bfra");
         Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas.bmom");
 
     

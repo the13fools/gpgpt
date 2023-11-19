@@ -54,6 +54,7 @@ public:
     // Optimization variables
     Eigen::MatrixXd frames;
     Eigen::MatrixXd moments; // TODO implement this!
+    std::vector<Eigen::MatrixXd> frame_jacobians; // TODO implement this!
     Eigen::MatrixXd deltas;
 
 

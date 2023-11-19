@@ -122,10 +122,10 @@ namespace ImGuiWidgets {
         // ShowFileScrubber(appState.currentFileIndex, 0, appState.fileList.size() - 1);
 
         // Display checkboxes with min and max sliders for field views
-        // ShowFieldViewCheckboxesWithSliders(appState);
+        ShowFieldViewCheckboxesWithSliders(appState);
 
         // Display run information
-        // ShowRunInfo(appState);
+        ShowRunInfo(appState);
 
         // Display a plot for run_step_times
         // ShowPlot(appState.run_step_times, "Step Times", 0.0f, 100.0f);

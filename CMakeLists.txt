@@ -79,6 +79,14 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 
+  # set (CMAKE_SHARED_LINKER_FLAGS "-Wl,-ld64")
+  set (CMAKE_SHARED_LINKER_FLAGS "-Wl,-ld_classic")
+
+set(OTHER_LDFLAGS "-Wl,-ld_classic")
+# set(OTHER_LDFLAGS "-Wl,-weak_reference_mismatches")
+
+
+
   add_definitions(/D "_CRT_SECURE_NO_WARNINGS")
   add_definitions(-DNOMINMAX)
   add_definitions(-D_USE_MATH_DEFINES)
@@ -208,9 +216,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_S
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
 
 if(APPLE) # AND USE_OpenMP)
-  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json c++experimental) # stdc++fs
+  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json stdc++fs) # stdc++fs
 else() # AND USE_OpenMP)
-  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json stdc++fs) # 
+  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json stdc++fs) # c++experimental
 endif()
 
 

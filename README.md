@@ -96,6 +96,11 @@ This is ignorable if you're using the provided `func.x_from_data` and `func.x_to
 
 # MAC BUILD DETAILS 
 
+fresh install details: 
+brew install cmake eigen suitesparse llvm libomp
+
+------------
+
 Oh boy, this was quite tricky to pin down.  
 
 Thank you eerii .  Anonomous internet comments really came through here.  
@@ -110,4 +115,6 @@ export OpenMP_ROOT=$(brew --prefix)/opt/libomp
 
 
 BTW, todo: how to enable gdb on mac https://stackoverflow.com/a/10441587
+
+
 

@@ -42,10 +42,10 @@ public:
     virtual void initSimulation()
     {
 
-      igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle.obj", V, F);
-      // igl::readOBJ(std::string(SOURCE_PATH) + "/circle_1000.obj", V, F);
-      // igl::readOBJ(std::string(SOURCE_PATH) + "/circle_pent_hole2.obj", V, F);
-      // igl::readOBJ(std::string(SOURCE_PATH) + "/circle_pent_little_hole.obj", V, F);
+      // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle.obj", V, F);
+      // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_1000.obj", V, F);
+      igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_pent_hole2.obj", V, F);
+      // igl::readOBJ(std::string(SOURCE_PATH) + "/../shared/circle_pent_little_hole.obj", V, F);
       
 
 

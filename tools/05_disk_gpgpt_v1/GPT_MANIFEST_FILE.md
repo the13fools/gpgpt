@@ -1,3 +1,15 @@
+11-18-2023 
+
+todo: 
+hook up simulation code 
+add loggging 
+add parse from file/restart simulation
+
+load directory and start at largest file by default or create new directory if don't pass in valid directory.
+
+
+
+
 GPT_MANIFEST_FILE 
 
 # a manifest file is a file which an LLM like GPT-4 can be asked to generate to attempt to get it to hash it's state in a compact way.  They are also human readable, which is kinda nice, though they are clunky to edit.  

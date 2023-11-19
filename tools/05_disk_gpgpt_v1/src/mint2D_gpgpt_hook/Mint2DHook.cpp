@@ -182,6 +182,12 @@ void Mint2DHook::initSimulation() {
     // Load mesh using igl::readOBJ
         // igl::readOBJ("/home/josh/Documents/mint_redux/geometry-processing-starter-kit/tools/shared/" + cur_mesh_name + ".obj", V, F);
 
+    if (appState->directoryPath.empty()) {
+        std::cerr << "No directory path provided." << std::endl;
+        appState->directoryPath = "../../results/BLAH"; // switch to ../shared/mint2d_testsequence
+        // return;
+    }
+
     FileParser fileParser(appState->directoryPath);
 
     Eigen::MatrixXd V; // Temporary storage for vertices

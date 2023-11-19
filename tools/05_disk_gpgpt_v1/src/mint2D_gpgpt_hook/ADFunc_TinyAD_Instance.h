@@ -6,10 +6,7 @@
 // #include <TinyAD/Utils/LinearSolver.hh>
 
 #include "ADFuncRunner.h"
-
-
 #include <Eigen/Core>
-
 
 
 /// This class wraps your tiny ad func in a templated way to allow for taking newton steps in sequence
