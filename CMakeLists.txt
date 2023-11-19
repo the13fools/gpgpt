@@ -234,9 +234,9 @@ message("====== Adding Tools ======")
 add_subdirectory(tools/01_basic_test)
 add_subdirectory(tools/02_tiny_ad_test)
 add_subdirectory(tools/03_disk_bvp_v1)
-add_subdirectory(tools/04_disk_bvp_adfunc_wrapper)
+add_subdirectory(tools/04_adfunc_wrapper)
 # add_subdirectory(tools/04_disk_mint2d_v1)
-add_subdirectory(tools/05_disk_gpgpt_v1)
+# add_subdirectory(tools/05_disk_gpgpt_v1)
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})

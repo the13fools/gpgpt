@@ -20,6 +20,8 @@
 
 #include <igl/map_vertices_to_circle.h>
 
+#include "ADWrapper/ADFunc_TinyAD_Instance.h"
+
 class VizHook : public PhysicsHook
 {
 public:
@@ -259,7 +261,7 @@ public:
   double w_curl;
   double w_s_perp;
 
-
+  ADFunc_TinyAD_Instance<2> blah;
 
 private:
   // Read mesh and compute Tutte embedding
@@ -283,6 +285,7 @@ private:
   std::vector<Eigen::Matrix2d> rest_shapes;
 
   decltype(TinyAD::scalar_function<2>(TinyAD::range(1))) func;
+
   Eigen::VectorXd x;
 
   int max_iters = 5000;
