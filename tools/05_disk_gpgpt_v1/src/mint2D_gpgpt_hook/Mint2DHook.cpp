@@ -76,7 +76,7 @@ void Mint2DHook::updateRenderGeometry() {
 /// 
 
 
-    
+    std::cout << "update render geometry" << std::endl;
 
 
     renderState = new AppState(*appState);
@@ -128,7 +128,7 @@ void Mint2DHook::updateRenderGeometry() {
         
         // polyscope::requestRedraw();   
 
-        std::cout << "render renderGeometry" << std::endl;
+        // std::cout << "render renderGeometry" << std::endl;
 
         // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
@@ -136,27 +136,27 @@ void Mint2DHook::updateRenderGeometry() {
     // Depending on the current element view, render different quantities
     switch (appState->current_element) {
         case Field_View::vec_norms:
-         std::cout << "render norms_vec" << std::endl;
+        //  std::cout << "render norms_vec" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Vector", appState->norms_vec)->setEnabled(true);
             break;
         case Field_View::delta_norms:
-         std::cout << "render norms_delta" << std::endl;
+        //  std::cout << "render norms_delta" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Delta", appState->norms_delta)->setEnabled(true);
             break;
         case Field_View::vec_dirch:
-         std::cout << "render smoothness_primal" << std::endl;
+        //  std::cout << "render smoothness_primal" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Primal", appState->smoothness_primal)->setEnabled(true);
             break;
         case Field_View::moment_dirch:
-         std::cout << "render smoothness_sym" << std::endl;
+        //  std::cout << "render smoothness_sym" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Moment", appState->smoothness_sym)->setEnabled(true);
             break;
         case Field_View::primal_curl_residual:
-         std::cout << "render primal_curl" << std::endl;
+        //  std::cout << "render primal_curl" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Primal Residual", appState->curls_primal)->setEnabled(true);
             break;
         case Field_View::sym_curl_residual:
-         std::cout << "render sym_curl" << std::endl;
+        //  std::cout << "render sym_curl" << std::endl;
             polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Symmetric Residual", appState->curls_sym)->setEnabled(true);
             break;
         case Field_View::gui_free:
@@ -170,7 +170,7 @@ void Mint2DHook::updateRenderGeometry() {
         // Update other visualization properties based on AppState
         // Example: Vector field visualization
         if (appState->showVectorField) {
-             std::cout << "show vector field" << std::endl;
+            //  std::cout << "show vector field" << std::endl;
             auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", appState->renderFrames);
             // vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
             // vectorField->setEnabled(true);
@@ -218,7 +218,7 @@ void Mint2DHook::initSimulation() {
         // }
     } else {
         // Load default mesh and set default config
-        std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + cur_mesh_name + ".obj";
+        std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + appState->meshName + ".obj";
         
         // std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
 
@@ -261,7 +261,7 @@ void Mint2DHook::initSimulation() {
 
     // Initialize other parameters and logging folder
     // initializeOtherParameters();
-    // initializeLogFolder();
+    initializeLogFolder();
 
     // Register mesh with Polyscope
     polyscope::registerSurfaceMesh("c", appState->V, appState->F);

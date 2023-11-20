@@ -17,12 +17,12 @@ std::string Views::fieldViewToString(Field_View view) {
 // Utility function to convert Field_View enums to strings
 std::string Views::fieldViewToFileStub(Field_View view) {
     switch (view) {
-        case vec_norms: return "norms_vec";
-        case delta_norms: return "norms_delta";
-        case vec_dirch: return "dirch_vec";
-        case moment_dirch: return "dirch_moment";
-        case primal_curl_residual: return "curl_vec";
-        case sym_curl_residual: return "curl_mom";
+        case vec_norms: return "nv_norms_vec";
+        case delta_norms: return "nd_norms_delta";
+        case vec_dirch: return "dv_dirch_vec";
+        case moment_dirch: return "dm_dirch_moment";
+        case primal_curl_residual: return "cv_curl_vec";
+        case sym_curl_residual: return "cm_curl_mom";
         case gui_free: return "Free";
         default: return "Unknown";
     }

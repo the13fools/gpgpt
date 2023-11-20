@@ -81,20 +81,42 @@ namespace ImGuiWidgets {
     void ShowFieldViewCheckboxesWithSliders(AppState& appState) {
         ImGui::Text("Field Views with Sliders:");
 
-        for (int i = 0; i < Views::Element_COUNT; ++i) {
+        for (int i = 0; i < Views::Element_COUNT - 1; ++i) {
             Field_View field = static_cast<Field_View>(i);
             const char* fieldName = fieldViewToFileStub(field).c_str();
             bool* active = &appState.fieldViewActive[field];
             float* minVal = &appState.fieldBounds[field].lower;
             float* maxVal = &appState.fieldBounds[field].upper;
 
-            std::cout << fieldName << std::endl;
+            std::string field_str = fieldViewToFileStub(field);
+            // const char* lower = ("l" + field_str).c_str();
+            // const char* upper = ("u" + field_str).c_str();
+            // const char* checkbox = ("cb" + field_str).c_str();
 
-            ImGui::Checkbox(fieldName, active);
+            // std::string lower = ("l" + field_str).c_str();
+            // std::string upper = ("u" + field_str).c_str();
+            // std::string checkbox = ("cb" + field_str).c_str();
+            
+            std::string lower = ("lower ##" + field_str);
+            std::string upper = ("upper##" + field_str);
+            std::string checkbox = (field_str + "##cb");
+
+
+            // std::cout << "lower*****" << lower.c_str() << upper.c_str() << checkbox.c_str() << std::endl;
+     
+            ImGui::PushItemWidth(150);
+            ImGui::InputFloat( lower.c_str(), minVal, 0.01f, .10f, "%.3f");
             ImGui::SameLine();
-            ImGui::SliderFloat((std::string(fieldName) + " (Lower Bound)").c_str(), minVal, 0.0f, 1.0f);
-            ImGui::SameLine();
-            ImGui::SliderFloat((std::string(fieldName) + " (Upper Bound)").c_str(), maxVal, 0.0f, 1.0f);
+            ImGui::InputFloat( upper.c_str(), maxVal, 0.01f, .10f, "%.3f");
+            ImGui::PopItemWidth();
+             ImGui::SameLine();
+                   ImGui::Checkbox( checkbox.c_str(), active);
+
+            //                    std::cout << fieldName << std::endl;
+           
+            // ImGui::SliderFloat((std::string(fieldName) + " (Lower Bound)").c_str(), minVal, 0.0f, 1.0f);
+            // ImGui::SameLine();
+            // ImGui::SliderFloat((std::string(fieldName) + " (Upper Bound)").c_str(), maxVal, 0.0f, 1.0f);
         }
     }
 
@@ -117,6 +139,14 @@ namespace ImGuiWidgets {
             }
             ImGui::EndCombo();
         }
+
+    // //  const char* element_names[Field_View::Element_COUNT] = { "Vector Norms", "Delta Norms", "Vector Dirichlet", "Symmetric Dirichlet", "Vector Curl", "Symmetric Curl", "free" };
+    //         // const char* current_element_name = (current_element >= 0 && current_element < Field_View::Element_COUNT) ? element_names[current_element] : "Unknown";
+    //         const char* current_element_name = fieldViewToString(currentField).c_str();
+    //         ImGui::PushItemWidth(300);
+    //         ImGui::SliderInt("Shading Mode", (int *) currentField, 0, Views::Field_View::Element_COUNT - 1, current_element_name);
+    //         ImGui::PopItemWidth();
+        
     }
 
     // Function to display a plot in ImGui
@@ -137,6 +167,11 @@ namespace ImGuiWidgets {
 
         // Display checkboxes with min and max sliders for field views
         ShowFieldViewCheckboxesWithSliders(appState);
+
+        // Display a field view scrubber
+        ShowFieldViewScrubber(appState, appState.current_element);
+
+ ImGui::ShowDemoWindow(); // TODO remove this
 
         // Display run information
         ShowRunInfo(appState);

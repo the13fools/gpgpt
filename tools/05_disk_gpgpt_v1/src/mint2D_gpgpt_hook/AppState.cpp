@@ -35,8 +35,8 @@ bool AppState::LogToFile()
         
 
 
-        Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames.bfra");
-        Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas.bmom");
+        Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + std::to_string(this->currentFileID + 100000) + ".bfra");
+        Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + std::to_string(this->currentFileID + 100000) + ".bmom");
 
     
 

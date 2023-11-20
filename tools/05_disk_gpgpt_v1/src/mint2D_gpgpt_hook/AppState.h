@@ -24,8 +24,8 @@ using Field_View = Views::Field_View;
 
 // Struct to hold bounds for each field view quantity
 struct FieldBounds {
-    float upper = 0; // std::numeric_limits<float>::max();
-    float lower = 1; //std::numeric_limits<float>::lowest();
+    float upper = .9; // std::numeric_limits<float>::max();
+    float lower = .1; //std::numeric_limits<float>::lowest();
 };
 
 // AppState holds the state of the application
@@ -71,7 +71,7 @@ public:
 
     // GUI state 
     std::unordered_map<Field_View, FieldBounds> fieldBounds;
-    bool fieldViewActive [8] = {false};
+    bool fieldViewActive [8] = {true, true, true, true, true, true, true, false};
     bool shouldLogData = true;
     Field_View current_element;
     bool showVectorField;
