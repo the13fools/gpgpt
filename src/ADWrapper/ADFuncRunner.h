@@ -68,7 +68,7 @@ class ADFuncRunner
 
 
         // runner state 
-        bool x_curr_is_new = false;
+        // bool x_curr_is_new = false;
         TinyAD::LinearSolver<double> solver; // make this changable 
 
 

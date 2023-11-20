@@ -4,7 +4,18 @@
 #include "polyscope/polyscope.h"
 #include "FieldView.h"
 
+#include "MyConfig.h"
+
 namespace ImGuiWidgets {
+
+    void ShowOptWeights(AppState& appState)
+    {
+        MyConfig* c = appState.config;
+        ImGui::InputDouble("Smoothness Weight", &c->w_smooth);
+        ImGui::InputDouble("S Perp Weight", &c->w_s_perp);
+        ImGui::InputDouble("Curl Weight", &c->w_curl);
+        ImGui::InputDouble("Bound Weight", &c->w_bound);
+    }
 
     // Function to display a file scrubber in ImGui
     void ShowFileScrubber(int& fileIndex, int minIndex, int maxIndex) {
@@ -120,6 +131,9 @@ namespace ImGuiWidgets {
 
         // Display file scrubber for selecting files
         // ShowFileScrubber(appState.currentFileIndex, 0, appState.fileList.size() - 1);
+
+
+        ShowOptWeights(appState);
 
         // Display checkboxes with min and max sliders for field views
         ShowFieldViewCheckboxesWithSliders(appState);

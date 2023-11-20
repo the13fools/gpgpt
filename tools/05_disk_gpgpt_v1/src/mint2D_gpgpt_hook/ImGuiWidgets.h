@@ -7,6 +7,8 @@
 
 namespace ImGuiWidgets {
 
+    void ShowOptWeights(AppState& appState);
+
     // Custom ImGui widget functions
     void ShowFileScrubber(int& fileIndex, int minIndex, int maxIndex);
     void ShowFieldViewCheckboxes(AppState& appState);

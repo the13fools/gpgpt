@@ -71,12 +71,21 @@ void Mint2DHook::updateRenderGeometry() {
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
 
+////
+//////  Here we calculate derived quantities. 
+/// 
+
+
+    
+
+
     renderState = new AppState(*appState);
 
     // Log data if necessary
     if (appState->shouldLogData) {
         // Serialize and save the frame data
         appState->LogToFile();
+        appState->currentFileID++;
 
         // Additional logging for any other fields in AppState as needed
     }
@@ -183,7 +192,7 @@ void Mint2DHook::initSimulation() {
         // igl::readOBJ("/home/josh/Documents/mint_redux/geometry-processing-starter-kit/tools/shared/" + cur_mesh_name + ".obj", V, F);
 
     if (appState->directoryPath.empty()) {
-        std::cerr << "No directory path provided." << std::endl;
+        std::cerr << "No directory path provided. TODO FIX THIS." << std::endl;
         appState->directoryPath = "../../results/BLAH"; // switch to ../shared/mint2d_testsequence
         // return;
     }
@@ -210,7 +219,7 @@ void Mint2DHook::initSimulation() {
     } else {
         // Load default mesh and set default config
         std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + cur_mesh_name + ".obj";
-
+        
         // std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
 
         std::cout << default_path << std::endl;
@@ -412,7 +421,11 @@ void Mint2DHook::initSimulation() {
 
 
 bool Mint2DHook::simulateOneStep() {
-    return false;
+
+
+
+}
+    // return false;
     // if (appState->currentIteration < appState->maxIterations) {
     //     appState->currentIteration++;
     //     appState->innerLoopIteration++;
@@ -459,7 +472,7 @@ bool Mint2DHook::simulateOneStep() {
     //     this->pause();
     //     return false;
     // }
-}
+// }
 
 
 // void Mint2DHook::reset() {
