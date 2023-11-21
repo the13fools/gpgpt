@@ -38,6 +38,7 @@ class ADFuncRunner
 
 
     Eigen::VectorXd take_newton_step(const Eigen::VectorXd &x);
+    void reset_params();
 
 
 //// Mostly shouldn't touch this but if you want to speed up convergence can do your own regualization updates

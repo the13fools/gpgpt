@@ -48,7 +48,7 @@ public:
     Eigen::MatrixXd V; // Vertex positions
     Eigen::MatrixXi F; // Face indices
     MyConfig* config;
-    Eigen::VectorXi boundaryFaces;
+    Eigen::VectorXi boundaryFaces;   
 
 
     // Optimization variables
@@ -63,6 +63,7 @@ public:
     Eigen::VectorXd norms_vec;
     Eigen::VectorXd norms_delta;
     Eigen::VectorXd norms_moment; // TODO 
+    Eigen::VectorXd thetas; // TODO
     Eigen::VectorXd curls_primal;
     Eigen::VectorXd curls_sym;
     Eigen::VectorXd smoothness_primal;
@@ -81,9 +82,9 @@ public:
 
     // simulation metadata 
     int currentIteration; 
-    int maxIterations;
+    int maxIterations = 9999; // move to config
     int innerLoopIteration;
-    double convergenceEpsilon;
+    double convergenceEpsilon = 1e-10;
     double convergenceThreshold;
     double identityWeight;
     bool isConverged;

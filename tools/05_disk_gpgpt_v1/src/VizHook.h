@@ -15,6 +15,8 @@
 #include <TinyAD/Utils/NewtonDecrement.hh>
 #include <TinyAD/Utils/LineSearch.hh>
 
+#include "ADWrapper/ADFuncRunner.h"
+#include "ADWrapper/ADFunc_TinyAD_Instance.h"
 
 
 
@@ -69,69 +71,151 @@ public:
       // Add file parsing logic here.
        Mint2DHook::initSimulation();
 
-     double w_bound = 10000;
-        double w_smooth = 1;
-        double w_smooth_vector = 0; 
-        double w_curl = 0;
-        double w_s_perp = 0;
+//      double w_bound = 10000;
+//         double w_smooth = 1;
+//         double w_smooth_vector = 0; 
+//         double w_curl = 0;
+//         double w_s_perp = 0;
 
-        double w_attenuate = 1;
+//         double w_attenuate = 1;
 
 
   
 
-      int nedges = cur_surf.nEdges();
+//       int nedges = cur_surf.nEdges();
 
-      rots.clear();// 
-      rstars.clear();
-      e_projs.clear();
-      e_projs_primal.clear();
+//       rots.clear();// 
+//       rstars.clear();
+//       e_projs.clear();
+//       e_projs_primal.clear();
 
-      e_projs2.resize(nedges,4); 
+//       e_projs2.resize(nedges,4); 
 
  
 
-      for (int i = 0; i < nedges; i++)
-      {
+//       for (int i = 0; i < nedges; i++)
+//       {
 
-        Eigen::Vector3d estart = V.row(cur_surf.data().edgeVerts(i,0));
-        Eigen::Vector3d eend = V.row(cur_surf.data().edgeVerts(i,1));
-        Eigen::Vector3d edge_dir = (eend - estart).normalized();
-        Eigen::Matrix2d e_to_x;
-        e_to_x << edge_dir(0),edge_dir(1),-edge_dir(1),edge_dir(0); // Note this rotates the edge into [1,0]
-        // std::cout << e_to_x * edge_dir.head(2) << std::endl<< std::endl; // sanity check.
-// std::cout << flatten(edge_dir.head(2) * edge_dir.head(2).transpose()) << std::endl<< std::endl;
+//         Eigen::Vector3d estart = V.row(cur_surf.data().edgeVerts(i,0));
+//         Eigen::Vector3d eend = V.row(cur_surf.data().edgeVerts(i,1));
+//         Eigen::Vector3d edge_dir = (eend - estart).normalized();
+//         Eigen::Matrix2d e_to_x;
+//         e_to_x << edge_dir(0),edge_dir(1),-edge_dir(1),edge_dir(0); // Note this rotates the edge into [1,0]
+//         // std::cout << e_to_x * edge_dir.head(2) << std::endl<< std::endl; // sanity check.
+// // std::cout << flatten(edge_dir.head(2) * edge_dir.head(2).transpose()) << std::endl<< std::endl;
 
-        rots.push_back(e_to_x);
+//         rots.push_back(e_to_x);
 
-        Eigen::Vector4d e_proj = rstar_xcomp_from_r(e_to_x);
-        e_projs.push_back(e_proj);
-        e_projs_primal.push_back(edge_dir.head(2));
-        e_projs2.row(i) = e_proj;
+//         Eigen::Vector4d e_proj = rstar_xcomp_from_r(e_to_x);
+//         e_projs.push_back(e_proj);
+//         e_projs_primal.push_back(edge_dir.head(2));
+//         e_projs2.row(i) = e_proj;
 
-      }
-// std::cout << e_projs2 << std::endl;
-
-
-    std::cout << e_projs2.rows() << std::endl;
-    std::cout << "blah" << std::endl;
-
-      frames_orig = frames;
-
-      // std::cout << frames << std::endl;
+//       }
+// // std::cout << e_projs2 << std::endl;
 
 
-      // std::cout << "frames.rows() " << frames.rows() << std::endl;
-      // appState->frames.resize(frames.rows(), 3);
-      // appState->frames << frames, Eigen::MatrixXd::Zero(frames.rows(), 1);
+//     std::cout << e_projs2.rows() << std::endl;
+//     std::cout << "blah" << std::endl;
 
-      // polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("orig normals", appState->frames); //   ( ((N.array()*0.5)+0.5).eval());
-      // polyscope::getSurfaceMesh()->addFaceScalarQuantity("vec_norms", frames.rowwise().squaredNorm())->setEnabled(true); //   ( ((N.array()*0.5)+0.5).eval());
+//       frames_orig = frames;
+
 
 
 
 //       // Set up function with 2D vertex positions as variables.
 //       func = TinyAD::scalar_function<6>(TinyAD::range(F.rows()));
+    ADFunc_TinyAD_Instance<6>* _opt = new ADFunc_TinyAD_Instance<6>();
+    auto func = TinyAD::scalar_function<6>(TinyAD::range(F.rows()));
+    // auto func = _opt._func;
+
+    // setup tinyad func
+
+
+
+    _opt->_func = &func;
+    opt = static_cast<ADFuncRunner*>(_opt);
+
+
+
+    }
+
+
+    virtual void updateRenderGeometry()
+    {
+      Mint2DHook::updateRenderGeometry();
+
+    }
+
+
+
+
+    virtual void renderRenderGeometry()
+    {
+      Mint2DHook::renderRenderGeometry();
+    }
+
+
+    virtual bool simulateOneStep()
+    {
+      return Mint2DHook::simulateOneStep();
+      
+
+      // //// Move this out 
+      // static_cast<ADFunc_TinyAD_Instance<6>*>(opt)->_func->x_to_data(x, [&] (int f_idx, const Eigen::Vector2d& v) {
+      //           appState->frames.row(f_idx) = v;
+
+      //           });
+    }
+
+
+
+
+protected:
+  // Read mesh and compute Tutte embedding
+
+
+
+  // Eigen::MatrixXd metadata;
+
+
+
+
+      std::vector<Eigen::Matrix2d> rots;// 
+      std::vector<Eigen::Matrix4d> rstars;
+      std::vector<Eigen::Vector4d> e_projs;
+      std::vector<Eigen::Vector2d> e_projs_primal;
+
+      Eigen::MatrixXd e_projs2;
+
+
+
+  
+
+
+  // Eigen::MatrixXd renderFrames;
+  // Eigen::MatrixXd renderDeltas;
+
+
+
+
+
+  
+  std::vector<Eigen::Matrix2d> rest_shapes;
+// %%% 2 + 4 + 4
+
+
+
+
+
+
+
+  // Eigen::ConjugateGradient<Eigen::SparseMatrix<double>> cg_solver;
+
+
+    
+};
+
 
 //       // Add objective term per face. Each connecting 3 vertices.
 //       func.add_elements<4>(TinyAD::range(F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
@@ -327,74 +411,3 @@ public:
 //           // ret << frames.row(f_idx), deltas.row(f_idx);
 //           return ret;
 //           });
-
-    }
-
-
-    virtual void updateRenderGeometry()
-    {
-      Mint2DHook::updateRenderGeometry();
-
-    }
-
-
-
-
-    virtual void renderRenderGeometry()
-    {
-      Mint2DHook::renderRenderGeometry();
-    }
-
-
-    virtual bool simulateOneStep()
-    {
-      return Mint2DHook::simulateOneStep();
-    }
-
-
-
-
-protected:
-  // Read mesh and compute Tutte embedding
-
-
-
-  // Eigen::MatrixXd metadata;
-
-
-
-
-      std::vector<Eigen::Matrix2d> rots;// 
-      std::vector<Eigen::Matrix4d> rstars;
-      std::vector<Eigen::Vector4d> e_projs;
-      std::vector<Eigen::Vector2d> e_projs_primal;
-
-      Eigen::MatrixXd e_projs2;
-
-
-
-  
-
-
-  // Eigen::MatrixXd renderFrames;
-  // Eigen::MatrixXd renderDeltas;
-
-
-
-
-
-  
-  std::vector<Eigen::Matrix2d> rest_shapes;
-// %%% 2 + 4 + 4
-
-
-
-
-
-
-
-  // Eigen::ConjugateGradient<Eigen::SparseMatrix<double>> cg_solver;
-
-
-    
-};

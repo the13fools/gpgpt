@@ -40,7 +40,6 @@ public:
     void initBoundaryConditions();
 
 
-    std::string cur_mesh_name;
     Surface cur_surf;
     Eigen::MatrixXd V; // Vertex positions
     Eigen::MatrixXi F; // Face indices

@@ -15,6 +15,12 @@
 #include <iostream>
     
     
+    void ADFuncRunner::reset_params()
+    {
+        useProjHessian = true;
+        prev_energy = -100000.;
+        identity_weight = 1e-8; 
+    }
     
     
     Eigen::VectorXd ADFuncRunner::take_newton_step(const Eigen::VectorXd &x){
@@ -92,10 +98,11 @@
 
             _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
             _newton_dir = d;
-            _dec = dec;
+            // _dec = dec;
+            _dec = f - this->eval_func_at(_cur_x);  // use this to track the true decrement 
             
             // 
-            std::cout << "current decrement: " << dec << std::endl;
+            std::cout << "current decrement: " << _dec << " newton dec: " << dec << std::endl;
 
             return _cur_x;
     };

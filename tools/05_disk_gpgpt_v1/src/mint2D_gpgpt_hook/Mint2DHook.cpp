@@ -74,6 +74,9 @@ void Mint2DHook::updateRenderGeometry() {
 ////
 //////  Here we calculate derived quantities. 
 /// 
+    appState->norms_vec = appState->frames.rowwise().norm();
+    appState->norms_delta = appState->deltas.rowwise().norm();
+    
 
 
     std::cout << "update render geometry" << std::endl;
@@ -421,7 +424,35 @@ void Mint2DHook::initSimulation() {
 
 
 bool Mint2DHook::simulateOneStep() {
+    int max_iters = appState->maxIterations;
+    int cur_iter = appState->currentIteration;
+    double convergence_eps = appState->convergenceEpsilon;
+      if (cur_iter < max_iters)
+        {
+            cur_iter++;
 
+            x = opt->take_newton_step(x);
+            if (opt->_dec < convergence_eps)
+            {
+                 cur_iter = max_iters; // break
+                //  adhook.reset_params();
+            }
+
+            
+
+        }
+        else if (cur_iter == max_iters) 
+        {
+            TINYAD_DEBUG_OUT("Final energy: " << func.eval(x));
+            cur_iter++;
+        }
+        else{
+            this->pause();
+        }
+
+    appState->currentIteration = cur_iter;
+
+    return false;
 
 
 }
