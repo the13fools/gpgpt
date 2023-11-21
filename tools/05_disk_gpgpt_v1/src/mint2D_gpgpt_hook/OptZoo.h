@@ -11,9 +11,9 @@
  {
 
 
-void (AppState state);
+void addSmoothnessTerm(TinyAD::ScalarFunction<6>& func, const AppState& appState) {
 
 
- };
+}
 
 #endif // OPTZOO_H
