@@ -8,6 +8,9 @@
 #include "ADWrapper/ADFuncRunner.h"
 #include <Eigen/Core>
 
+#include <TinyAD/ScalarFunction.hh>
+// #include <TinyAD/Utils/LinearSolver.hh>
+
 
 /// This class wraps your tiny ad func in a templated way to allow for taking newton steps in sequence
 template<int N>
@@ -16,6 +19,7 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
             // FuncEvaluator(f) : _f(f) {} 
             // In practice: use f to evaluate the function, gradient, and hessian 
     public: 
+
     ~ADFunc_TinyAD_Instance(){};
             
     double eval_func_local(const Eigen::VectorXd &x){
@@ -40,6 +44,12 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
         // dec = TinyAD::newton_decrement(d, g);
         
     }; 
+
+    void set_tinyad_objective_func(decltype(TinyAD::scalar_function<N>(TinyAD::range(1)))* func)
+    {
+        _func = func;
+        _cur_x = Eigen::VectorXd::Zero(_func->n_vars);
+    }
 
 
     decltype(TinyAD::scalar_function<N>(TinyAD::range(1)))* _func;

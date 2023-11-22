@@ -19,6 +19,44 @@
 
     using SF6 = decltype(TinyAD::scalar_function<6>(TinyAD::range(1)));
 
+    void addConstTestTerm(SF6& func, const AppState& appState) {
+
+    func.add_elements<1>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+     // Evaluate element using either double or TinyAD::Double
+        using T = TINYAD_SCALAR_TYPE(element);
+
+
+
+        // Get variable 2D vertex positions
+        Eigen::Index f_idx = element.handle;
+        Eigen::VectorX<T> s_curr = element.variables(f_idx);
+        Eigen::Vector2<T> curr =  s_curr.head(2);
+        Eigen::Vector4<T> delta = s_curr.tail(4);
+
+        Eigen::Matrix2<T> currcurr = curr*curr.transpose();
+        Eigen::Vector4<T> currcurrt = flatten(currcurr);
+
+        Surface cur_surf = *(appState.cur_surf);
+
+        T w_bound = appState.config->w_bound;
+
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+      
+        Eigen::Vector2<T> targ = Eigen::Vector2<T>::Ones();
+        
+        return w_bound*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
+      
+
+
+
+    });
+
+ 
+
+}
+
 
 // The pinned boundary condition.  
 // TODO,  add in other boundary conditions like mixed neumann and free for meshing examples.  

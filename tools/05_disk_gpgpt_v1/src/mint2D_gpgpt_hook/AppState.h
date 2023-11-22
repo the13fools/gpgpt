@@ -58,6 +58,8 @@ public:
     // Optimization variables
     Surface* cur_surf; // This initializes some more convenient data structures for building up local energies.
                       // In 3d need to use mesh data structures.  
+
+    // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;
     Eigen::MatrixXd frames_orig;
 
@@ -70,8 +72,8 @@ public:
     Eigen::MatrixXd renderFrames;
     Eigen::VectorXd norms_vec;
     Eigen::VectorXd norms_delta;
-    Eigen::VectorXd norms_moment; // TODO 
-    Eigen::VectorXd thetas; // TODO
+    Eigen::VectorXd norms_moment; // TODO IMPLEMENT THIS!
+    Eigen::VectorXd thetas; // TODO  IMPORTANT! 
     Eigen::VectorXd curls_primal;
     Eigen::VectorXd curls_sym;
     Eigen::VectorXd smoothness_primal;

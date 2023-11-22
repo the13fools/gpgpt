@@ -7,7 +7,7 @@
 
 #include "PhysicsHook.h"
 #include "ADWrapper/ADFuncRunner.h"
-// #include "ADWrapper/ADFunc_TinyAD_Instance.h"
+#include "ADWrapper/ADFunc_TinyAD_Instance.h"
 
 #include "Surface.h"
 
@@ -20,6 +20,8 @@ public:
 
     Mint2DHook(AppState* state) : PhysicsHook() {
         appState = state;
+        renderState = appState;
+        opt = new ADFunc_TinyAD_Instance<6>();
     //   current_element = Field_View::vec_norms;
     }
     virtual ~Mint2DHook(){

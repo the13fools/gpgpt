@@ -131,10 +131,15 @@ public:
     // auto func = _opt._func;
 
     // setup tinyad func
+    OptZoo::addConstTestTerm(func, *appState);
+    // OptZoo::addPinnedBoundaryTerm(func, *appState);
+    // OptZoo::addSmoothnessTerm(func, *appState);
+    
 
 
 
-    _opt->_func = &func;
+    _opt->set_tinyad_objective_func(&func);
+    // _opt->_func = &func;
     opt = static_cast<ADFuncRunner*>(_opt);
 
 
