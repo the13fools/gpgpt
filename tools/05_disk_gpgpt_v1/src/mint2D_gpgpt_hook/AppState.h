@@ -12,6 +12,8 @@
 #include "MyConfig.h"
 #include "FieldView.h"
 
+#include "Surface.h"
+
 using Field_View = Views::Field_View;
 
 // Enum for identifying field view quantities
@@ -47,12 +49,18 @@ public:
     // Init variables 
     Eigen::MatrixXd V; // Vertex positions
     Eigen::MatrixXi F; // Face indices
+
+    /// @brief config optimization variables and params stored and initialized here.  ///
     MyConfig* config;
-    Eigen::VectorXi boundaryFaces;   
+    Eigen::VectorXi bound_face_idx;   
 
 
     // Optimization variables
+    Surface* cur_surf; // This initializes some more convenient data structures for building up local energies.
+                      // In 3d need to use mesh data structures.  
     Eigen::MatrixXd frames;
+    Eigen::MatrixXd frames_orig;
+
     Eigen::MatrixXd moments; // TODO implement this!
     std::vector<Eigen::MatrixXd> frame_jacobians; // TODO implement this!
     Eigen::MatrixXd deltas;

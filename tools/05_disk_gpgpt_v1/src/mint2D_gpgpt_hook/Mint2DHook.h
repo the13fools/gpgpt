@@ -40,12 +40,14 @@ public:
     void initBoundaryConditions();
 
 
-    Surface cur_surf;
-    Eigen::MatrixXd V; // Vertex positions
-    Eigen::MatrixXi F; // Face indices
-    Eigen::MatrixXd frames_orig;
-    Eigen::MatrixXd frames;
-    Eigen::VectorXd x;
+// these are moved to appState
+    // Eigen::MatrixXd V; // Vertex positions
+    // Eigen::MatrixXi F; // Face indices
+    // Eigen::MatrixXd frames_orig;
+    // Eigen::MatrixXd frames;
+
+    // current state stored in opt
+    // Eigen::VectorXd x;
 
     TinyAD::LinearSolver<double> solver; // make this changable 
     decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;

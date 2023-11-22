@@ -33,7 +33,8 @@
 // #include <fstream>
 #include <sys/stat.h>
 
-#include "UtilsMisc.h"
+
+#include "OptZoo.h"
 
 
 
@@ -126,7 +127,7 @@ public:
 //       // Set up function with 2D vertex positions as variables.
 //       func = TinyAD::scalar_function<6>(TinyAD::range(F.rows()));
     ADFunc_TinyAD_Instance<6>* _opt = new ADFunc_TinyAD_Instance<6>();
-    auto func = TinyAD::scalar_function<6>(TinyAD::range(F.rows()));
+    auto func = TinyAD::scalar_function<6>(TinyAD::range(appState->F.rows()));
     // auto func = _opt._func;
 
     // setup tinyad func
@@ -160,12 +161,6 @@ public:
     {
       return Mint2DHook::simulateOneStep();
       
-
-      // //// Move this out 
-      // static_cast<ADFunc_TinyAD_Instance<6>*>(opt)->_func->x_to_data(x, [&] (int f_idx, const Eigen::Vector2d& v) {
-      //           appState->frames.row(f_idx) = v;
-
-      //           });
     }
 
 

@@ -19,8 +19,11 @@
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
 #include <igl/readOBJ.h>
+#include <igl/on_boundary.h>
 #include "date.h"
 #include "MyConfig.h"
+#include "ADWrapper/ADFuncRunner.h"
+#include "Surface.h"
 
 
 
@@ -230,6 +233,7 @@ void Mint2DHook::initSimulation() {
             std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
             return;
         }
+        appState->cur_surf = new Surface(V, F);
 
         // Set default configuration
         appState->config = new MyConfig(); // Assign default values to the config
@@ -431,7 +435,7 @@ bool Mint2DHook::simulateOneStep() {
         {
             cur_iter++;
 
-            x = opt->take_newton_step(x);
+            opt->take_newton_step(opt->get_current_x());
             if (opt->_dec < convergence_eps)
             {
                  cur_iter = max_iters; // break
@@ -443,7 +447,7 @@ bool Mint2DHook::simulateOneStep() {
         }
         else if (cur_iter == max_iters) 
         {
-            TINYAD_DEBUG_OUT("Final energy: " << func.eval(x));
+            TINYAD_DEBUG_OUT("Final energy: " << func.eval(opt->get_current_x()));
             cur_iter++;
         }
         else{
@@ -565,7 +569,14 @@ void Mint2DHook::initializeOtherParameters() {
 
 void Mint2DHook::initBoundaryConditions() {
     // Assuming boundary faces are identified in AppState
-    Eigen::VectorXi& boundaryFaces = appState->boundaryFaces;
+    Eigen::MatrixXi K;
+
+    // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
+
+    Eigen::VectorXi boundaryFaces;
+    igl::on_boundary(appState->F,boundaryFaces, K);
+
+    appState->bound_face_idx = boundaryFaces;
 
     // Initialize boundary conditions
     for (int i = 0; i < boundaryFaces.size(); ++i) {
@@ -583,6 +594,11 @@ void Mint2DHook::initBoundaryConditions() {
             }
         }
     }
+
+    // 
+
+    // 
+
 }
 
 
