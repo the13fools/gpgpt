@@ -30,6 +30,15 @@
             // auto [f, g, H_proj] = func.eval_with_hessian_proj(x);
             // auto [f, g, H_proj] = func.eval_with_derivatives(x);
 
+            std::cout << std::endl << "take a newton step" << std::endl;
+
+            double cur_obj = this->eval_func_at(x);
+            if (cur_obj < 1e-15)
+            {
+              std::cout << "Tiny objective: " << cur_obj << "  Exiting. This shouldn't have been called in the first place." << std::endl;
+              return x;
+            }
+
             this->eval_func_with_derivatives(x);
             double f = this->get_fval_at_x();
             Eigen::VectorXd g = this->get_grad_at_x();
@@ -102,7 +111,10 @@
             _dec = f - this->eval_func_at(_cur_x);  // use this to track the true decrement 
             
             // 
-            std::cout << "current decrement: " << _dec << " newton dec: " << dec << std::endl;
+            std::cout << "prev obj" << f << "current decrement: " << _dec << " newton dec: " << dec << std::endl;
+
+          std::cout << "finshed newton step" << std::endl;
+
 
             return _cur_x;
     };

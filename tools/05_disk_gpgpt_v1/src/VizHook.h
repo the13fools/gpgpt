@@ -52,6 +52,10 @@ public:
 
     }
 
+    ~VizHook(){
+      delete _opt;
+    }
+
 
 
 
@@ -61,7 +65,11 @@ public:
       // cur_mesh_name = "circle_subdiv";
 
       // cur_mesh_name = "circle";
-      appState->meshName = "circle_irreg";
+      // appState->meshName = "circle_irreg";
+      appState->meshName = "circle_1000";
+
+
+
       // cur_mesh_name = "circle_irreg_20000";
 
 
@@ -70,7 +78,7 @@ public:
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
-       Mint2DHook::initSimulation();
+      Mint2DHook::initSimulation();
 
 //      double w_bound = 10000;
 //         double w_smooth = 1;
@@ -121,26 +129,35 @@ public:
 
 //       frames_orig = frames;
 
-
+      
+      
+      
+      
+      std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
 
 //       // Set up function with 2D vertex positions as variables.
 //       func = TinyAD::scalar_function<6>(TinyAD::range(F.rows()));
-    ADFunc_TinyAD_Instance<6>* _opt = new ADFunc_TinyAD_Instance<6>();
-    auto func = TinyAD::scalar_function<6>(TinyAD::range(appState->F.rows()));
+
+    func = TinyAD::scalar_function<6>(TinyAD::range(appState->F.rows()));
     // auto func = _opt._func;
 
     // setup tinyad func
-    OptZoo::addConstTestTerm(func, *appState);
-    // OptZoo::addPinnedBoundaryTerm(func, *appState);
+    // OptZoo::addConstTestTerm(func, *appState);
+    OptZoo::addPinnedBoundaryTerm(func, *appState);
     // OptZoo::addSmoothnessTerm(func, *appState);
     
 
 
-
+    _opt = new ADFunc_TinyAD_Instance<6>();
     _opt->set_tinyad_objective_func(&func);
     // _opt->_func = &func;
     opt = static_cast<ADFuncRunner*>(_opt);
+
+    std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
+    // std::cout << "nvars in opt" << _opt->_func->n_vars << std::endl; // get_num_vars
+    std::cout << "nvars in opt" << this->opt->get_num_vars() << std::endl; 
+
 
 
 
@@ -178,7 +195,8 @@ protected:
 
   // Eigen::MatrixXd metadata;
 
-
+     ADFunc_TinyAD_Instance<6>* _opt;
+     decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
 
 
       std::vector<Eigen::Matrix2d> rots;// 

@@ -16,6 +16,8 @@ class ADFuncRunner
     virtual void eval_func_with_derivatives(const Eigen::VectorXd &x) = 0; 
     virtual void eval_func_and_proj_hess_to_psd_local(const Eigen::VectorXd &x) = 0; 
 
+    virtual int get_num_vars() = 0;
+
 
     ADFuncRunner() = default;
     virtual ~ADFuncRunner() {};
@@ -24,6 +26,7 @@ class ADFuncRunner
     // virtual Eigen::MatrixXd eval_hess_local(const Eigen::VectorXd &x) = 0; 
 
     double eval_func_at(const Eigen::VectorXd &x) { return eval_func_local(x); } 
+ 
 
 // can copy tinyad and return a tuple here for convenience.
     void eval_func_with_derivatives_at(const Eigen::VectorXd &x) { eval_func_with_derivatives(x);  } 
@@ -32,6 +35,7 @@ class ADFuncRunner
 
 
     Eigen::VectorXd get_current_x() { return _cur_x; } 
+    void set_current_x(const Eigen::VectorXd &x) { _cur_x = x; }
     double get_fval_at_x() { return _fun_val; } 
     Eigen::VectorXd get_grad_at_x() { return _grad; } 
     Eigen::SparseMatrix<double> get_hessian_at_x() { return _hess; } 

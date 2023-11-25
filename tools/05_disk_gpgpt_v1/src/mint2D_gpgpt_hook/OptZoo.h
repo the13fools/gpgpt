@@ -19,7 +19,11 @@
 
     using SF6 = decltype(TinyAD::scalar_function<6>(TinyAD::range(1)));
 
+
+// the const test term tried to make all the vectors the all ones or somethgn.
     void addConstTestTerm(SF6& func, const AppState& appState) {
+
+        std::cout << "add const obj" << std::endl;
 
     func.add_elements<1>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
@@ -40,13 +44,18 @@
 
         Surface cur_surf = *(appState.cur_surf);
 
+        if (f_idx == 0)
+        {
+            std::cout << "eval const obj" << std::endl;
+        }
+
         T w_bound = appState.config->w_bound;
 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
       
         Eigen::Vector2<T> targ = Eigen::Vector2<T>::Ones();
         
-        return w_bound*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
+        return .00001*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
       
 
 
@@ -61,6 +70,8 @@
 // The pinned boundary condition.  
 // TODO,  add in other boundary conditions like mixed neumann and free for meshing examples.  
 void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
+
+    std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
 
     func.add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
@@ -84,6 +95,14 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
         T w_bound = appState.config->w_bound;
 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+        
+
+        if ((int)f_idx == 0)
+        {
+            std::cout << "eval boundary obj" << std::endl;
+        }
+
 
         // Surface* cur_surf = appState;
           // metadata field
@@ -126,6 +145,8 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
 
 void addSmoothnessTerm(SF6& func, const AppState& appState) {
 
+    std::cout << "add smoothness obj" << std::endl;
+
     func.add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
         using T = TINYAD_SCALAR_TYPE(element);
@@ -151,9 +172,26 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
         // double w_bound = appState.config->w_bound;
 
 
+        if ((int)f_idx == 0)
+        {
+            std::cout << "eval smoothness obj" << std::endl;
+        }
 
+
+// A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+        if (bound_face_idx(f_idx) == 1)
+        {
+            return T(0);
+        }
+
+
+
+        std::cout << "smoothness idx " << f_idx;
 
         // 
+
+        std::cout << "neighbors " << cur_surf.data().faceNeighbors(f_idx, 0) << " " << cur_surf.data().faceNeighbors(f_idx, 1) << " " << cur_surf.data().faceNeighbors(f_idx, 2) << std::endl;
 
           Eigen::VectorX<T> s_a = element.variables(cur_surf.data().faceNeighbors(f_idx, 0));
           Eigen::VectorX<T> s_b = element.variables(cur_surf.data().faceNeighbors(f_idx, 1));

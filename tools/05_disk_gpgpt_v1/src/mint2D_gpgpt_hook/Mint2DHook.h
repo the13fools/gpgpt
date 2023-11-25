@@ -35,8 +35,9 @@ public:
     virtual void renderRenderGeometry();
     virtual void initSimulation();
     virtual bool simulateOneStep();
+    virtual void pause();
 
-    // void reset();
+    void resetAppState();
     void initializeLogFolder(); 
     void initializeOtherParameters(); 
     void initBoundaryConditions();

@@ -20,8 +20,20 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
             // In practice: use f to evaluate the function, gradient, and hessian 
     public: 
 
+    ADFunc_TinyAD_Instance(){};
     ~ADFunc_TinyAD_Instance(){};
-            
+
+    // ADFunc_TinyAD_Instance& operator=(const ADFunc_TinyAD_Instance& other)
+    // {
+    //     if (this != &other) 
+    //     {
+    //         this->set_tinyad_objective_func(other._func);
+    //         // Copy each member from 'other' to 'this'
+    //         // Be careful with pointers! You might need to perform a deep copy
+    //     }
+    //     return *this;
+    // }
+                
     double eval_func_local(const Eigen::VectorXd &x){
         _fun_val = _func->eval(x);
         return _fun_val;
@@ -49,6 +61,13 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
     {
         _func = func;
         _cur_x = Eigen::VectorXd::Zero(_func->n_vars);
+    }
+
+    int get_num_vars()
+    {
+        // std::cout << std::endl << "get_num_vars() called" << std::endl;
+        // std::cout << "_func->n_vars = " << _func->n_vars << std::endl;
+        return _func->n_vars;
     }
 
 

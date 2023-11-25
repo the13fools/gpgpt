@@ -112,7 +112,7 @@ public:
      * Pause a running simulation. The simulation will pause at the end of its current "step"; this method will not
      * interrupt simulateOneStep mid-processing.
      */
-    void pause()
+    virtual void pause()
     {
         status_mutex.lock();
         please_pause = true;

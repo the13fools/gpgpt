@@ -190,6 +190,12 @@ void Mint2DHook::updateRenderGeometry() {
 
     }
 
+void Mint2DHook::pause() {
+    PhysicsHook::pause();
+    appState->keepSolving = true;
+}
+    // Pause the simulati
+
 
 
 
@@ -202,6 +208,7 @@ void Mint2DHook::initSimulation() {
         appState->directoryPath = "../../results/BLAH"; // switch to ../shared/mint2d_testsequence
         // return;
     }
+    appState->keepSolving = true;
 
     FileParser fileParser(appState->directoryPath);
 
@@ -252,18 +259,7 @@ void Mint2DHook::initSimulation() {
     appState->V = V;
     appState->F = F;
 
-    appState->renderFrames = Eigen::MatrixXd::Zero(F.rows(), 3);
-
-    appState->frames = Eigen::MatrixXd::Zero(F.rows(), 2);
-    appState->moments = Eigen::MatrixXd::Zero(F.rows(), 0);
-    appState->deltas = Eigen::MatrixXd::Zero(F.rows(), 4);
-    //   metadata = Eigen::MatrixXd::Zero(F.rows(), 2);
-    appState->norms_vec = Eigen::VectorXd::Zero(F.rows());
-    appState->norms_delta = Eigen::VectorXd::Zero(F.rows());
-    appState->curls_sym = Eigen::VectorXd::Zero(F.rows());
-    appState->curls_primal = Eigen::VectorXd::Zero(F.rows());
-    appState->smoothness_primal = Eigen::VectorXd::Zero(F.rows());
-    appState->smoothness_sym = Eigen::VectorXd::Zero(F.rows());
+    this->resetAppState();
 
 
     // Initialize other parameters and logging folder
@@ -431,14 +427,25 @@ bool Mint2DHook::simulateOneStep() {
     int max_iters = appState->maxIterations;
     int cur_iter = appState->currentIteration;
     double convergence_eps = appState->convergenceEpsilon;
-      if (cur_iter < max_iters)
+    double cur_obj = opt->eval_func_at(opt->get_current_x());
+      if (cur_iter < max_iters && cur_obj > convergence_eps && appState->keepSolving)
         {
             cur_iter++;
+            std::cout << "*** GLOBAL STEP: " << cur_iter << "*** "  << std::endl;
+            std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
+            std::cout << "nvars in opt" << opt->get_num_vars() << std::endl; 
+            std::cout << "cur_obj: " <<  cur_obj  << " convergence_eps: " << convergence_eps << std::endl;
 
             opt->take_newton_step(opt->get_current_x());
             if (opt->_dec < convergence_eps)
             {
-                 cur_iter = max_iters; // break
+                std::cout << "**** Converged, early exit ****" << std::endl;
+                std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
+
+                appState->keepSolving = false;
+
+                // In principle should load next config because an optimziation might have a schedule.
+                //  cur_iter = max_iters; // break
                 //  adhook.reset_params();
             }
 
@@ -451,6 +458,7 @@ bool Mint2DHook::simulateOneStep() {
             cur_iter++;
         }
         else{
+            std::cout << "**** Pause Simulation ****" << std::endl;
             this->pause();
         }
 
@@ -460,78 +468,50 @@ bool Mint2DHook::simulateOneStep() {
 
 
 }
-    // return false;
-    // if (appState->currentIteration < appState->maxIterations) {
-    //     appState->currentIteration++;
-    //     appState->innerLoopIteration++;
-
-    //     auto startTime = std::chrono::high_resolution_clock::now();
-
-    //     // Perform optimization step using TinyAD
-    //     auto [f, g, H_proj] = appState->optimizationFunction.eval_with_derivatives(appState->optimizationVariables);
-    //     std::cout << "Energy in iteration " << appState->currentIteration << ": " << f << std::endl;
-
-    //     Eigen::VectorXd d;
-    //     double decrement;
-
-    //     try {
-    //         updateOptimizationParameters();
-    //         d = TinyAD::newton_direction(g, H_proj, appState->solver, appState->identityWeight);
-    //         decrement = TinyAD::newton_decrement(d, g);
-    //         checkAndUpdateConvergence(decrement, f);
-    //     } catch (const std::exception& e) {
-    //         std::cerr << "Optimization error: " << e.what() << std::endl;
-    //         return false;
-    //     }
-
-    //     appState->optimizationVariables = TinyAD::line_search(appState->optimizationVariables, d, f, g, appState->optimizationFunction, 1.0, 0.8, 512, 1e-3);
-
-    //     auto endTime = std::chrono::high_resolution_clock::now();
-    //     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    //     std::cout << "Iteration took " << duration.count() << "ms" << std::endl;
-
-    //     // Update visualization data
-    //     updateVisualizationData();
-
-    //     // Check for final logging and other conditions
-    //     finalizeIteration();
-
-    //     return true;
-    // } else if (appState->currentIteration == appState->maxIterations) {
-    //     std::cout << "Final energy: " << appState->optimizationFunction.eval(appState->optimizationVariables) << std::endl;
-    //     appState->currentIteration++;
-    //     // Final logging and cleanup
-    //     // ...
-    //     return false;
-    // } else {
-    //     this->pause();
-    //     return false;
-    // }
-// }
 
 
-// void Mint2DHook::reset() {
-//     // Resetting simulation parameters to default or initial values
-//     appState->currentIteration = 0;
-//     appState->maxIterations = 5000; // Default maximum iterations
-//     appState->convergenceEpsilon = 1e-10;
+void Mint2DHook::resetAppState() {
+    // Resetting simulation parameters to default or initial values
+    appState->currentIteration = 0;
+    appState->maxIterations = 5000; // Default maximum iterations
+    appState->convergenceEpsilon = 1e-10;
 
-//     // Resetting mesh data
-//     appState->frames.setZero(appState->F.rows(), 2);
-//     appState->deltas.setZero(appState->F.rows(), 4);
-//     appState->curls_primal.setZero(appState->F.rows());
-//     appState->curls_sym.setZero(appState->F.rows());
-//     appState->smoothness_primal.setZero(appState->F.rows());
-//     appState->smoothness_sym.setZero(appState->F.rows());
 
-//     // Reinitialize the boundary conditions if needed
-//     initBoundaryConditions();
 
-//     // Optionally, re-register mesh with Polyscope if visualization needs a reset
-//     polyscope::removeAllStructures();
-//     polyscope::registerSurfaceMesh("c", appState->V, appState->F);
-//     polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
-// }
+    // Resetting mesh data
+    appState->frames.setZero(appState->F.rows(), 2);
+    appState->deltas.setZero(appState->F.rows(), 4);
+    appState->moments.setZero(appState->F.rows(), 0);
+
+    // Resetting derived quantities
+    appState->norms_vec.setZero(appState->F.rows());
+    appState->norms_delta.setZero(appState->F.rows());
+    appState->curls_primal.setZero(appState->F.rows());
+    appState->curls_sym.setZero(appState->F.rows());
+    appState->smoothness_primal.setZero(appState->F.rows());
+    appState->smoothness_sym.setZero(appState->F.rows());
+
+    // Reinitialize the boundary conditions if needed
+    initBoundaryConditions();
+
+    // Optionally, re-register mesh with Polyscope if visualization needs a reset
+    polyscope::removeAllStructures();
+    polyscope::registerSurfaceMesh("c", appState->V, appState->F);
+    polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
+}
+
+    //     appState->renderFrames = Eigen::MatrixXd::Zero(F.rows(), 3);
+
+    // appState->frames = Eigen::MatrixXd::Zero(F.rows(), 2);
+    // appState->moments = Eigen::MatrixXd::Zero(F.rows(), 0);
+    // appState->deltas = Eigen::MatrixXd::Zero(F.rows(), 4);
+    // //   metadata = Eigen::MatrixXd::Zero(F.rows(), 2);
+    // appState->norms_vec = Eigen::VectorXd::Zero(F.rows());
+    // appState->norms_delta = Eigen::VectorXd::Zero(F.rows());
+    // appState->curls_sym = Eigen::VectorXd::Zero(F.rows());
+    // appState->curls_primal = Eigen::VectorXd::Zero(F.rows());
+    // appState->smoothness_primal = Eigen::VectorXd::Zero(F.rows());
+    // appState->smoothness_sym = Eigen::VectorXd::Zero(F.rows());
 
 
 

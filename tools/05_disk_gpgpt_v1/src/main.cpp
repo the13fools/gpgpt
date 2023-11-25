@@ -113,6 +113,10 @@ int main(int argc, char **argv) {
 
   hook = new VizHook();
   hook->reset();
+  std::cout << "nvars in opt: after reset" << hook->opt->get_num_vars() << std::endl; 
+
+  // hook->initSimulation();
+  // std::cout << "nvars in opt: outside after init" << hook->opt->get_num_vars() << std::endl; 
 
   polyscope::state::userCallback = drawGUICallback;
 
