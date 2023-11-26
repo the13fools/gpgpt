@@ -144,8 +144,8 @@ public:
 
     // setup tinyad func
     OptZoo::addConstTestTerm(func, *appState);
-    OptZoo::addPinnedBoundaryTerm(func, *appState);
-    // OptZoo::addSmoothnessTerm(func, *appState);
+    // OptZoo::addPinnedBoundaryTerm(func, *appState);
+    OptZoo::addSmoothnessTerm(func, *appState);
     
 
 

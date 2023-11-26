@@ -111,13 +111,15 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
           // metadata field
           // Eigen::Vector2<T> metadata = s_curr.segment(2, 2);
 
-
+        // Dirichlet (i.e. pinned) boundary condition
         if (bound_face_idx(f_idx) == 1)
         {
             Eigen::Vector2<T> targ = appState.frames_orig.row(f_idx);
             return w_bound*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
         }
 
+
+        // Free boundary condition
         if (bound_face_idx(f_idx) == -1)
         {
             T ret = w_bound*delta.squaredNorm();
@@ -138,6 +140,9 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
             }
             return ret;
         }
+
+        // Not a boundary element
+        return T(0);
 
     });
 
@@ -194,7 +199,7 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
 
         // 
 
-        std::cout << "neighbors " << cur_surf.data().faceNeighbors(f_idx, 0) << " " << cur_surf.data().faceNeighbors(f_idx, 1) << " " << cur_surf.data().faceNeighbors(f_idx, 2) << std::endl;
+        std::cout << " neighbors " << cur_surf.data().faceNeighbors(f_idx, 0) << " " << cur_surf.data().faceNeighbors(f_idx, 1) << " " << cur_surf.data().faceNeighbors(f_idx, 2) << std::endl;
 
           Eigen::VectorX<T> s_a = element.variables(cur_surf.data().faceNeighbors(f_idx, 0));
           Eigen::VectorX<T> s_b = element.variables(cur_surf.data().faceNeighbors(f_idx, 1));
