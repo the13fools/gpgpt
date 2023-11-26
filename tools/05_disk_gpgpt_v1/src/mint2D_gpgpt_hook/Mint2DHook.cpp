@@ -16,8 +16,11 @@
 #include <TinyAD/Utils/NewtonDecrement.hh>
 #include <TinyAD/Utils/LineSearch.hh>
 #include "ImGuiWidgets.h"
+
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
+
+
 #include <igl/readOBJ.h>
 #include <igl/on_boundary.h>
 #include "date.h"
@@ -73,6 +76,10 @@ void Mint2DHook::updateRenderGeometry() {
     // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
+    
+
+
+
 
 ////
 //////  Here we calculate derived quantities. 
@@ -86,6 +93,10 @@ void Mint2DHook::updateRenderGeometry() {
 
 
     renderState = new AppState(*appState);
+
+    renderState->frames.resize(renderState->frames.rows(), 3);
+    renderState->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
+
 
     // Log data if necessary
     if (appState->shouldLogData) {
@@ -140,30 +151,30 @@ void Mint2DHook::updateRenderGeometry() {
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
     // Depending on the current element view, render different quantities
-    switch (appState->current_element) {
+    switch (renderState->current_element) {
         case Field_View::vec_norms:
         //  std::cout << "render norms_vec" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Vector", appState->norms_vec)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Vector", renderState->norms_vec)->setEnabled(true);
             break;
         case Field_View::delta_norms:
         //  std::cout << "render norms_delta" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Delta", appState->norms_delta)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Delta", renderState->norms_delta)->setEnabled(true);
             break;
         case Field_View::vec_dirch:
         //  std::cout << "render smoothness_primal" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Primal", appState->smoothness_primal)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Primal", renderState->smoothness_primal)->setEnabled(true);
             break;
         case Field_View::moment_dirch:
         //  std::cout << "render smoothness_sym" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Moment", appState->smoothness_sym)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Moment", renderState->smoothness_sym)->setEnabled(true);
             break;
         case Field_View::primal_curl_residual:
         //  std::cout << "render primal_curl" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Primal Residual", appState->curls_primal)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Primal Residual", renderState->curls_primal)->setEnabled(true);
             break;
         case Field_View::sym_curl_residual:
         //  std::cout << "render sym_curl" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Symmetric Residual", appState->curls_sym)->setEnabled(true);
+            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Symmetric Residual", renderState->curls_sym)->setEnabled(true);
             break;
         case Field_View::gui_free:
             // Implement logic for gui_free if required
@@ -177,9 +188,15 @@ void Mint2DHook::updateRenderGeometry() {
         // Example: Vector field visualization
         if (appState->showVectorField) {
             //  std::cout << "show vector field" << std::endl;
-            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", appState->renderFrames);
-            // vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
-            // vectorField->setEnabled(true);
+
+            //  std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
+            //  std::cout << "renderState->frames.rows() " << renderState->frames.rows() << std::endl;
+            //  polyscope::getSurfaceMesh("c");
+
+
+            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", renderState->frames);
+            vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
+            vectorField->setEnabled(true);
         }
 
         polyscope::requestRedraw();
@@ -428,30 +445,32 @@ bool Mint2DHook::simulateOneStep() {
     int cur_iter = appState->currentIteration;
     double convergence_eps = appState->convergenceEpsilon;
     double cur_obj = opt->eval_func_at(opt->get_current_x());
-      if (cur_iter < max_iters && cur_obj > convergence_eps && appState->keepSolving)
+    if (cur_iter < max_iters && cur_obj > convergence_eps && appState->keepSolving)
+    {
+        cur_iter++;
+        std::cout << "*** GLOBAL STEP: " << cur_iter << "*** "  << std::endl;
+        std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
+        std::cout << "nvars in opt" << opt->get_num_vars() << std::endl; 
+        std::cout << "cur_obj: " <<  cur_obj  << " convergence_eps: " << convergence_eps << std::endl;
+
+        opt->take_newton_step(opt->get_current_x());
+        if (opt->_dec < convergence_eps)
         {
-            cur_iter++;
-            std::cout << "*** GLOBAL STEP: " << cur_iter << "*** "  << std::endl;
-            std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
-            std::cout << "nvars in opt" << opt->get_num_vars() << std::endl; 
-            std::cout << "cur_obj: " <<  cur_obj  << " convergence_eps: " << convergence_eps << std::endl;
+            std::cout << "**** Converged, early exit ****" << std::endl;
+            std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
 
-            opt->take_newton_step(opt->get_current_x());
-            if (opt->_dec < convergence_eps)
-            {
-                std::cout << "**** Converged, early exit ****" << std::endl;
-                std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
+            appState->keepSolving = false;
 
-                appState->keepSolving = false;
+            // In principle should load next config because an optimziation might have a schedule.
+            //  cur_iter = max_iters; // break
+            //  adhook.reset_params();
+        }
 
-                // In principle should load next config because an optimziation might have a schedule.
-                //  cur_iter = max_iters; // break
-                //  adhook.reset_params();
-            }
+        updateAppStateFromOptState();
 
             
 
-        }
+     }
         else if (cur_iter == max_iters) 
         {
             TINYAD_DEBUG_OUT("Final energy: " << func.eval(opt->get_current_x()));
@@ -574,6 +593,8 @@ void Mint2DHook::initBoundaryConditions() {
             }
         }
     }
+
+    appState->frames_orig = appState->frames;
 
     // 
 

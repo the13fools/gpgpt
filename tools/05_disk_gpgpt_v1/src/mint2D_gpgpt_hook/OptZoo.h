@@ -44,12 +44,15 @@
 
         Surface cur_surf = *(appState.cur_surf);
 
+        T w_bound = appState.config->w_bound;
+
         if (f_idx == 0)
         {
             std::cout << "eval const obj" << std::endl;
+
+            std::cout << " w_bound " << w_bound << " curr " << curr << " delta " << delta << std::endl;
         }
 
-        T w_bound = appState.config->w_bound;
 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
       

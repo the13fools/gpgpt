@@ -63,6 +63,7 @@ public:
     // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;
     Eigen::MatrixXd frames_orig;
+    // Eigen::MatrixXd frames_viz;
 
     Eigen::MatrixXd moments; // TODO implement this!
     std::vector<Eigen::MatrixXd> frame_jacobians; // TODO implement this!
@@ -86,7 +87,7 @@ public:
     bool fieldViewActive [8] = {true, true, true, true, true, true, true, false};
     bool shouldLogData = true;
     Field_View current_element;
-    bool showVectorField;
+    bool showVectorField = true;
 
     bool LogToFile(); // Log based on fieldViewActive state
 

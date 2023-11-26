@@ -7,7 +7,7 @@
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
 
-
+#include <Eigen/Dense>
 #include <Eigen/IterativeLinearSolvers>
 
 #include <TinyAD/ScalarFunction.hh>
@@ -143,7 +143,7 @@ public:
     // auto func = _opt._func;
 
     // setup tinyad func
-    // OptZoo::addConstTestTerm(func, *appState);
+    OptZoo::addConstTestTerm(func, *appState);
     OptZoo::addPinnedBoundaryTerm(func, *appState);
     // OptZoo::addSmoothnessTerm(func, *appState);
     
@@ -183,6 +183,38 @@ public:
     {
       return Mint2DHook::simulateOneStep();
       
+    }
+
+    virtual void updateAppStateFromOptState()
+    {
+      int nelem = appState->F.rows();
+      int nvars = 6; // opt->get_num_vars();
+
+      Eigen::VectorXd x = opt->get_current_x();
+      for(int i = 0; i < nelem; i++)
+      {
+        appState->frames.row(i) = x.segment<2>(nvars*i);
+        appState->deltas.row(i) = x.segment<4>(nvars*i+2);
+
+        
+      }
+
+        // std::cout << x.segment<2>(nvars*i) << std::endl;
+        // std::cout << x.segment<2>(nvars*i+4) << std::endl;
+
+        // std::cout << appState->frames.rows() << " " << appState->deltas.rows() << std::endl;
+        // std::cout << appState->frames.cols() << " " << appState->deltas.cols() << std::endl;
+
+
+      // std::cout << "updateAppStateFromOptState" << std::endl;
+      //   func.x_to_data(opt->get_current_x(), [&] (int f_idx, const Eigen::VectorXd& v) {
+      //           appState->frames.row(f_idx) = v.head<2>();
+      //           appState->deltas.row(f_idx) = v.tail<2>();
+      //           // if (bound_face_idx(f_idx) == 1)
+      //           // {
+      //           //   frames.row(f_idx) = frames_orig.row(f_idx);
+      //           // }
+      //           });
     }
 
 

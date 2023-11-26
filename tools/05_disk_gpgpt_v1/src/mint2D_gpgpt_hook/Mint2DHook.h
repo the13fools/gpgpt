@@ -36,6 +36,7 @@ public:
     virtual void initSimulation();
     virtual bool simulateOneStep();
     virtual void pause();
+    virtual void updateAppStateFromOptState() = 0;
 
     void resetAppState();
     void initializeLogFolder(); 
