@@ -29,10 +29,12 @@
 
             // auto [f, g, H_proj] = func.eval_with_hessian_proj(x);
             // auto [f, g, H_proj] = func.eval_with_derivatives(x);
-
-            std::cout << std::endl << "take a newton step" << std::endl;
-
+            
             double cur_obj = this->eval_func_at(x);
+
+            std::cout << std::endl << "take a newton step.  Cur Objective: " << cur_obj << std::endl;
+
+
             if (cur_obj < 1e-15)
             {
               std::cout << "Tiny objective: " << cur_obj << "  Exiting. This shouldn't have been called in the first place." << std::endl;

@@ -151,16 +151,22 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
 }
 
 
+
+// The elementwise laplacian term 
+
 void addSmoothnessTerm(SF6& func, const AppState& appState) {
 
-    std::cout << "add smoothness obj" << std::endl;
+    std::cout << "add smoonthess obj" << std::endl;
 
     func.add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
-        using T = TINYAD_SCALAR_TYPE(element);
-        // Init element state from solver DOFs + appState optimization data.  
 
-         // Get variable 2D vertex positions
+     // Evaluate element using either double or TinyAD::Double
+        using T = TINYAD_SCALAR_TYPE(element);
+
+
+
+        // Get variable 2D vertex positions
         Eigen::Index f_idx = element.handle;
         Eigen::VectorX<T> s_curr = element.variables(f_idx);
         Eigen::Vector2<T> curr =  s_curr.head(2);
@@ -169,7 +175,11 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
         Eigen::Matrix2<T> currcurr = curr*curr.transpose();
         Eigen::Vector4<T> currcurrt = flatten(currcurr);
 
-        Surface cur_surf = *appState.cur_surf;
+        Surface cur_surf = *(appState.cur_surf);
+
+        // T w_bound = appState.config->w_bound;
+
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
 
         double w_bound = appState.config->w_bound;
         double w_smooth_vector = appState.config->w_bound;
@@ -187,7 +197,7 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
 
 
 // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
-        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+        // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
         if (bound_face_idx(f_idx) == 1)
         {
             return T(0);
@@ -195,11 +205,16 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
 
 
 
-        std::cout << "smoothness idx " << f_idx;
+        // std::cout << "smoothness idx " << f_idx;
 
         // 
 
-        std::cout << " neighbors " << cur_surf.data().faceNeighbors(f_idx, 0) << " " << cur_surf.data().faceNeighbors(f_idx, 1) << " " << cur_surf.data().faceNeighbors(f_idx, 2) << std::endl;
+        // std::cout << " neighbors " << cur_surf.data().faceNeighbors(f_idx, 0) << " " << cur_surf.data().faceNeighbors(f_idx, 1) << " " << cur_surf.data().faceNeighbors(f_idx, 2) << std::endl;
+
+
+///////////////////
+//// Initialize the neighbor meta-data 
+///////////////////
 
           Eigen::VectorX<T> s_a = element.variables(cur_surf.data().faceNeighbors(f_idx, 0));
           Eigen::VectorX<T> s_b = element.variables(cur_surf.data().faceNeighbors(f_idx, 1));
@@ -231,12 +246,6 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
 
 
 
-                    // return (T) 0.;
-         
-
-
-
-
 
 
           Eigen::Vector2<T> curr_normalized = curr.normalized();
@@ -244,17 +253,17 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
           curr_perp(0) = curr_normalized(1);
           curr_perp(1) = -curr_normalized(0);
 
-          // T s_perp_term = pow(a.dot(curr_perp),2) + pow(b.dot(curr_perp),2) + pow(c.dot(curr_perp), 2);
 
-          // T s_perp_term = ((a.dot(curr_perp) + b.dot(curr_perp) + c.dot(curr_perp)) * (curr_perp * curr_perp.transpose())).norm();
-          T s_perp_term = ((a.dot(curr_perp) + b.dot(curr_perp) + c.dot(curr_perp)) * (currcurrt)).squaredNorm();
+///////////////////
+//// Initlaize elementwise objectives 
+///////////////////
 
-          // T primal_dirichlet_term = (a + b + c - 3*curr).squaredNorm();
-          // T dirichlet_term = (aat+bbt+cct-3*currcurrt).squaredNorm();
+                  
+          // T primal_biharmonic_term = (a + b + c - 3*curr).squaredNorm();
+          // T biharmonic_term = (aat+bbt+cct-3*currcurrt).squaredNorm();
 
           T primal_dirichlet_term = (a - curr).squaredNorm() + (b - curr).squaredNorm() + (c - curr).squaredNorm();
           T dirichlet_term = (aat-currcurrt).squaredNorm() + (bbt-currcurrt).squaredNorm() + (cct-currcurrt).squaredNorm();
-
 
 
           // T dirichlet_term = (aa + bb + cc - 3*currcurr).norm();
@@ -269,45 +278,44 @@ void addSmoothnessTerm(SF6& func, const AppState& appState) {
 
           // T delta_dirichlet = (a_delta+b_delta+c_delta-3*delta).squaredNorm()*delta_rescale;
 
-          T delta_norm_term = delta_rescale * delta.squaredNorm();// + delta_dirichlet;
+        //   T delta_norm_term = delta_rescale * delta.squaredNorm();// + delta_dirichlet;
 
     
 
-          // curl_term += 1e-5*abs(curl_term - metadata(1));
+         return dirichlet_term;
 
 
-          // T atten = 1./(cur_iter*cur_iter + 1);
-          // T atten = 1./(cur_iter + 1);
 
-          // T atten = 1.;
 
-          T delta_weight = .1; // std::min(w_curl/100., 1./w_attenuate);
 
-          T ret = delta_norm_term * delta_weight;
-          if (w_smooth_vector > 0)
-            return w_smooth_vector * primal_dirichlet_term + ret;
-          if (w_smooth > 0)
-            ret = ret + w_attenuate * w_smooth * dirichlet_term;
+        //   T delta_weight = .1; // std::min(w_curl/100., 1./w_attenuate);
+
+        //   T ret = delta_norm_term * delta_weight;
+        //   if (w_smooth_vector > 0)
+        //     return w_smooth_vector * primal_dirichlet_term + ret;
+        //   if (w_smooth > 0)
+        //     ret = ret + w_attenuate * w_smooth * dirichlet_term;
      
 
-          return ret;
+        //   return ret;
+
+
+        
+
 
     });
 
-
-// (w_smooth * dirichlet_term + 
-//                   w_s_perp * s_perp_term) *  + 
-//                   w_curl*curl_term  + 
-//                  delta_norm_term * delta_weight;
-
-          // return (w_smooth * dirichlet_term + 
-          //         w_s_perp * s_perp_term) * atten + 
-          //        w_curl*curl_term  + 
-          //        delta_norm_term;
-
-
+ 
 
 }
+
+          // T s_perp_term = pow(a.dot(curr_perp),2) + pow(b.dot(curr_perp),2) + pow(c.dot(curr_perp), 2);
+          // T s_perp_term = ((a.dot(curr_perp) + b.dot(curr_perp) + c.dot(curr_perp)) * (curr_perp * curr_perp.transpose())).norm();
+       
+       
+       
+        //   T s_perp_term = ((a.dot(curr_perp) + b.dot(curr_perp) + c.dot(curr_perp)) * (currcurrt)).squaredNorm();
+
 
 void addCurlTerm(SF6& func, const AppState& appState) {
 
