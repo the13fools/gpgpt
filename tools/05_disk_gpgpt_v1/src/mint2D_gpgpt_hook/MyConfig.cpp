@@ -7,8 +7,8 @@
 MyConfig::MyConfig()
     : w_bound(1.e6),
       w_smooth(0.1),
-      w_smooth_vector(0.1),
-      w_curl(0.1),
+      w_smooth_vector(1),
+      w_curl(1e5),
       w_s_perp(0.),
       w_attenuate(0.1),
       convergence_eps(1e-6),

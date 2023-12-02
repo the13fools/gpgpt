@@ -20,13 +20,13 @@ public:
 
     Mint2DHook(AppState* state) : PhysicsHook() {
         appState = state;
-        renderState = appState;
+        outputData = appState->os;
         opt = new ADFunc_TinyAD_Instance<6>();
     //   current_element = Field_View::vec_norms;
     }
     virtual ~Mint2DHook(){
         delete appState;
-        delete renderState;
+        delete outputData;
         delete opt;
     }
     
@@ -42,6 +42,7 @@ public:
     void initializeLogFolder(); 
     void initializeOtherParameters(); 
     void initBoundaryConditions();
+    void initCurlOperators();
 
 
 // these are moved to appState
@@ -59,7 +60,10 @@ public:
 
 
     AppState* appState; // Pointer to AppState instance
-    AppState* renderState; // We clone visualization data to a different object, and update it in a threadsafe manner.  
+
+    OutputState* outputData; // threadsafe copy of the output fields.
+
+    // AppState* renderState; // We clone visualization data to a different object, and update it in a threadsafe manner.  
     
     // This is an interface to take optimization steps with respect to a set objective.
     // there is some magic going on under the hood mostly involving the tinyAD library at the moment.

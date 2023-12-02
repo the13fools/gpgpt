@@ -26,7 +26,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_S
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
 
-target_link_libraries(${PROJECT_NAME} gpgpt polyscope TinyAD igl::core) # OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} gpgpt polyscope TinyAD igl::core args) # OpenMP::OpenMP_CXX)
 
 # add_dependencies(${PROJECT_NAME}  ${FRONTENDFILES})
 

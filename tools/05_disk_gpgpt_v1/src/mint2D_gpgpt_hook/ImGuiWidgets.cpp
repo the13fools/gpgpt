@@ -27,21 +27,49 @@ namespace ImGuiWidgets {
 
     // Function to display checkboxes for field views in ImGui
     void ShowFieldViewCheckboxes(AppState& appState) {
-        ImGui::Text("Field Views:");
+       if ( ImGui::CollapsingHeader("Select Which Views To Log:") ) 
+       {
 
-        for (int i = 0; i < Views::Element_COUNT; ++i) {
-            Field_View field = static_cast<Field_View>(i);
-            const char* fieldName = fieldViewToString(field).c_str();
-            bool* active = &appState.fieldViewActive[field];
+            for (int i = 0; i < Views::Element_COUNT-1; ++i) {
+                Field_View field = static_cast<Field_View>(i);
+                // const char* fieldName = fieldViewToString(field).c_str();
+                bool* active = &appState.fieldViewActive[field];
+                
+                
+                std::string field_str = fieldViewToFileStub(field);
+                std::string checkbox = (field_str + "##cb");
 
-            ImGui::Checkbox(fieldName, active);
-            ImGui::SameLine();
-        }
+
+                // std::cout << fieldName << std::endl;
+                ImGui::Checkbox(checkbox.c_str(), active);
+                // ImGui::SameLine();
+            }
+
+       }
     }
 
     // Function to display run information in ImGui
     void ShowRunInfo(AppState& appState) {
         ImGui::Text("Run Info:");
+
+        ImGui::Text( appState.solveDescription.c_str() );
+
+        // ImGui::Text("Current File: %s", appState.fileList[appState.currentFileIndex].c_str());
+        // ImGui::Text("Current Element: %s", fieldViewToString(appState.current_element).c_str());
+        ImGui::Text("Current Iteration: %d", appState.currentIteration);
+        ImGui::Text("Current File ID: %d", appState.currentFileID);
+
+        // ImGui::Text("Config State:  bound %.0f", (float) appState.config->w_bound);
+
+        // std::cout << "blah" << std::endl;
+        //  smooth %f smooth primal %f curl %f", , appState.config->w_smooth, appState.config->w_smooth_vector, appState.config->w_curl);
+
+        ImGui::Text("Config State:");
+        ImGui::Text("smooth primal %.1f bound %.1f curl %.1f smooth %.5f ", (float) appState.config->w_smooth_vector, (float) appState.config->w_bound, (float) appState.config->w_curl, (float) appState.config->w_smooth);
+
+        // ImGui::Text("Current Step Time: %f", appState.currentStepTime);
+        ImGui::Text("Current Energy: %f", appState.os->cur_global_objective_val);
+
 
         // ImGui::Text("Current Frame: %d", appState.currentFrameIndex);
         // ImGui::Text("Current Moment: %d", appState.currentMomentIndex);
@@ -64,7 +92,7 @@ namespace ImGuiWidgets {
     void AddFieldViewScalarsToPolyscope(AppState& appState) {
         for (int i = 0; i < Views::Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
-            std::string fieldName = fieldViewToString(field);
+            std::string fieldName = fieldViewToFileStub(field);
             // std::vector<double> scalarValues(appState.fieldData[field].begin(), appState.fieldData[field].end());
 
             // Calculate bounds (10th and 90th percentiles)
@@ -72,7 +100,7 @@ namespace ImGuiWidgets {
             float maxBound = appState.fieldBounds[field].upper;
 
             // Add the scalar quantity with bounds to Polyscope
-            // auto scalarQ = polyscope::getVolumeMesh("my mesh")->addVertexScalarQuantity(fieldName, scalarValues);
+            // auto scalarQ = polyscope::curls_primal("my mesh")->addVertexScalarQuantity(fieldName, scalarValues);
             // scalarQ->setMapRange({minBound, maxBound});
         }
     }
@@ -123,7 +151,7 @@ namespace ImGuiWidgets {
     // Function to display a field view scrubber in ImGui
     void ShowFieldViewScrubber(AppState& appState, Field_View& currentField) {
         ImGui::Text("Field View Scrubber:");
-        ImGui::Text("Current Field: %s", fieldViewToString(currentField).c_str());
+        ImGui::Text("Current Field: %s", fieldViewToFileStub(currentField).c_str());
 
         // Display a combo box to select the current field view
         if (ImGui::BeginCombo("Select Field View", fieldViewToString(currentField).c_str())) {
@@ -139,6 +167,41 @@ namespace ImGuiWidgets {
             }
             ImGui::EndCombo();
         }
+
+        bool* active = &appState.fieldViewActive[currentField];
+        float* minVal = &appState.fieldBounds[currentField].lower;
+        float* maxVal = &appState.fieldBounds[currentField].upper;
+
+        std::string field_str = fieldViewToFileStub(currentField);
+            
+        std::string percentile_lower = ("lower_bound##percentile" + field_str);
+        std::string percentile_upper = ("upper_bound##percentile" + field_str);
+
+        ImGui::PushItemWidth(150);
+        ImGui::InputFloat( percentile_lower.c_str(), minVal, 0.01f, .10f, "%.3f");
+        ImGui::SameLine();
+        ImGui::InputFloat( percentile_upper.c_str(), maxVal, 0.01f, .10f, "%.3f");
+        ImGui::PopItemWidth();
+
+        std::string override_lower = ("ovr_lower##ovr" + field_str);
+        std::string overide_upper = ("ovr_upper##ovr" + field_str);
+
+        bool* ovr_active = &appState.override_bounds_active;
+        float* ovr_minVal = &appState.override_bounds.lower;
+        float* ovr_maxVal = &appState.override_bounds.upper;
+                
+        std::string checkbox = ("ovr##cb");
+
+
+        ImGui::PushItemWidth(150);
+        ImGui::InputFloat( override_lower.c_str(), minVal, 0.01f, .10f, "%.3f");
+        ImGui::SameLine();
+        ImGui::InputFloat( overide_upper.c_str(), maxVal, 0.01f, .10f, "%.3f");
+        ImGui::SameLine();
+        // std::cout << fieldName << std::endl;
+        ImGui::Checkbox(checkbox.c_str(), ovr_active);
+
+        ImGui::PopItemWidth();
 
     // //  const char* element_names[Field_View::Element_COUNT] = { "Vector Norms", "Delta Norms", "Vector Dirichlet", "Symmetric Dirichlet", "Vector Curl", "Symmetric Curl", "free" };
     //         // const char* current_element_name = (current_element >= 0 && current_element < Field_View::Element_COUNT) ? element_names[current_element] : "Unknown";
@@ -166,15 +229,21 @@ namespace ImGuiWidgets {
         ShowOptWeights(appState);
 
         // Display checkboxes with min and max sliders for field views
-        ShowFieldViewCheckboxesWithSliders(appState);
+        // ShowFieldViewCheckboxesWithSliders(appState);
+    
+
 
         // Display a field view scrubber
         ShowFieldViewScrubber(appState, appState.current_element);
 
- ImGui::ShowDemoWindow(); // TODO remove this
+        ShowFieldViewCheckboxes(appState);
 
         // Display run information
+         ImGui::Begin("Optimization State");
         ShowRunInfo(appState);
+        ImGui::End();
+
+         ImGui::ShowDemoWindow(); // TODO remove this
 
         // Display a plot for run_step_times
         // ShowPlot(appState.run_step_times, "Step Times", 0.0f, 100.0f);

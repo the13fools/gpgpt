@@ -8,7 +8,7 @@
 // Constructor here
 AppState::AppState()
 {
-
+    os = new OutputState();
 }
 
 
@@ -53,22 +53,22 @@ bool AppState::LogToFile()
                 // Serialize the corresponding Eigen::Vector
                 switch (static_cast<Field_View>(i)) {
                     case Field_View::vec_norms:
-                        Serialization::serializeVector(this->norms_vec, filePath);
+                        Serialization::serializeVector(os->norms_vec, filePath);
                         break;
                     case Field_View::delta_norms:
-                        Serialization::serializeVector(this->norms_delta, filePath);
+                        Serialization::serializeVector(os->norms_delta, filePath);
                         break;
                     case Field_View::vec_dirch:
-                        Serialization::serializeVector(this->smoothness_primal, filePath);
+                        Serialization::serializeVector(os->smoothness_primal, filePath);
                         break;
                     case Field_View::moment_dirch:
-                        Serialization::serializeVector(this->smoothness_sym, filePath);
+                        Serialization::serializeVector(os->smoothness_sym, filePath);
                         break;
                     case Field_View::primal_curl_residual:
-                        Serialization::serializeVector(this->curls_primal, filePath);
+                        Serialization::serializeVector(os->curls_primal, filePath);
                         break;
                     case Field_View::sym_curl_residual:
-                        Serialization::serializeVector(this->curls_sym, filePath);
+                        Serialization::serializeVector(os->curls_sym, filePath);
                         break;
                     // ... handle other Field_View cases as needed
                     default:

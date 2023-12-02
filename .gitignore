@@ -36,3 +36,5 @@ build/*
 imgui.ini
 .vscode
 *.DS_Store
+*.polyscope.ini
+

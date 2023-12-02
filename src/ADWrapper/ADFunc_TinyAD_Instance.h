@@ -20,7 +20,9 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
             // In practice: use f to evaluate the function, gradient, and hessian 
     public: 
 
-    ADFunc_TinyAD_Instance(){};
+    ADFunc_TinyAD_Instance(){
+        _cur_x = Eigen::VectorXd::Random(N) * 1e-5;
+    };
     ~ADFunc_TinyAD_Instance(){};
 
     // ADFunc_TinyAD_Instance& operator=(const ADFunc_TinyAD_Instance& other)

@@ -8,13 +8,18 @@
 
 #include "polyscope/polyscope.h"
 
-#include "VizHook.h"
+// #include "VizHook.h"
+
+#include "Solve_L2_newton_rank1.h"
+#include "Mint2DHook.h"
 
 #include <thread>
 
+#include "args.hxx"
 
 
-static VizHook *hook = NULL;
+
+static Mint2DHook *hook = NULL;
 
 
 void toggleSimulation()
@@ -81,23 +86,29 @@ int main(int argc, char **argv) {
 
 // Comment out parser.  Should be easy to add in commandline scripting with this though.
 
-  // args::ArgumentParser parser("A simple demo of Polyscope with libIGL.\nBy "
-  //                             "Nick Sharp (nsharp@cs.cmu.edu)",
-  //                             "");
-  // args::Positional<std::string> inFile(parser, "mesh", "input mesh");
+  args::ArgumentParser parser(("This is an example optimization that studies integrability in 2d.\n "
+                              "Built on top of an LLM assisted codebase called gpgpt. \n\n\n"
+                              ""));
+  args::Positional<std::string> inDir(parser, "out_dir", "load a directory to restart optimization");
+  args::Positional<std::string> inObj(parser, "in_obj", "load a surface mesh to solve if out_dir is empty");
 
-  // // Parse args
-  // try {
-  //   parser.ParseCLI(argc, argv);
-  // } catch (args::Help) {
-  //   std::cout << parser;
-  //   return 0;
-  // } catch (args::ParseError e) {
-  //   std::cerr << e.what() << std::endl;
+  // Parse args
+  try {
+    parser.ParseCLI(argc, argv);
+    // std::cout << parser;
+  } catch (args::Help) {
+    std::cout << parser;
+    return 0;
+  } catch (args::ParseError e) {
+    std::cerr << e.what() << std::endl;
 
-  //   std::cerr << parser;
-  //   return 1;
-  // }
+    std::cerr << parser;
+    return 1;
+  }
+
+
+
+  
 
 
   // Options
@@ -111,7 +122,9 @@ int main(int argc, char **argv) {
   // Initialize polyscope
   polyscope::init();
 
-  hook = new VizHook();
+  hook = static_cast<Mint2DHook*>(new Solve_L2_newton_rank1());
+
+  hook->appState->directoryPath = args::get(inDir);
   hook->reset();
   std::cout << "nvars in opt: after reset" << hook->opt->get_num_vars() << std::endl; 
 
@@ -119,6 +132,8 @@ int main(int argc, char **argv) {
   // std::cout << "nvars in opt: outside after init" << hook->opt->get_num_vars() << std::endl; 
 
   polyscope::state::userCallback = drawGUICallback;
+  polyscope::options::programName = "gpgpt - MINT2D";
+  polyscope::options::verbosity = 1;
 
 //   polyscope::GroundPlaneMode::None;
 // polyscope::options::groundPlaneEnabled = false;

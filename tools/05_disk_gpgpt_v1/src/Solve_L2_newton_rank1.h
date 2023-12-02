@@ -1,3 +1,8 @@
+#ifndef SOLVE_L2_NETWON_RANK1_H
+#define SOLVE_L2_NETWON_RANK1_H
+
+
+
 #include "PhysicsHook.h"
 #include "Mint2DHook.h"
 
@@ -38,13 +43,18 @@
 
 
 
-class VizHook : public Mint2DHook
+class Solve_L2_newton_rank1 : public Mint2DHook
 {
 public:
-    VizHook() : Mint2DHook(new AppState()) {
+    Solve_L2_newton_rank1() : Mint2DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
+      appState->solveType = "L2_newton_rank1";
+      appState->solveDescription = "L2_newton_rank1";
     }
 
+    ~Solve_L2_newton_rank1(){
+      delete _opt;
+    }
 
     virtual void drawGUI()
     {
@@ -52,21 +62,14 @@ public:
 
     }
 
-    ~VizHook(){
-      delete _opt;
-    }
-
-
-
-
     virtual void initSimulation()
     {
 
       // cur_mesh_name = "circle_subdiv";
 
       // cur_mesh_name = "circle";
-      appState->meshName = "circle_irreg";
-      // appState->meshName = "circle_1000";
+      // appState->meshName = "circle_irreg";
+      appState->meshName = "circle_1000";
 
 
 
@@ -97,11 +100,12 @@ public:
     /////////////////////////////
     /// 
     /////////////////////////////
-    OptZoo::addConstTestTerm(func, *appState);
+    // OptZoo::addConstTestTerm(func, *appState);
     OptZoo::addPinnedBoundaryTerm(func, *appState);
 
     // OptZoo::addPinnedBoundaryTerm(func, *appState);
     OptZoo::addSmoothnessTerm(func, *appState);
+    OptZoo::addCurlTerm(func, *appState);
     
 
 
@@ -139,9 +143,10 @@ public:
     virtual bool simulateOneStep()
     {
       return Mint2DHook::simulateOneStep();
-      
+
     }
 
+// This is called after each step.  
     virtual void updateAppStateFromOptState()
     {
       int nelem = appState->F.rows();
@@ -154,6 +159,15 @@ public:
         appState->deltas.row(i) = x.segment<4>(nvars*i+2);
 
         
+      }
+
+      if ( appState->keepSolving == false && appState->config->w_smooth_vector > 0)
+      {
+        appState->keepSolving = true;  
+        appState->config->w_smooth_vector = 0;
+
+        std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
+
       }
 
         // std::cout << x.segment<2>(nvars*i) << std::endl;
@@ -188,12 +202,12 @@ protected:
      decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
 
 
-      std::vector<Eigen::Matrix2d> rots;// 
-      std::vector<Eigen::Matrix4d> rstars;
-      std::vector<Eigen::Vector4d> e_projs;
-      std::vector<Eigen::Vector2d> e_projs_primal;
+      // std::vector<Eigen::Matrix2d> rots;// 
+      // std::vector<Eigen::Matrix4d> rstars;
+      // std::vector<Eigen::Vector4d> e_projs;
+      // std::vector<Eigen::Vector2d> e_projs_primal;
 
-      Eigen::MatrixXd e_projs2;
+      // Eigen::MatrixXd e_projs2;
 
 
 
@@ -236,3 +250,6 @@ protected:
 //           // ret << frames.row(f_idx), deltas.row(f_idx);
 //           return ret;
 //           });
+
+
+#endif // SOLVE_L2_NETWON_RANK1_H

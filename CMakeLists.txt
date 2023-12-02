@@ -194,6 +194,9 @@ FetchContent_MakeAvailable(polyscope)
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
+FetchContent_Declare(args URL https://github.com/Taywee/args/archive/refs/tags/6.4.6.tar.gz)
+FetchContent_MakeAvailable(args)
+
 # add_subdirectory("/Userss/fool/Documents/mint/polyscope/build/src")
 
 # add_subdirectory("/Users/fool/Documents/mint/polyscope/build/deps")

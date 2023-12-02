@@ -27,6 +27,7 @@
 #include "MyConfig.h"
 #include "ADWrapper/ADFuncRunner.h"
 #include "Surface.h"
+#include "UtilsMisc.h"
 
 
 
@@ -84,18 +85,25 @@ void Mint2DHook::updateRenderGeometry() {
 ////
 //////  Here we calculate derived quantities. 
 /// 
-    appState->norms_vec = appState->frames.rowwise().norm();
-    appState->norms_delta = appState->deltas.rowwise().norm();
+    appState->os->norms_vec = appState->frames.rowwise().norm();
+    appState->os->norms_delta = appState->deltas.rowwise().norm();
+
+    double cur_obj = opt->eval_func_at(opt->get_current_x());
+    appState->os->cur_global_objective_val = cur_obj;
+
+    // std::cout << "cur_obj " << cur_obj << std::endl;
     
 
 
     std::cout << "update render geometry" << std::endl;
 
+    outputData = new OutputState(*appState->os);
 
-    renderState = new AppState(*appState);
 
-    renderState->frames.resize(renderState->frames.rows(), 3);
-    renderState->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
+    // renderState = new AppState(*appState);
+
+    outputData->frames.resize(appState->frames.rows(), 3);
+    outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
 
 
     // Log data if necessary
@@ -151,30 +159,32 @@ void Mint2DHook::updateRenderGeometry() {
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
     // Depending on the current element view, render different quantities
-    switch (renderState->current_element) {
+    
+
+
+    const char* cur_field = fieldViewToFileStub(appState->current_element).c_str();
+    
+    // std::cout << cur_field << std::endl;
+
+    Eigen::VectorXd cur_scalar_quantity; 
+    switch (appState->current_element) {
         case Field_View::vec_norms:
-        //  std::cout << "render norms_vec" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Vector", renderState->norms_vec)->setEnabled(true);
+            cur_scalar_quantity = outputData->norms_vec;
             break;
         case Field_View::delta_norms:
-        //  std::cout << "render norms_delta" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Norms Delta", renderState->norms_delta)->setEnabled(true);
+            cur_scalar_quantity = outputData->norms_delta;
             break;
         case Field_View::vec_dirch:
-        //  std::cout << "render smoothness_primal" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Primal", renderState->smoothness_primal)->setEnabled(true);
+            cur_scalar_quantity = outputData->smoothness_primal;
             break;
         case Field_View::moment_dirch:
-        //  std::cout << "render smoothness_sym" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Dirichlet Moment", renderState->smoothness_sym)->setEnabled(true);
+            cur_scalar_quantity = outputData->smoothness_sym;
             break;
         case Field_View::primal_curl_residual:
-        //  std::cout << "render primal_curl" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Primal Residual", renderState->curls_primal)->setEnabled(true);
+            cur_scalar_quantity = outputData->curls_primal;
             break;
         case Field_View::sym_curl_residual:
-        //  std::cout << "render sym_curl" << std::endl;
-            polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("Curl Symmetric Residual", renderState->curls_sym)->setEnabled(true);
+            cur_scalar_quantity = outputData->curls_sym;
             break;
         case Field_View::gui_free:
             // Implement logic for gui_free if required
@@ -183,6 +193,31 @@ void Mint2DHook::updateRenderGeometry() {
             std::cerr << "Unknown Field_View option selected in AppState." << std::endl;
             break;
     }
+
+
+    auto cur_scalar_field = polyscope::getSurfaceMesh("c")->addFaceScalarQuantity(cur_field, cur_scalar_quantity);
+    if (appState->prev_frame_element != appState->current_element)
+    {
+        cur_scalar_field->setEnabled(true);
+        double maxbound = cur_scalar_quantity.maxCoeff();
+        double minbound = cur_scalar_quantity.minCoeff();
+        double diff = maxbound - minbound;
+        FieldBounds cur_bounds = appState->fieldBounds[appState->current_element];
+        double abs_max = cur_bounds.upper * diff + minbound;
+        double abs_min = cur_bounds.lower * diff + minbound;
+
+        cur_scalar_field->setMapRange(std::make_pair(abs_min, abs_max));
+
+
+    }
+
+//     if (appState->current_element != Field_View::gui_free)
+//     {
+//         // cur_scalar_field->setEnabled(true);
+//         // cur_scalar_field->setMapRange(appState->fieldViewActive[appState->current_element]);
+//         // (cur_field
+// // getBoundsPair
+//     }
 
         // Update other visualization properties based on AppState
         // Example: Vector field visualization
@@ -194,7 +229,7 @@ void Mint2DHook::updateRenderGeometry() {
             //  polyscope::getSurfaceMesh("c");
 
 
-            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", renderState->frames);
+            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", outputData->frames);
             vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
             vectorField->setEnabled(true);
         }
@@ -220,34 +255,30 @@ void Mint2DHook::initSimulation() {
     // Load mesh using igl::readOBJ
         // igl::readOBJ("/home/josh/Documents/mint_redux/geometry-processing-starter-kit/tools/shared/" + cur_mesh_name + ".obj", V, F);
 
+    appState->keepSolving = true;
+
+
+    bool create_new_dir = false;
     if (appState->directoryPath.empty()) {
-        std::cerr << "No directory path provided. TODO FIX THIS." << std::endl;
+        std::cerr << "No directory path provided. Creating new directory." << std::endl;
+        create_new_dir = true;
         appState->directoryPath = "../../results/BLAH"; // switch to ../shared/mint2d_testsequence
         // return;
     }
-    appState->keepSolving = true;
 
-    FileParser fileParser(appState->directoryPath);
+  
 
     Eigen::MatrixXd V; // Temporary storage for vertices
     Eigen::MatrixXi F; // Temporary storage for faces
 
     // Check if .bfra and .bmom files exist
-    // bool bfraExists = fileParser.parseLargestFile((appState->frames), FileType::BFRA);
-    // bool bmomExists = fileParser.parseLargestFile((appState->deltas), FileType::BMOM);
 
-    bool bfraExists = false;
-    bool bmomExists = false;
+    // bool bfraExists = false;
+    // bool bmomExists = false;
 
     // Load mesh and config
-    if (bfraExists && bmomExists) {
-        // Deserialize configuration from a file
-        // if (!Serialization::deserializeConfig(appState->config, appState->directoryPath + "/config.json")) {
-        //     std::cerr << "Failed to load config from " << appState->directoryPath + "/config.json" << std::endl;
-        //     // Handle error, possibly set default config
-        // }
-    } else {
-        // Load default mesh and set default config
+    if (create_new_dir) {
+       // Load default mesh and set default config
         std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + appState->meshName + ".obj";
         
         // std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
@@ -266,6 +297,21 @@ void Mint2DHook::initSimulation() {
         // if (!Serialization::serializeConfig(appState->config, appState->directoryPath + "/config.json")) {
         //     std::cerr << "Failed to save default config to " << appState->directoryPath + "/config.json" << std::endl;
         // }
+
+    } else {
+
+          FileParser fileParser(appState->directoryPath);
+
+        // bool bfraExists = fileParser.parseLargestFile((appState->frames), FileType::BFRA);
+        // bool bmomExists = fileParser.parseLargestFile((appState->deltas), FileType::BMOM);
+
+
+            // Deserialize configuration from a file
+        // if (!Serialization::deserializeConfig(appState->config, appState->directoryPath + "/config.json")) {
+        //     std::cerr << "Failed to load config from " << appState->directoryPath + "/config.json" << std::endl;
+        //     // Handle error, possibly set default config
+        // }
+ 
     }
 
     // fieldViewActive = 
@@ -290,155 +336,6 @@ void Mint2DHook::initSimulation() {
 }
 
 
-/* 
-
-    bool Mint2DHook::simulateOneStep()
-    {
-        // auto func = func_wrapper->get();
-        if (cur_iter < max_iters)
-        {
-            cur_iter++;
-            inner_loop_iter++;
-
-
-            auto t1 = std::chrono::high_resolution_clock::now();
-
-
-            // auto [f, g, H_proj] = func.eval_with_hessian_proj(x);
-            auto [f, g, H_proj] = func.eval_with_derivatives(x);
-            TINYAD_DEBUG_OUT("Energy in iteration " << cur_iter << ": " << f);
-            // std::cout<<"the number of nonzeros "<<H_proj.nonZeros() << "number of non-zeros per dof " << H_proj.nonZeros() / (6*F.rows()) << " # rows " << H_proj.rows() << " faces " << F.rows() <<std::endl;
-
-            // std::cout<<"the number of nonzeros "<<H_proj.nonZeros()<<std::endl;
-            Eigen::VectorXd d;
-            double dec;
-            // d = TinyAD::newton_direction(g, H_proj, solver);
-             // = TinyAD::newton_decrement(d, g);
-
-            if (prev_energy < 0)
-            {
-              prev_energy = f + 100 * convergence_eps;
-            }
-            
-            try
-            {
-              if (w_smooth_vector > 0 || useProjHessian)
-              {
-                auto [f_h, g_h, H_proj_h] = func.eval_with_hessian_proj(x);
-                f = f_h;
-                g = g_h;
-                H_proj = H_proj_h;
-                d = TinyAD::newton_direction(g, H_proj, solver, 0.);
-                dec = TinyAD::newton_decrement(d, g);
-
-                if ( dec / f < 1e-3)
-                {
-                  useProjHessian = false;
-                  std::cout << "switch off projected hessian to fine-tune result" << std::endl;
-                }
-
-
-              }
-              else
-              {
-                d = TinyAD::newton_direction(g, H_proj, solver, identity_weight);
-                dec = TinyAD::newton_decrement(d, g);
-                identity_weight = identity_weight / 2.;
-              }
-              
-            }
-            catch(const std::exception& e)
-            {
-              auto [f_h, g_h, H_proj_h] = func.eval_with_hessian_proj(x);
-              f = f_h;
-              g = g_h;
-              H_proj = H_proj_h;
-              d = TinyAD::newton_direction(g, H_proj, solver);
-              dec = TinyAD::newton_decrement(d, g);
-              if ( !useProjHessian )
-                identity_weight = identity_weight * 10.;
-            }
-            
-            // 
-            std::cout << "current decrement: " << dec << std::endl;
-            // if( dec < convergence_eps )
-            // {
-            //   buffer -= 1;
-            //   identity_weight = identity_weight * 10.;
-            // }
-
-            if ( dec < convergence_eps || (inner_loop_iter > 300 && dec / f < 1e-5))
-            {
-              std::cout << "***** current decrement: " << dec << std::endl;
-              buffer = 5;
-              identity_weight = 1e-6;
-              if (w_smooth_vector > 0)
-              {
-                w_smooth_vector = 0;
-                
-              }
-              else {
-                w_attenuate = w_attenuate / 10.;
-                std::cout << "New attenuation value is set to: " << w_attenuate << std::endl;
-                // inner_loop_iter = 0;
-                if (w_attenuate < 1e-12)
-                  cur_iter = max_iters;
-              }
-
-              useProjHessian = true;
-                 
-
-                // Eigen::MatrixXd tmp =TinyAD::to_passive(H_proj);
-                //  igl::writeDMAT("converged_hessian.dmat",tmp,true);
-            }
-
-            // Eigen::MatrixXd tmp =TinyAD::to_passive(H_proj);
-            // igl::writeDMAT("curr_hessian.dmat",tmp,true);
-
-            // cur_iter = max_iters; // break
-            x = TinyAD::line_search(x, d, f, g, func, 1., .8, 512, 1e-3);
-
-            auto t2 = std::chrono::high_resolution_clock::now();
-            auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-            std::cout << ms_int.count() << "ms\n";
-
-
-
-            ///// Move this out 
-            func.x_to_data(x, [&] (int f_idx, const Eigen::VectorXd& v) {
-                frames.row(f_idx) = v.head<2>();
-                // metadata.row(f_idx) = v.segment(2, 2);
-                deltas.row(f_idx) = v.tail<4>();
-                // if (bound_face_idx(f_idx) == 1)
-                // {
-                //   frames.row(f_idx) = frames_orig.row(f_idx);
-                // }
-                });
-
-    
-
-
-        }
-        else if (cur_iter == max_iters) 
-        {
-            TINYAD_DEBUG_OUT("Final energy: " << func.eval(x));
-            cur_iter++;
-
-             // FINAL LOGGING.  
-        }
-        else{
-            this->pause();
-        }
-
-
-        
-        return false;
-    }
-
-
-
-*/
-
 
 bool Mint2DHook::simulateOneStep() {
     int max_iters = appState->maxIterations;
@@ -448,15 +345,15 @@ bool Mint2DHook::simulateOneStep() {
     if (cur_iter < max_iters && cur_obj > convergence_eps && appState->keepSolving)
     {
         cur_iter++;
-        std::cout << "*** GLOBAL STEP: " << cur_iter << "*** "  << std::endl;
+        std::cout << std::endl << "*** GLOBAL STEP: " << cur_iter << "*** "  << std::endl;
         std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
         std::cout << "nvars in opt" << opt->get_num_vars() << std::endl; 
         std::cout << "cur_obj: " <<  cur_obj  << " convergence_eps: " << convergence_eps << std::endl;
 
-        opt->take_newton_step(opt->get_current_x());
+        opt->take_newton_step( opt->get_current_x() );
         if (opt->_dec < convergence_eps)
         {
-            std::cout << "**** Converged, early exit ****" << std::endl;
+            std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
 
             appState->keepSolving = false;
@@ -492,6 +389,7 @@ bool Mint2DHook::simulateOneStep() {
 void Mint2DHook::resetAppState() {
     // Resetting simulation parameters to default or initial values
     appState->currentIteration = 0;
+    // appState->currentFileID = 0;
     appState->maxIterations = 5000; // Default maximum iterations
     appState->convergenceEpsilon = 1e-10;
 
@@ -503,15 +401,20 @@ void Mint2DHook::resetAppState() {
     appState->moments.setZero(appState->F.rows(), 0);
 
     // Resetting derived quantities
-    appState->norms_vec.setZero(appState->F.rows());
-    appState->norms_delta.setZero(appState->F.rows());
-    appState->curls_primal.setZero(appState->F.rows());
-    appState->curls_sym.setZero(appState->F.rows());
-    appState->smoothness_primal.setZero(appState->F.rows());
-    appState->smoothness_sym.setZero(appState->F.rows());
+    appState->os->norms_vec.setZero(appState->F.rows());
+    appState->os->norms_delta.setZero(appState->F.rows());
+    appState->os->curls_primal.setZero(appState->F.rows());
+    appState->os->curls_sym.setZero(appState->F.rows());
+    appState->os->smoothness_primal.setZero(appState->F.rows());
+    appState->os->smoothness_sym.setZero(appState->F.rows());
+
+    appState->prev_frame_element = Field_View::Element_COUNT;
 
     // Reinitialize the boundary conditions if needed
     initBoundaryConditions();
+
+    // Initialize symmetric curl operators 
+    initCurlOperators();
 
     // Optionally, re-register mesh with Polyscope if visualization needs a reset
     polyscope::removeAllStructures();
@@ -534,6 +437,47 @@ void Mint2DHook::resetAppState() {
 
 
 
+void Mint2DHook::initCurlOperators() 
+{
+    int nedges = appState->cur_surf->nEdges();
+    appState->C_primal.resize(nedges, 2);
+    appState->C_sym_2.resize(nedges, 4);
+    appState->C_sym_4.resize(nedges, 16); // todo add metric to make in reduced form.  
+
+        // e_projs2.resize(nedges,4); 
+
+
+    std::vector<Eigen::Matrix2d> rots;// 
+    std::vector<Eigen::Matrix4d> rstars;
+    std::vector<Eigen::Vector4d> e_projs;
+
+ 
+
+    for (int i = 0; i < nedges; i++)
+    {
+        Eigen::Vector3d estart = appState->V.row(appState->cur_surf->data().edgeVerts(i,0));
+        Eigen::Vector3d eend = appState->V.row(appState->cur_surf->data().edgeVerts(i,1));
+        Eigen::Vector3d edge_dir = (eend - estart).normalized();
+        Eigen::Matrix2d e_to_x;
+        e_to_x << edge_dir(0),edge_dir(1),-edge_dir(1),edge_dir(0); // Note this rotates the edge into [1,0]
+        // std::cout << e_to_x * edge_dir.head(2) << std::endl<< std::endl; // sanity check.
+// std::cout << flatten(edge_dir.head(2) * edge_dir.head(2).transpose()) << std::endl<< std::endl;
+
+        rots.push_back(e_to_x);
+
+        Eigen::Vector4d e_proj = rstar_xcomp_from_r(e_to_x);
+
+        appState->C_primal.row(i) = edge_dir.head(2);
+        appState->C_sym_2.row(i) = e_proj;
+
+        // e_projs.push_back(e_proj);
+        // e_projs_primal.push_back(edge_dir.head(2));
+        // e_projs2.row(i) = e_proj;
+
+    }
+
+}
+
 void Mint2DHook::initializeLogFolder() {
     // Retrieve current time
     auto now = std::chrono::system_clock::now();
@@ -543,11 +487,13 @@ void Mint2DHook::initializeLogFolder() {
 
     // Construct the log folder path using the mesh name and the current date-time
     std::ostringstream folderStream;
-    folderStream << "../../results/" << appState->meshName << "_"
+    folderStream << "../../results/" << appState->solveType << "/" << appState->meshName << "_"
                  << static_cast<unsigned>(ymd.month()) << "_"
                  << static_cast<unsigned>(ymd.day()) << "_"
                  << time.hours().count() << "_"
                  << time.minutes().count();
+
+    // std::cout << "Log folder path: " << folderStream.str() << std::endl;
 
     // Store the constructed path in AppState
     appState->logFolderPath = folderStream.str();

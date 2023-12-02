@@ -113,7 +113,7 @@
             _dec = f - this->eval_func_at(_cur_x);  // use this to track the true decrement 
             
             // 
-            std::cout << "prev obj" << f << "current decrement: " << _dec << " newton dec: " << dec << std::endl;
+            std::cout << "prev obj " << f << " | current decrement: " << _dec << " | newton dec: " << dec << std::endl;
 
           std::cout << "finshed newton step" << std::endl;
 

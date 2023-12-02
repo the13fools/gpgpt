@@ -23,7 +23,7 @@ std::string Views::fieldViewToFileStub(Field_View view) {
         case moment_dirch: return "dm_dirch_moment";
         case primal_curl_residual: return "cv_curl_vec";
         case sym_curl_residual: return "cm_curl_mom";
-        case gui_free: return "Free";
+        case gui_free: return "free";
         default: return "Unknown";
     }
 }
