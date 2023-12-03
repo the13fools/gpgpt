@@ -183,8 +183,8 @@ namespace ImGuiWidgets {
         ImGui::InputFloat( percentile_upper.c_str(), maxVal, 0.01f, .10f, "%.3f");
         ImGui::PopItemWidth();
 
-        std::string override_lower = ("ovr_lower##ovr" + field_str);
-        std::string overide_upper = ("ovr_upper##ovr" + field_str);
+        std::string override_lower = ("lower_bound##ovr" + field_str);
+        std::string overide_upper = ("upper_bound##ovr" + field_str);
 
         bool* ovr_active = &appState.override_bounds_active;
         float* ovr_minVal = &appState.override_bounds.lower;
@@ -194,9 +194,9 @@ namespace ImGuiWidgets {
 
 
         ImGui::PushItemWidth(150);
-        ImGui::InputFloat( override_lower.c_str(), minVal, 0.01f, .10f, "%.3f");
+        ImGui::InputFloat( override_lower.c_str(), ovr_minVal, 0.01f, .10f, "%.3f");
         ImGui::SameLine();
-        ImGui::InputFloat( overide_upper.c_str(), maxVal, 0.01f, .10f, "%.3f");
+        ImGui::InputFloat( overide_upper.c_str(), ovr_maxVal, 0.01f, .10f, "%.3f");
         ImGui::SameLine();
         // std::cout << fieldName << std::endl;
         ImGui::Checkbox(checkbox.c_str(), ovr_active);

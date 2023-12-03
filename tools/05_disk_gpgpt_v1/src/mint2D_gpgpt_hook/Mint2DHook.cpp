@@ -84,11 +84,14 @@ void Mint2DHook::updateRenderGeometry() {
 
 ////
 //////  Here we calculate derived quantities. 
+
 /// 
     appState->os->norms_vec = appState->frames.rowwise().norm();
     appState->os->norms_delta = appState->deltas.rowwise().norm();
 
+    ////// The quantities not explicitly set above are set inside of to_passive calls in optzoo.
     double cur_obj = opt->eval_func_at(opt->get_current_x());
+
     appState->os->cur_global_objective_val = cur_obj;
 
     // std::cout << "cur_obj " << cur_obj << std::endl;
@@ -194,21 +197,33 @@ void Mint2DHook::updateRenderGeometry() {
             break;
     }
 
-
-    auto cur_scalar_field = polyscope::getSurfaceMesh("c")->addFaceScalarQuantity(cur_field, cur_scalar_quantity);
-    if (appState->prev_frame_element != appState->current_element)
+    if (appState->current_element == Field_View::gui_free)
     {
-        cur_scalar_field->setEnabled(true);
-        double maxbound = cur_scalar_quantity.maxCoeff();
-        double minbound = cur_scalar_quantity.minCoeff();
-        double diff = maxbound - minbound;
-        FieldBounds cur_bounds = appState->fieldBounds[appState->current_element];
-        double abs_max = cur_bounds.upper * diff + minbound;
-        double abs_min = cur_bounds.lower * diff + minbound;
+        // noop
+    }
+    else
+    {
+        auto cur_scalar_field = polyscope::getSurfaceMesh("c")->addFaceScalarQuantity(cur_field, cur_scalar_quantity);
+        if (appState->prev_frame_element != appState->current_element)
+        {
+            cur_scalar_field->setEnabled(true);
+            double maxbound = cur_scalar_quantity.maxCoeff();
+            double minbound = cur_scalar_quantity.minCoeff();
+            double diff = maxbound - minbound;
+            FieldBounds cur_bounds = appState->fieldBounds[appState->current_element];
+            double abs_max = cur_bounds.upper * diff + minbound;
+            double abs_min = cur_bounds.lower * diff + minbound;
 
-        cur_scalar_field->setMapRange(std::make_pair(abs_min, abs_max));
+            if (appState->override_bounds_active)
+            {
+                abs_max = appState->override_bounds.upper;
+                abs_min = appState->override_bounds.lower;
+            }
+
+            cur_scalar_field->setMapRange(std::make_pair(abs_min, abs_max));
 
 
+        }
     }
 
 //     if (appState->current_element != Field_View::gui_free)
@@ -392,6 +407,9 @@ void Mint2DHook::resetAppState() {
     // appState->currentFileID = 0;
     appState->maxIterations = 5000; // Default maximum iterations
     appState->convergenceEpsilon = 1e-10;
+
+    appState->override_bounds.lower = 0;
+    appState->override_bounds.upper = 1e-5;
 
 
 

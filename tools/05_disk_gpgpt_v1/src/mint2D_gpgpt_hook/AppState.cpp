@@ -9,6 +9,9 @@
 AppState::AppState()
 {
     os = new OutputState();
+
+    override_bounds.lower = 0;
+    override_bounds.upper = 1e-5;
 }
 
 
