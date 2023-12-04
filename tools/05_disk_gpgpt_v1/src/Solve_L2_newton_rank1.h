@@ -121,6 +121,7 @@ public:
 // This is some magic to get the tinyAD function to work with the ADFuncRunner interface.
     _opt = new ADFunc_TinyAD_Instance<6>();
     _opt->set_tinyad_objective_func(&func);
+    init_opt_state();
     // _opt->_func = &func;
     opt = static_cast<ADFuncRunner*>(_opt);
 
@@ -130,6 +131,26 @@ public:
 
 
 
+
+    }
+
+// Init state and clone it to the appstate in order to make the visualization accurate.  
+    void init_opt_state()
+    {
+      Eigen::VectorXd x = _opt->_cur_x;
+      int nelem = appState->F.rows();
+      int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
+
+      // Eigen::VectorXd x = opt->get_current_x();
+      for(int i = 0; i < nelem; i++)
+      {
+        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-5;
+        appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
+        x.segment<2>(nvars*i) = appState->frames.row(i);
+        x.segment<4>(nvars*i+2) = appState->deltas.row(i);
+        
+      }
+      _opt->_cur_x = x;
 
     }
 
@@ -159,7 +180,7 @@ public:
     virtual void updateAppStateFromOptState()
     {
       int nelem = appState->F.rows();
-      int nvars = 6; // opt->get_num_vars();
+      int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
@@ -170,6 +191,8 @@ public:
         
       }
 
+
+      // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
       if ( appState->keepSolving == false && appState->config->w_smooth_vector > 0)
       {
         appState->keepSolving = true;  
@@ -179,22 +202,7 @@ public:
 
       }
 
-        // std::cout << x.segment<2>(nvars*i) << std::endl;
-        // std::cout << x.segment<2>(nvars*i+4) << std::endl;
 
-        // std::cout << appState->frames.rows() << " " << appState->deltas.rows() << std::endl;
-        // std::cout << appState->frames.cols() << " " << appState->deltas.cols() << std::endl;
-
-
-      // std::cout << "updateAppStateFromOptState" << std::endl;
-      //   func.x_to_data(opt->get_current_x(), [&] (int f_idx, const Eigen::VectorXd& v) {
-      //           appState->frames.row(f_idx) = v.head<2>();
-      //           appState->deltas.row(f_idx) = v.tail<2>();
-      //           // if (bound_face_idx(f_idx) == 1)
-      //           // {
-      //           //   frames.row(f_idx) = frames_orig.row(f_idx);
-      //           // }
-      //           });
     }
 
 
@@ -208,24 +216,7 @@ protected:
   // Eigen::MatrixXd metadata;
     int DOFS_PER_ELEMENT = 6;
     ADFunc_TinyAD_Instance<6>* _opt;
-     decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
-
-
-      // std::vector<Eigen::Matrix2d> rots;// 
-      // std::vector<Eigen::Matrix4d> rstars;
-      // std::vector<Eigen::Vector4d> e_projs;
-      // std::vector<Eigen::Vector2d> e_projs_primal;
-
-      // Eigen::MatrixXd e_projs2;
-
-
-
-  
-
-
-  // Eigen::MatrixXd renderFrames;
-  // Eigen::MatrixXd renderDeltas;
-
+    decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
 
 
 
@@ -235,11 +226,6 @@ protected:
 // %%% 2 + 4 + 4
 
 
-
-
-
-
-
   // Eigen::ConjugateGradient<Eigen::SparseMatrix<double>> cg_solver;
 
 
@@ -247,18 +233,7 @@ protected:
 };
 
 
-// TODO initialize app state.  
 
-//       // Assemble inital x vector from P matrix.
-//       // x_from_data(...) takes a lambda function that maps
-//       // each variable handle (vertex index) to its initial 2D value (Eigen::Vector2d).
-//         x = func.x_from_data([&] (int f_idx) {
-//           Eigen::VectorXd ret;
-//           ret = Eigen::VectorXd::Zero(6); // resize(10);
-//           ret.head(2) = Eigen::VectorXd::Random(2) * 0.0001;
-//           // ret << frames.row(f_idx), deltas.row(f_idx);
-//           return ret;
-//           });
 
 
 #endif // SOLVE_L2_NETWON_RANK1_H
