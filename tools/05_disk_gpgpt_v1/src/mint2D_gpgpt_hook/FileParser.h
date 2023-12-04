@@ -7,6 +7,8 @@
 #include <Eigen/Dense>
 #include "Serialization.h" // Include the Serialization header
 
+#include "AppState.h"
+
 // Define the FileType enum
 enum class FileType {
     BFRA,
@@ -30,6 +32,8 @@ public:
 
     // Retrieve the largest file's data
     bool parseLargestFile(Eigen::VectorXd& data, FileType fileType);
+
+    void parseToAppState(AppState* appState, int fileId);
 
     // // Load an .obj file if found
     // bool parseObjFile(Eigen::MatrixXd& V, Eigen::MatrixXi& F);

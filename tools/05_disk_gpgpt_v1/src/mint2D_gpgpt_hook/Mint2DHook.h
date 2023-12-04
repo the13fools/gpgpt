@@ -3,6 +3,7 @@
 
 #include "AppState.h" // Include AppState definition
 #include <Eigen/Dense>
+#include <Eigen/Core>
 #include <string>
 
 #include "PhysicsHook.h"
@@ -10,9 +11,15 @@
 #include "ADWrapper/ADFunc_TinyAD_Instance.h"
 
 #include "Surface.h"
+#include "FileParser.h"
 
 #include <TinyAD/ScalarFunction.hh>
 #include <TinyAD/Utils/LinearSolver.hh>
+
+
+enum class DOFType {
+    primals, moments, deltas, gammas, Element_COUNT
+};
 
 class Mint2DHook : public virtual PhysicsHook
 {
@@ -68,7 +75,9 @@ public:
     // This is an interface to take optimization steps with respect to a set objective.
     // there is some magic going on under the hood mostly involving the tinyAD library at the moment.
     // this wrapper is templated and can instead inject your own autodiff framework or solver instead.
-    ADFuncRunner* opt; 
+    ADFuncRunner* opt;
+
+    std::unique_ptr<FileParser> fileParser;
 
 private:
     void updateOptimizationParameters();

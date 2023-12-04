@@ -61,6 +61,10 @@ public:
 
 };
 
+enum class VariableType {
+    primals, moments, deltas, gammas, Element_COUNT
+};
+
 // AppState holds the state of the application
 class AppState {
 public:
@@ -117,6 +121,13 @@ public:
     Eigen::MatrixXd C_primal;
     Eigen::MatrixXd C_sym_2;
     Eigen::MatrixXd C_sym_4; // TODO 
+
+    // Per element selection indicies 
+    // This is a much more generic way to create optzoo entries.  
+    Eigen::VectorXi sel_primals_from_dof;
+    Eigen::VectorXi sel_moments_from_dof;
+    Eigen::VectorXi sel_deltas_from_dof;
+    
 
 
     // Output State - gets visualized and serialized.  

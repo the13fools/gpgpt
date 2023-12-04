@@ -10,7 +10,7 @@ AppState::AppState()
 {
     os = new OutputState();
 
-    override_bounds.lower = 0;
+    override_bounds.lower = 1e-16;
     override_bounds.upper = 1e-5;
 }
 
@@ -37,11 +37,12 @@ bool AppState::LogToFile()
 {
         
 
-
-        Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + std::to_string(this->currentFileID + 100000) + ".bfra");
-        Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + std::to_string(this->currentFileID + 100000) + ".bmom");
+// TODO add moments here 
+    Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + std::to_string(this->currentFileID + 100000) + ".bfra");
+    Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + std::to_string(this->currentFileID + 100000) + ".bmom");
 
     
+
 
           // Here, we'll also log relevant data to files based on the fieldViewActive flags
 

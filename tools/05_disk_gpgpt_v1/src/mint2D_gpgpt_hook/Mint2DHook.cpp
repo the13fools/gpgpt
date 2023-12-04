@@ -22,6 +22,7 @@
 
 
 #include <igl/readOBJ.h>
+#include <igl/writeOBJ.h>
 #include <igl/on_boundary.h>
 #include "date.h"
 #include "MyConfig.h"
@@ -315,8 +316,14 @@ void Mint2DHook::initSimulation() {
 
     } else {
 
-          FileParser fileParser(appState->directoryPath);
+        // fileParser = new FileParser(appState->directoryPath);
+        fileParser = std::make_unique<FileParser>(appState->directoryPath);
 
+        // load mesh from file 
+
+
+
+        // fileParser->
         // bool bfraExists = fileParser.parseLargestFile((appState->frames), FileType::BFRA);
         // bool bmomExists = fileParser.parseLargestFile((appState->deltas), FileType::BMOM);
 
@@ -333,6 +340,7 @@ void Mint2DHook::initSimulation() {
 
     std::cout << "V.rows() " << V.rows() << "F.rows()" << F.rows() << std::endl;
  
+ 
     // Set mesh data to AppState
     appState->V = V;
     appState->F = F;
@@ -343,6 +351,13 @@ void Mint2DHook::initSimulation() {
     // Initialize other parameters and logging folder
     // initializeOtherParameters();
     initializeLogFolder();
+
+    // save OBJ file 
+    if (!igl::writeOBJ(appState->logFolderPath + "/" + appState->meshName + ".obj", V, F)) {
+        std::cerr << "Failed to save mesh to " << appState->logFolderPath << std::endl;
+        // return;
+    }
+
 
     // Register mesh with Polyscope
     polyscope::registerSurfaceMesh("c", appState->V, appState->F);

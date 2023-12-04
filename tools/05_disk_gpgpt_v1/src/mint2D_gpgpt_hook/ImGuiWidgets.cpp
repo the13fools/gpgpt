@@ -190,17 +190,30 @@ namespace ImGuiWidgets {
         float* ovr_minVal = &appState.override_bounds.lower;
         float* ovr_maxVal = &appState.override_bounds.upper;
                 
-        std::string checkbox = ("ovr##cb");
+        std::string checkbox = ("abs override##ovr");
 
 
         ImGui::PushItemWidth(150);
-        ImGui::InputFloat( override_lower.c_str(), ovr_minVal, 0.01f, .10f, "%.3f");
-        ImGui::SameLine();
-        ImGui::InputFloat( overide_upper.c_str(), ovr_maxVal, 0.01f, .10f, "%.3f");
+
+        if (*ovr_active)
+        {
+            ImGui::Text("vvv Absolute Bounds vvv");
+        }
+        else 
+        {
+            ImGui::Text("^^^ Percentile Bounds ^^^");
+        }
+
         ImGui::SameLine();
         // std::cout << fieldName << std::endl;
         ImGui::Checkbox(checkbox.c_str(), ovr_active);
+        ImGui::InputFloat( override_lower.c_str(), ovr_minVal, 0.01f, .10f, "%.8f");
+        ImGui::SameLine();
+        ImGui::InputFloat( overide_upper.c_str(), ovr_maxVal, 0.01f, .10f, "%.8f");
+        ImGui::PopItemWidth();
 
+        ImGui::PushItemWidth(300);
+        ImGui::SliderFloat("override max (log slider)", ovr_maxVal, 1e-16f, 1e-4f, "%.16f", ImGuiSliderFlags_Logarithmic);
         ImGui::PopItemWidth();
 
     // //  const char* element_names[Field_View::Element_COUNT] = { "Vector Norms", "Delta Norms", "Vector Dirichlet", "Symmetric Dirichlet", "Vector Curl", "Symmetric Curl", "free" };

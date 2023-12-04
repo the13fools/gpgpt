@@ -2,6 +2,8 @@
 // #include <experimental/filesystem>
 #include <filesystem>
 
+#include <filesystem>
+
 #include <algorithm>
 
 #include <igl/readOBJ.h>
@@ -26,18 +28,18 @@ inline bool ends_with(std::string const & value, std::string const & ending)
 }
 
 void FileParser::scanDirectory() {
-    // for (const auto& entry : fs::directory_iterator(directoryPath)) {
-    //     if (entry.is_regular_file()) {
-    //         std::string filename = entry.path().filename().string();
-    //         if (ends_with(filename, ".bfra")) {
-    //             bfraFiles.push_back(entry.path().string());
-    //         } else if (ends_with(filename, ".bmom")) {
-    //             bmomFiles.push_back(entry.path().string());
-    //         } else if (ends_with(filename, ".obj") && objFilePath.empty()) {
-    //             objFilePath = entry.path().string(); // Assuming only one .obj file
-    //         }
-    //     }
-    // }
+    for (const auto& entry : fs::directory_iterator(directoryPath)) {
+        if (entry.is_regular_file()) {
+            std::string filename = entry.path().filename().string();
+            if (ends_with(filename, ".bfra")) {
+                bfraFiles.push_back(entry.path().string());
+            } else if (ends_with(filename, ".bmom")) {
+                bmomFiles.push_back(entry.path().string());
+            } else if (ends_with(filename, ".obj") && objFilePath.empty()) {
+                objFilePath = entry.path().string(); // Assuming only one .obj file
+            }
+        }
+    }
     // findLargestIDFile();
 }
 

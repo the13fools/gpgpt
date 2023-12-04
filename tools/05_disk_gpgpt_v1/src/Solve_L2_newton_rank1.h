@@ -50,6 +50,15 @@ public:
       appState->current_element = Field_View::vec_norms;
       appState->solveType = "L2_newton_rank1";
       appState->solveDescription = "L2_newton_rank1";
+
+
+      appState->sel_primals_from_dof.resize(DOFS_PER_ELEMENT);
+      appState->sel_moments_from_dof.resize(DOFS_PER_ELEMENT);
+      appState->sel_deltas_from_dof.resize(DOFS_PER_ELEMENT);
+
+      appState->sel_primals_from_dof << 1, 1, 0, 0, 0, 0;
+      appState->sel_moments_from_dof << 0, 0, 0, 0, 0, 0;
+      appState->sel_deltas_from_dof << 0, 0, 1, 1, 1, 1;
     }
 
     ~Solve_L2_newton_rank1(){
@@ -197,8 +206,8 @@ protected:
 
 
   // Eigen::MatrixXd metadata;
-
-     ADFunc_TinyAD_Instance<6>* _opt;
+    int DOFS_PER_ELEMENT = 6;
+    ADFunc_TinyAD_Instance<6>* _opt;
      decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
 
 
