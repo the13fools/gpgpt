@@ -12,6 +12,8 @@
 
 #include <igl/find.h>
 
+#include "ElementVarsTinyAD.h"
+
 /**
  * Enumeration for the different field views.
  */
@@ -74,7 +76,7 @@
 
 // The pinned boundary condition.  
 // TODO,  add in other boundary conditions like mixed neumann and free for meshing examples.  
-void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
+void addPinnedBoundaryTerm(SF6& func, AppState& appState) {
 
     std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
 
@@ -89,19 +91,22 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
         // Get variable 2D vertex positions
         Eigen::Index f_idx = element.handle;
         Eigen::VectorX<T> s_curr = element.variables(f_idx);
-        Eigen::Vector2<T> curr =  s_curr.segment(appState.primals_layout.start, appState.primals_layout.size); // head(2);
-        // Eigen::Vector2<T> curr =  s_curr(igl::find(appState.sel_primals_from_dof));
-        // find
-        Eigen::Vector4<T> delta = s_curr.tail(4);
+        // Eigen::Vector2<T> curr =  s_curr.segment(appState.primals_layout.start, appState.primals_layout.size); // head(2);
+        // // Eigen::Vector2<T> curr =  s_curr(igl::find(appState.sel_primals_from_dof));
+        // // find
+        // Eigen::Vector4<T> delta = s_curr.tail(4);
 
-        Eigen::Matrix2<T> currcurr = curr*curr.transpose();
-        Eigen::Vector4<T> currcurrt = flatten(currcurr);
+        // Eigen::Matrix2<T> currcurr = curr*curr.transpose();
+        // Eigen::Vector4<T> currcurrt = flatten(currcurr);
 
-        Surface* cur_surf = appState.cur_surf;
+        // Surface* cur_surf = appState.cur_surf;
 
-        T w_bound = appState.config->w_bound;
+        // T w_bound = appState.config->w_bound;
 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+        ElementVars<T> e; 
+        // std::cout << "s_curr: " << s_curr << std::endl;
+        e.setElementVars(appState, f_idx, s_curr);
 
         
 
@@ -119,18 +124,18 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
         if (bound_face_idx(f_idx) == 1)
         {
             Eigen::Vector2<T> targ = appState.frames_orig.row(f_idx);
-            return w_bound*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
+            return e.w_bound*(e.curr-targ).squaredNorm() + e.w_bound*e.delta.squaredNorm();
         }
 
 
         // Free boundary condition
         if (bound_face_idx(f_idx) == -1)
         {
-            T ret = w_bound*delta.squaredNorm();
+            T ret = e.w_bound*e.delta.squaredNorm();
             for(int i = 0; i < 3; i++)
             {
             
-              int neighbor_edge_idx = cur_surf->data().faceNeighbors(f_idx, i);
+              int neighbor_edge_idx = e.cur_surf->data().faceNeighbors(f_idx, i);
               if(neighbor_edge_idx > -1)
               {
                 Eigen::VectorX<T> s_n = element.variables(neighbor_edge_idx);
@@ -138,7 +143,7 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
                 // ret = ret + (n_i-curr).squaredNorm() * w_smooth;
                 Eigen::Matrix2<T> nini = n_i*n_i.transpose();
                 Eigen::Vector4<T> ninit = flatten(nini);
-                ret = ret + (ninit-currcurrt).squaredNorm() * w_bound; // * w_smooth * w_attenuate;
+                ret = ret + (ninit-e.currcurrt).squaredNorm() * e.w_bound; // * w_smooth * w_attenuate;
                 // ret = ret + (n_i*n_i.transpose()-currcurr).norm() * w_smooth;
               }
             }
@@ -173,25 +178,30 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
         // Get variable 2D vertex positions
         Eigen::Index f_idx = element.handle;
         Eigen::VectorX<T> s_curr = element.variables(f_idx);
-        Eigen::Vector2<T> curr =  s_curr.head(2);
-        Eigen::Vector4<T> delta = s_curr.tail(4);
 
-        Eigen::Matrix2<T> currcurr = curr*curr.transpose();
-        Eigen::Vector4<T> currcurrt = flatten(currcurr);
+        ElementVars<T> e; 
+        e.setElementVars(appState, f_idx, s_curr);
 
-        Surface* cur_surf = appState.cur_surf;
+
+        // Eigen::Vector2<T> curr =  s_curr.head(2);
+        // Eigen::Vector4<T> delta = s_curr.tail(4);
+
+        // Eigen::Matrix2<T> currcurr = curr*curr.transpose();
+        // Eigen::Vector4<T> currcurrt = flatten(currcurr);
+
+        // Surface* cur_surf = appState.cur_surf;
 
         // T w_bound = appState.config->w_bound;
 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
 
-        double w_bound = appState.config->w_bound;
-        double w_smooth_vector = appState.config->w_smooth_vector;
-
-        double w_smooth = appState.config->w_smooth;
-        double w_curl = appState.config->w_curl;
-        double w_attenuate = appState.config->w_attenuate;
         // double w_bound = appState.config->w_bound;
+        // double w_smooth_vector = appState.config->w_smooth_vector;
+
+        // double w_smooth = appState.config->w_smooth;
+        // double w_curl = appState.config->w_curl;
+        // double w_attenuate = appState.config->w_attenuate;
+        // // double w_bound = appState.config->w_bound;
 
 
         if ((int)f_idx == 0)
@@ -258,7 +268,8 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
           curr_perp(0) = curr_normalized(1);
           curr_perp(1) = -curr_normalized(0);
 
-
+return T(0);
+/*
 ///////////////////
 //// Initlaize elementwise objectives 
 ///////////////////
@@ -303,7 +314,7 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
      
 
           return ret;
-
+*/
 
         
 
@@ -412,10 +423,10 @@ void addCurlTerm(SF6& func, AppState& appState) {
 
 
 
-          Eigen::Vector2<T> curr_normalized = curr.normalized();
-          Eigen::Vector2<T> curr_perp; // = curr_normalized;
-          curr_perp(0) = curr_normalized(1);
-          curr_perp(1) = -curr_normalized(0);
+          // Eigen::Vector2<T> curr_normalized = curr.normalized();
+          // Eigen::Vector2<T> curr_perp; // = curr_normalized;
+          // curr_perp(0) = curr_normalized(1);
+          // curr_perp(1) = -curr_normalized(0);
 
 
 ///////////////////

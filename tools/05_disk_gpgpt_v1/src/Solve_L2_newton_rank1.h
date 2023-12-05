@@ -125,7 +125,7 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-5;
+        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
         appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
         x.segment<2>(nvars*i) = appState->frames.row(i);
         x.segment<4>(nvars*i+2) = appState->deltas.row(i);

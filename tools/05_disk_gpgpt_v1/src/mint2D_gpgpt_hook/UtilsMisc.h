@@ -128,6 +128,11 @@ void GN_proj_to_rank_1(Eigen::Matrix2d p, Eigen::Vector2d& v);
 template <typename ScalarType, int Rows, int Cols>
 Eigen::Matrix<ScalarType, Rows * Cols, 1> flatten(const Eigen::Matrix<ScalarType, Rows, Cols>& matrix) {
     Eigen::Matrix<ScalarType, Rows * Cols, 1> flattened;
+
+    // std::cout << "flatten size" << std::endl;
+    // std::cout << Rows << std::endl;
+    // std::cout << Cols << std::endl;
+
     flattened << matrix(0, 0), matrix(0, 1), matrix(1, 0), matrix(1, 1);
     return flattened;
 }
