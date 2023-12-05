@@ -89,7 +89,7 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
         // Get variable 2D vertex positions
         Eigen::Index f_idx = element.handle;
         Eigen::VectorX<T> s_curr = element.variables(f_idx);
-        Eigen::Vector2<T> curr =  s_curr.head(2);
+        Eigen::Vector2<T> curr =  s_curr.segment(appState.primals_layout.start, appState.primals_layout.size); // head(2);
         // Eigen::Vector2<T> curr =  s_curr(igl::find(appState.sel_primals_from_dof));
         // find
         Eigen::Vector4<T> delta = s_curr.tail(4);

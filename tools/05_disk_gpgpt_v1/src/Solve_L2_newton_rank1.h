@@ -12,13 +12,7 @@
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
 
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-
 #include <TinyAD/ScalarFunction.hh>
-#include <TinyAD/Utils/NewtonDirection.hh>
-#include <TinyAD/Utils/NewtonDecrement.hh>
-#include <TinyAD/Utils/LineSearch.hh>
 
 #include "ADWrapper/ADFuncRunner.h"
 #include "ADWrapper/ADFunc_TinyAD_Instance.h"
@@ -26,18 +20,6 @@
 
 
 #include <igl/writeDMAT.h>
-
-#include <sys/stat.h>
-
-#include <igl/map_vertices_to_circle.h>
-
-
-
-#include <chrono>
-
-// #include <fstream>
-#include <sys/stat.h>
-
 
 #include "OptZoo.h"
 
@@ -196,6 +178,7 @@ public:
       {
         appState->keepSolving = true;  
         appState->config->w_smooth_vector = 0;
+        opt->useProjHessian = true; // reset to use PSD hessian because optimization problem changed.
 
         std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
 
