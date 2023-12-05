@@ -10,6 +10,8 @@
 
 #include "UtilsMisc.h"
 
+#include <igl/find.h>
+
 /**
  * Enumeration for the different field views.
  */
@@ -88,12 +90,14 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
         Eigen::Index f_idx = element.handle;
         Eigen::VectorX<T> s_curr = element.variables(f_idx);
         Eigen::Vector2<T> curr =  s_curr.head(2);
+        // Eigen::Vector2<T> curr =  s_curr(igl::find(appState.sel_primals_from_dof));
+        // find
         Eigen::Vector4<T> delta = s_curr.tail(4);
 
         Eigen::Matrix2<T> currcurr = curr*curr.transpose();
         Eigen::Vector4<T> currcurrt = flatten(currcurr);
 
-        Surface cur_surf = *(appState.cur_surf);
+        Surface* cur_surf = appState.cur_surf;
 
         T w_bound = appState.config->w_bound;
 
@@ -126,7 +130,7 @@ void addPinnedBoundaryTerm(SF6& func, const AppState& appState) {
             for(int i = 0; i < 3; i++)
             {
             
-              int neighbor_edge_idx = cur_surf.data().faceNeighbors(f_idx, i);
+              int neighbor_edge_idx = cur_surf->data().faceNeighbors(f_idx, i);
               if(neighbor_edge_idx > -1)
               {
                 Eigen::VectorX<T> s_n = element.variables(neighbor_edge_idx);
@@ -175,7 +179,7 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
         Eigen::Matrix2<T> currcurr = curr*curr.transpose();
         Eigen::Vector4<T> currcurrt = flatten(currcurr);
 
-        Surface cur_surf = *(appState.cur_surf);
+        Surface* cur_surf = appState.cur_surf;
 
         // T w_bound = appState.config->w_bound;
 
@@ -217,9 +221,9 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
 //// Initialize the neighbor meta-data 
 ///////////////////
 
-          Eigen::VectorX<T> s_a = element.variables(cur_surf.data().faceNeighbors(f_idx, 0));
-          Eigen::VectorX<T> s_b = element.variables(cur_surf.data().faceNeighbors(f_idx, 1));
-          Eigen::VectorX<T> s_c = element.variables(cur_surf.data().faceNeighbors(f_idx, 2));
+          Eigen::VectorX<T> s_a = element.variables(cur_surf->data().faceNeighbors(f_idx, 0));
+          Eigen::VectorX<T> s_b = element.variables(cur_surf->data().faceNeighbors(f_idx, 1));
+          Eigen::VectorX<T> s_c = element.variables(cur_surf->data().faceNeighbors(f_idx, 2));
 
 
 
@@ -334,7 +338,7 @@ void addCurlTerm(SF6& func, AppState& appState) {
         Eigen::Matrix2<T> currcurr = curr*curr.transpose();
         Eigen::Vector4<T> currcurrt = flatten(currcurr);
 
-        Surface cur_surf = *(appState.cur_surf);
+        Surface* cur_surf = appState.cur_surf;
 
         // T w_bound = appState.config->w_bound;
 
@@ -376,9 +380,9 @@ void addCurlTerm(SF6& func, AppState& appState) {
 //// Initialize the neighbor meta-data 
 ///////////////////
 
-          Eigen::VectorX<T> s_a = element.variables(cur_surf.data().faceNeighbors(f_idx, 0));
-          Eigen::VectorX<T> s_b = element.variables(cur_surf.data().faceNeighbors(f_idx, 1));
-          Eigen::VectorX<T> s_c = element.variables(cur_surf.data().faceNeighbors(f_idx, 2));
+          Eigen::VectorX<T> s_a = element.variables(cur_surf->data().faceNeighbors(f_idx, 0));
+          Eigen::VectorX<T> s_b = element.variables(cur_surf->data().faceNeighbors(f_idx, 1));
+          Eigen::VectorX<T> s_c = element.variables(cur_surf->data().faceNeighbors(f_idx, 2));
 
 
 
@@ -439,9 +443,9 @@ void addCurlTerm(SF6& func, AppState& appState) {
           appState.os->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
 
 
-          Eigen::Vector2<T> eb_primal = appState.C_primal.row(cur_surf.data().faceEdges(f_idx, 1));
-          Eigen::Vector2<T> ea_primal = appState.C_primal.row(cur_surf.data().faceEdges(f_idx, 0));
-          Eigen::Vector2<T> ec_primal = appState.C_primal.row(cur_surf.data().faceEdges(f_idx, 2));
+          Eigen::Vector2<T> eb_primal = appState.C_primal.row(cur_surf->data().faceEdges(f_idx, 1));
+          Eigen::Vector2<T> ea_primal = appState.C_primal.row(cur_surf->data().faceEdges(f_idx, 0));
+          Eigen::Vector2<T> ec_primal = appState.C_primal.row(cur_surf->data().faceEdges(f_idx, 2));
 
           T curl_term_primal = pow(ea_primal.dot(a) - ea_primal.dot(curr),2);
           curl_term_primal +=  pow(eb_primal.dot(b) - eb_primal.dot(curr),2);

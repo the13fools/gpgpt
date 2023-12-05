@@ -32,7 +32,10 @@ void toggleSimulation()
         hook->run();
     }
     else
+    {
         hook->pause();
+    }
+        
 }
 
 void resetSimulation()
@@ -48,6 +51,7 @@ void resetSimulation()
 
     std::cout << "try to reset" << std::endl;
     hook->reset();
+    hook->appState->solveStatus = "reset state";
 
   // hook->w_bound = w_bound_prev;
   // hook->w_smooth = w_smooth_prev;

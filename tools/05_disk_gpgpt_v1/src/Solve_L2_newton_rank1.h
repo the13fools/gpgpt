@@ -52,13 +52,9 @@ public:
       appState->solveDescription = "L2_newton_rank1";
 
 
-      appState->sel_primals_from_dof.resize(DOFS_PER_ELEMENT);
-      appState->sel_moments_from_dof.resize(DOFS_PER_ELEMENT);
-      appState->sel_deltas_from_dof.resize(DOFS_PER_ELEMENT);
-
-      appState->sel_primals_from_dof << 1, 1, 0, 0, 0, 0;
-      appState->sel_moments_from_dof << 0, 0, 0, 0, 0, 0;
-      appState->sel_deltas_from_dof << 0, 0, 1, 1, 1, 1;
+      appState->primals_layout = {0, 2};
+      appState->moments_layout = {0, 0};
+      appState->deltas_layout = {2, 4};
     }
 
     ~Solve_L2_newton_rank1(){
@@ -74,23 +70,26 @@ public:
     virtual void initSimulation()
     {
 
-      // cur_mesh_name = "circle_subdiv";
+      // appState->meshName = "circle_subdiv";
 
-      // cur_mesh_name = "circle";
+      // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       appState->meshName = "circle_1000";
 
 
 
-      // cur_mesh_name = "circle_irreg_20000";
+      // appState->meshName = "circle_irreg_20000";
 
 
-      // cur_mesh_name = "circle_1000";
+      // appState->meshName = "circle_1000";
+      
 
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
       Mint2DHook::initSimulation();
+
+      appState->solveStatus = "init L2 newton rank 1";
 
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
@@ -114,7 +113,7 @@ public:
 
     // OptZoo::addPinnedBoundaryTerm(func, *appState);
     OptZoo::addSmoothnessTerm(func, *appState);
-    OptZoo::addCurlTerm(func, *appState);
+    // OptZoo::addCurlTerm(func, *appState);
     
 
 

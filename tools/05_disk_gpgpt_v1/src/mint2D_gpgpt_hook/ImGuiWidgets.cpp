@@ -51,13 +51,20 @@ namespace ImGuiWidgets {
     // Function to display run information in ImGui
     void ShowRunInfo(AppState& appState) {
         ImGui::Text("Run Info:");
-
         ImGui::Text( appState.solveDescription.c_str() );
+        ImGui::Text("Status: ");
+        ImGui::SameLine();
+        ImGui::Text( appState.solveStatus.c_str() );
+
+        ImGui::Text("");
 
         // ImGui::Text("Current File: %s", appState.fileList[appState.currentFileIndex].c_str());
         // ImGui::Text("Current Element: %s", fieldViewToString(appState.current_element).c_str());
         ImGui::Text("Current Iteration: %d", appState.currentIteration);
         ImGui::Text("Current File ID: %d", appState.currentFileID);
+
+        // ImGui::Text("Optimization Status");
+        // ImGui::Text( appState.solveStatus.c_str() );
 
         // ImGui::Text("Config State:  bound %.0f", (float) appState.config->w_bound);
 
@@ -70,6 +77,15 @@ namespace ImGuiWidgets {
         // ImGui::Text("Current Step Time: %f", appState.currentStepTime);
         ImGui::Text("Current Energy: %f", appState.os->cur_global_objective_val);
 
+
+        ImGui::Text("TODO");
+        ImGui::Text("Fix curl operator");
+        ImGui::Text("refactor optzoo to use stencils");
+        ImGui::Text("reset/load from folder");
+         ImGui::Text("file scrubber");
+        ImGui::Text("offby1finished issue");
+        ImGui::Text("log energy in vector, graph here");
+       
 
         // ImGui::Text("Current Frame: %d", appState.currentFrameIndex);
         // ImGui::Text("Current Moment: %d", appState.currentMomentIndex);

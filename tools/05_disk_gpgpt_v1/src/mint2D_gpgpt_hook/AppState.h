@@ -34,6 +34,11 @@ struct FieldBounds {
     // }
 };
 
+struct DOFMemoryLayout {
+    int start = 0;
+    int size = 2; 
+};
+
 // enum VariableType {
 //     frames, moments, deltas, gammas, Element_COUNT
 // };
@@ -101,6 +106,8 @@ public:
     std::string solveType = "SOLVER_TYPE_NOT_SET";
     std::string solveDescription = "SOLVER_DESCRIPTION_NOT_SET";
 
+    std::string solveStatus = "STATUS_WAS_NOT_SET";
+
 
 
     // Optimization variables
@@ -124,9 +131,9 @@ public:
 
     // Per element selection indicies 
     // This is a much more generic way to create optzoo entries.  
-    Eigen::VectorXi sel_primals_from_dof;
-    Eigen::VectorXi sel_moments_from_dof;
-    Eigen::VectorXi sel_deltas_from_dof;
+    DOFMemoryLayout primals_layout;
+    DOFMemoryLayout moments_layout;
+    DOFMemoryLayout deltas_layout;
     
 
 

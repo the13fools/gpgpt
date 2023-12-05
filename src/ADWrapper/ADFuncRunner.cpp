@@ -66,10 +66,12 @@
               // First try to converge with projected hessian 
               if (useProjHessian) /// w_smooth_vector > 0 || 
               {
+                std::cout << "Compute Hessian" << std::endl;
                 this->eval_func_and_proj_hess_to_psd_local(x);
                 f = this->get_fval_at_x(); // maybe don't need these two lines 
                 g = this->get_grad_at_x();
                 H_proj = this->get_hessian_at_x();
+                std::cout << "Start Newton Solve, add timing here" << std::endl;
                 d = TinyAD::newton_direction(g, H_proj, solver, 0.);
                 dec = TinyAD::newton_decrement(d, g);
 

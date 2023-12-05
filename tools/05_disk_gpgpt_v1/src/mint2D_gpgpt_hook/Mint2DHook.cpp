@@ -261,6 +261,7 @@ void Mint2DHook::updateRenderGeometry() {
 void Mint2DHook::pause() {
     PhysicsHook::pause();
     appState->keepSolving = true;
+    appState->solveStatus = "paused";
 }
     // Pause the simulati
 
@@ -272,6 +273,7 @@ void Mint2DHook::initSimulation() {
         // igl::readOBJ("/home/josh/Documents/mint_redux/geometry-processing-starter-kit/tools/shared/" + cur_mesh_name + ".obj", V, F);
 
     appState->keepSolving = true;
+    appState->solveStatus = "init simulation";
 
 
     bool create_new_dir = false;
@@ -368,6 +370,7 @@ void Mint2DHook::initSimulation() {
 
 
 bool Mint2DHook::simulateOneStep() {
+    appState->solveStatus = "simulate one step";
     int max_iters = appState->maxIterations;
     int cur_iter = appState->currentIteration;
     double convergence_eps = appState->convergenceEpsilon;
@@ -394,6 +397,7 @@ bool Mint2DHook::simulateOneStep() {
         }
 
         updateAppStateFromOptState();
+        appState->solveStatus = "finished one step";
 
             
 

@@ -75,6 +75,9 @@ class ADFuncRunner
         // runner state 
         // bool x_curr_is_new = false;
         TinyAD::LinearSolver<double> solver; // make this changable 
+        // Eigen::SimplicialLDLT<Eigen::SparseMatrix<PassiveT>>>
+        // #include <Eigen/SparseCholesky>
+        // Eigen::CholmodSupernodalLLT< Eigen::SparseMatrix<PassiveT>> >
 
 
         // cached quantities 
