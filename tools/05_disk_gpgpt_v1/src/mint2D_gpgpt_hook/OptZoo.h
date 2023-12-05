@@ -257,7 +257,7 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
           aat = aat + a_delta;
           bbt = bbt + b_delta; 
           cct = cct + c_delta;
-          // currcurrt = currcurrt + delta;
+          e.currcurrt = e.currcurrt + e.delta;
 
 
 

@@ -3,6 +3,8 @@
 
 #include <string>
 
+// #include "UtilsMisc.h"
+
 // This is a helper header for the TinyAD interface of gpgpt.
 // We suggest that the pattern modeled here is a convenient way to structure 
 // generic geometric optimization problems.  
@@ -48,6 +50,23 @@ public:
     double w_curl;
     double w_attenuate;
 
+    inline void flatten(const Eigen::MatrixX<T_active>& xxt, Eigen::VectorX<T_active>& xxt_flattened)
+    {
+        int xdim = xxt.rows();
+
+        xxt_flattened.resize(xdim*xdim);
+
+        for (int i = 0; i < xdim; i++)
+        {
+            for (int j = 0; j < xdim; j++)
+            {
+                xxt_flattened(i*xdim + j) = xxt(i)*xxt(j);
+            }
+        }
+
+
+    }
+
 
 
     void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
@@ -80,14 +99,16 @@ public:
 
         currcurrt.resize(primals_size*primals_size);
 
-        for (int i = 0; i < primals_size; i++)
-        {
-            for (int j = 0; j < primals_size; j++)
-            {
-                currcurrt(i*primals_size + j) = curr(i)*curr(j);
-            }
-        }
-        // currcurrt = flatten(currcurr);
+        flatten(currcurr, currcurrt);
+
+        // for (int i = 0; i < primals_size; i++)
+        // {
+        //     for (int j = 0; j < primals_size; j++)
+        //     {
+        //         currcurrt(i*primals_size + j) = curr(i)*curr(j);
+        //     }
+        // }
+        // // currcurrt = flatten(currcurr);
 
         // std::cout << "currcurrt " << currcurrt << std::endl;
 
@@ -104,6 +125,40 @@ public:
         w_curl = appState.config->w_curl;
         w_attenuate = appState.config->w_attenuate;
     }
+
+//     void setNeighborVars()
+//     {
+//         ///////////////////
+// //// Initialize the neighbor meta-data 
+// ///////////////////
+
+//           Eigen::VectorX<T> s_a = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 0));
+//           Eigen::VectorX<T> s_b = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 1));
+//           Eigen::VectorX<T> s_c = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 2));
+
+
+
+//           Eigen::Vector2<T> a = s_a.head(2);
+//           Eigen::Vector2<T> b = s_b.head(2);
+//           Eigen::Vector2<T> c = s_c.head(2);
+
+//           Eigen::Matrix2<T> aa = a*a.transpose();
+//           Eigen::Matrix2<T> bb = b*b.transpose();
+//           Eigen::Matrix2<T> cc = c*c.transpose();
+
+
+//           Eigen::Vector4<T> a_delta = s_a.tail(4);
+//           Eigen::Vector4<T> b_delta = s_b.tail(4);
+//           Eigen::Vector4<T> c_delta = s_c.tail(4);
+
+//           Eigen::Vector4<T> aat = flatten(aa);
+//           Eigen::Vector4<T> bbt = flatten(bb);
+//           Eigen::Vector4<T> cct = flatten(cc);
+
+//           aat = aat + a_delta;
+//           bbt = bbt + b_delta; 
+//           cct = cct + c_delta;
+//     }
 
 
 
