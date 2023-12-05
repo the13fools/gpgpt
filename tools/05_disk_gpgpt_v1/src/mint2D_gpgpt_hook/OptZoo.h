@@ -231,9 +231,9 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
 //// Initialize the neighbor meta-data 
 ///////////////////
 
-          Eigen::VectorX<T> s_a = element.variables(cur_surf->data().faceNeighbors(f_idx, 0));
-          Eigen::VectorX<T> s_b = element.variables(cur_surf->data().faceNeighbors(f_idx, 1));
-          Eigen::VectorX<T> s_c = element.variables(cur_surf->data().faceNeighbors(f_idx, 2));
+          Eigen::VectorX<T> s_a = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 0));
+          Eigen::VectorX<T> s_b = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 1));
+          Eigen::VectorX<T> s_c = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 2));
 
 
 
@@ -257,19 +257,19 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
           aat = aat + a_delta;
           bbt = bbt + b_delta; 
           cct = cct + c_delta;
-          currcurrt = currcurrt + delta;
+          // currcurrt = currcurrt + delta;
 
 
 
 
 
-          Eigen::Vector2<T> curr_normalized = curr.normalized();
-          Eigen::Vector2<T> curr_perp; // = curr_normalized;
-          curr_perp(0) = curr_normalized(1);
-          curr_perp(1) = -curr_normalized(0);
+          // Eigen::Vector2<T> curr_normalized = e.curr.normalized();
+          // Eigen::Vector2<T> curr_perp; // = curr_normalized;
+          // curr_perp(0) = curr_normalized(1);
+          // curr_perp(1) = -curr_normalized(0);
 
-return T(0);
-/*
+// return T(0);
+
 ///////////////////
 //// Initlaize elementwise objectives 
 ///////////////////
@@ -278,8 +278,8 @@ return T(0);
           // T primal_biharmonic_term = (a + b + c - 3*curr).squaredNorm();
           // T biharmonic_term = (aat+bbt+cct-3*currcurrt).squaredNorm();
 
-          T primal_dirichlet_term = (a - curr).squaredNorm() + (b - curr).squaredNorm() + (c - curr).squaredNorm();
-          T dirichlet_term = (aat-currcurrt).squaredNorm() + (bbt-currcurrt).squaredNorm() + (cct-currcurrt).squaredNorm();
+          T primal_dirichlet_term = (a - e.curr).squaredNorm() + (b - e.curr).squaredNorm() + (c - e.curr).squaredNorm();
+          T dirichlet_term = (aat-e.currcurrt).squaredNorm() + (bbt-e.currcurrt).squaredNorm() + (cct-e.currcurrt).squaredNorm();
 
 
           // T dirichlet_term = (aa + bb + cc - 3*currcurr).norm();
@@ -294,7 +294,7 @@ return T(0);
 
           // T delta_dirichlet = (a_delta+b_delta+c_delta-3*delta).squaredNorm()*delta_rescale;
 
-          T delta_norm_term = delta_rescale * delta.squaredNorm();// + delta_dirichlet;
+          T delta_norm_term = delta_rescale * e.delta.squaredNorm();// + delta_dirichlet;
 
     
 
@@ -307,14 +307,14 @@ return T(0);
           T delta_weight = 1.; // std::min(w_curl/100., 1./w_attenuate);
 
           T ret = delta_norm_term * delta_weight;
-          if (w_smooth_vector > 0)
-            return w_smooth_vector * primal_dirichlet_term + ret;
-          if (w_smooth > 0)
-            ret = ret + w_attenuate * w_smooth * dirichlet_term;
+          if (e.w_smooth_vector > 0)
+            return e.w_smooth_vector * primal_dirichlet_term + ret;
+          if (e.w_smooth > 0)
+            ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
      
 
           return ret;
-*/
+
 
         
 

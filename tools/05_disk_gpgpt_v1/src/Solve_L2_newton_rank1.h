@@ -88,7 +88,13 @@ public:
 
 
     /////////////////////////////
-    /// 
+    /// Add terms to the objective function here.  
+    /// Feel free to implement your own terms :). 
+    ///
+    /// There's a lot of opportunity for both human and machine learning 
+    /// by exploring modifications to these operators.  
+    ///
+    /// Auto-diff with sparse hessians is very new, there's a lot to explore! 
     /////////////////////////////
     // OptZoo::addConstTestTerm(func, *appState);
     OptZoo::addPinnedBoundaryTerm(func, *appState);
