@@ -37,6 +37,8 @@ struct FieldBounds {
 struct DOFMemoryLayout {
     int start = 0;
     int size = 2; 
+    int rank = 1; // This is mostly used when optimizing directly over primal variables in higher rank setting.  
+    // TODO implement support for this! 
 };
 
 // enum VariableType {
@@ -134,7 +136,10 @@ public:
     DOFMemoryLayout primals_layout;
     DOFMemoryLayout moments_layout;
     DOFMemoryLayout deltas_layout;
-    
+
+    // When you have already picked out the moments from the dofs 
+    DOFMemoryLayout moments_L2_layout; // TODO implement support for this ! 
+    DOFMemoryLayout moments_L4_layout;
 
 
     // Output State - gets visualized and serialized.  

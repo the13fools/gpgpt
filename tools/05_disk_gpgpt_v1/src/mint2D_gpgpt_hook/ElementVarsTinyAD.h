@@ -20,9 +20,11 @@
 
 template <typename T_active>
 class ElementData {
+public:
 
-    Eigen::Index f_idx; 
-    Eigen::VectorX<T_active> s_curr;
+    // Eigen::Index f_idx; 
+    Eigen::Index n_idx; //  faceNeighbors idx
+    Eigen::VectorX<T_active> dofs_curr_elem;
 
     // Eigen::Vector2<T> curr;
     // Eigen::Vector4<T> delta;
@@ -45,6 +47,8 @@ template <typename T_active, typename ELEM>
 class ProcElement {
 public:
 
+    ProcElement() : w_bound(0) {};
+
     // ElementVars(AppState& appState) {}
 
     double w_bound;
@@ -54,19 +58,21 @@ public:
     double w_curl;
     double w_attenuate;
 
+    int num_neighbors = 0;
+
     Surface* cur_surf;
 
     // Replace this with ElementData
     Eigen::Index f_idx; 
-    Eigen::VectorX<T_active> s_curr;
+    // Eigen::VectorX<T_active> s_curr;
 
-    // Eigen::Vector2<T> curr;
-    // Eigen::Vector4<T> delta;
-    Eigen::VectorX<T_active> curr;
-    Eigen::VectorX<T_active> delta;
+    // // Eigen::Vector2<T> curr;
+    // // Eigen::Vector4<T> delta;
+    // Eigen::VectorX<T_active> curr;
+    // Eigen::VectorX<T_active> delta;
 
-    Eigen::MatrixX<T_active> currcurr;
-    Eigen::VectorX<T_active> currcurrt;
+    // Eigen::MatrixX<T_active> currcurr;
+    // Eigen::VectorX<T_active> currcurrt;
 
 
     ElementData<T_active> self_data;
@@ -77,40 +83,71 @@ public:
     // T w_bound;
 
 
+    void setSelfData(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
+
+        setElemState(appState, f_idx);
+
+        self_data.dofs_curr_elem = element.variables(f_idx);
+        setL2Vars(appState, f_idx, self_data.dofs_curr_elem, self_data);
+
+    }
+
+    void setNeighborData(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
+
+        neighbor_data.clear();
+        int max_neighbors = 3;
+
+        num_neighbors = 0;
+
+        for (int i = 0; i < max_neighbors; i++)
+        {
+            ElementData<T_active> neighbor_data_i;
+            int n_idx = cur_surf->data().faceNeighbors(f_idx, i);
+            neighbor_data_i.n_idx = n_idx;
+            if (n_idx == -1) continue; // Make sure this is the correct convention.  Do more advance boundary handling later.
+            
+            num_neighbors += 1;
+            neighbor_data_i.dofs_curr_elem = element.variables(cur_surf->data().faceNeighbors(f_idx, i));
+            setL2Vars(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+            neighbor_data.push_back(neighbor_data_i);
+        }
+
+    }
 
 
+
+    void setElemState(AppState& appState, const Eigen::Index f_idx) { 
+        cur_surf = appState.cur_surf;
+
+        w_bound = appState.config->w_bound;
+        w_smooth_vector = appState.config->w_smooth_vector;
+
+        w_smooth = appState.config->w_smooth;
+        w_curl = appState.config->w_curl;
+        w_attenuate = appState.config->w_attenuate;
+
+        this->f_idx = f_idx;
+    }
 
 
     // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
-    void setElementVars(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
+    void setL2Vars(AppState& appState, const Eigen::Index f_idx, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
+        
         int primals_size = appState.primals_layout.size;
         int deltas_size = appState.deltas_layout.size;
 
-        curr.resize(primals_size);
-        delta.resize(deltas_size);
 
-        s_curr = element.variables(f_idx);
-        curr =  s_curr.segment(appState.primals_layout.start, primals_size); // head(2);
-        delta =  s_curr.segment(appState.deltas_layout.start, deltas_size); // head(2);
+        data.curr.resize(primals_size);
+        data.delta.resize(deltas_size);
 
-        // std::cout << "s_curr " << s_curr << std::endl;
-        // std::cout << "curr " << curr << "curr.rows(): " <<  curr.rows() << std::endl;
-        // std::cout << "delta " << delta << "delta.rows(): " << delta.rows() <<  std::endl;
-
-        // f_idx = element.handle;
-        // s_curr = element.variables(f_idx);
-        // curr =  s_curr.head(2);
-        // delta = s_curr.tail(4);
-
-        currcurr = curr*curr.transpose();
-
-        // std::cout << "currcurr " << currcurr << std::endl;
-        // std::cout << "currcurr rows " << currcurr.rows() << std::endl;
-        // std::cout << "currcurr cols " << currcurr.cols() << std::endl;
+        
+        data.curr =  s_curr.segment(appState.primals_layout.start, primals_size); // head(2);
+        data.delta =  s_curr.segment(appState.deltas_layout.start, deltas_size); // head(2);
 
 
+        data.currcurr = data.curr*data.curr.transpose();
 
-        currcurrt.resize(primals_size*primals_size);
+        data.currcurrt.resize(primals_size*primals_size);
 
         // flatten(currcurr, currcurrt);
         // TODO fix this later, not sure why this function isn't having it.  
@@ -119,25 +156,10 @@ public:
         {
             for (int j = 0; j < primals_size; j++)
             {
-                currcurrt(i*primals_size + j) = curr(i)*curr(j);
+                data.currcurrt(i*primals_size + j) = data.curr(i)*data.curr(j);
             }
         }
-        // // currcurrt = flatten(currcurr);
 
-        // std::cout << "currcurrt " << currcurrt << std::endl;
-
-        cur_surf = appState.cur_surf;
-
-        // T w_bound = appState.config->w_bound;
-
-        // bound_face_idx = appState.bound_face_idx;
-
-        w_bound = appState.config->w_bound;
-        w_smooth_vector = appState.config->w_smooth_vector;
-
-        w_smooth = appState.config->w_smooth;
-        w_curl = appState.config->w_curl;
-        w_attenuate = appState.config->w_attenuate;
     }
 
 //     void setNeighborVars()

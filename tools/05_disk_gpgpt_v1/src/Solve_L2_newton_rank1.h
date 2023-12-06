@@ -139,6 +139,8 @@ public:
       }
       _opt->_cur_x = x;
 
+      appState->config->w_smooth_vector = 0;
+
     }
 
 
@@ -189,7 +191,7 @@ public:
         std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
 
       }
-
+      std::cout << "appState->config->w_smooth_vector " << appState->config->w_smooth_vector << std::endl;
 
     }
 
