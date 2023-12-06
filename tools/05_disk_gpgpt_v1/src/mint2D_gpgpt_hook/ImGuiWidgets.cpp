@@ -80,7 +80,7 @@ namespace ImGuiWidgets {
         ImGui::Text("Current Energy: %f", appState.os->cur_global_objective_val);
         ImGui::Text("smooth primal %.1f bound %.1f curl %.1f smooth %.5f ", (float) appState.config->w_smooth_vector, (float) appState.config->w_bound, (float) appState.config->w_curl, (float) appState.config->w_smooth);
         ImGui::Text("Attenuate weight %e, actual smoothness %e", appState.config->w_attenuate, appState.config->w_attenuate*appState.config->w_smooth);
-        ImGui::Text("Relative Residual %e, Absolute Residual %e", appState.cur_rel_residual, appState.cur_abs_residual);
+        ImGui::Text("Relative Residual %e, Absolute Residual %e, Convergence EPS %e", appState.cur_rel_residual, appState.cur_abs_residual, appState.convergenceEpsilon);
 
 
 

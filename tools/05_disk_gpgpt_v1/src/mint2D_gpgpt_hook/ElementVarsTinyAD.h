@@ -25,6 +25,7 @@ public:
     // Eigen::Index f_idx; 
     Eigen::Index n_idx; //  faceNeighbors idx
     Eigen::VectorX<T_active> dofs_curr_elem;
+    std::vector< Eigen::VectorX<T_active> > primals_rank1;
 
     // Eigen::Vector2<T> curr;
     // Eigen::Vector4<T> delta;
@@ -33,6 +34,16 @@ public:
 
     Eigen::MatrixX<T_active> currcurr;
     Eigen::VectorX<T_active> currcurrt;
+
+    // These are the lifted primals to moment space.  
+    // i.e. if primals_rank1 = [u, v];
+    // then L_2_primals = flatten(u*u^T + v*v^T);
+    // and L_4_primals = flatten(u^4 + v^4 = flatten(u*u^T)*flatten(u*u^T)^T + flatten(v*v^T)*flatten(v*v^T)^T);
+
+    // For now we don't do the extra optimization of removing the symmetry from these 
+    // entries, just as a base line, will add this in momentarily.  
+    Eigen::VectorX<T_active> L_2_primals;
+    Eigen::VectorX<T_active> L_4_primals;
 
         // Eigen::VectorXi bound_face_idx;
 
@@ -78,6 +89,10 @@ public:
     ElementData<T_active> self_data;
 
     std::vector<ElementData<T_active>> neighbor_data;
+
+    // static const Eigen::VectorX<int> L_2_weights << 1, 2, 1;
+    // static const Eigen::VectorX<int> L_4_weights << 1, 4, 6, 4, 1;
+    // static const Eigen::VectorX<int> L_6_weights << 1, 6, 15, 20, 15, 6, 1;
 
     
     // T w_bound;

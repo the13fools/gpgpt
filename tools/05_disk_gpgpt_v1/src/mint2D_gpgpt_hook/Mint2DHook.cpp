@@ -384,7 +384,8 @@ bool Mint2DHook::simulateOneStep() {
         std::cout << "cur_obj: " <<  cur_obj  << " convergence_eps: " << convergence_eps << std::endl;
 
         opt->take_newton_step( opt->get_current_x() );
-        appState->cur_rel_residual = opt->_dec / cur_obj;
+        double rel_res_correction = 1. / sqrt(cur_obj);
+        appState->cur_rel_residual = opt->_dec * rel_res_correction;
         appState->cur_abs_residual = opt->_dec;
         if (appState->cur_rel_residual  < convergence_eps)
         {
