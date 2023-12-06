@@ -73,7 +73,7 @@ namespace ImGuiWidgets {
 
         ImGui::Text("Config State:");
         ImGui::Text("smooth primal %.1f bound %.1f curl %.1f smooth %.5f ", (float) appState.config->w_smooth_vector, (float) appState.config->w_bound, (float) appState.config->w_curl, (float) appState.config->w_smooth);
-
+        ImGui::Text("Attenuate weight %e", appState.config->w_attenuate);
         // ImGui::Text("Current Step Time: %f", appState.currentStepTime);
         ImGui::Text("Current Energy: %f", appState.os->cur_global_objective_val);
 

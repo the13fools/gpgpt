@@ -426,6 +426,7 @@ void Mint2DHook::resetAppState() {
     // appState->currentFileID = 0;
     appState->maxIterations = 5000; // Default maximum iterations
     appState->convergenceEpsilon = 1e-10;
+    appState->outerLoopIteration = 0;
 
     appState->override_bounds.lower = 0;
     appState->override_bounds.upper = 1e-5;

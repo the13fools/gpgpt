@@ -116,6 +116,7 @@ public:
     Surface* cur_surf; // This initializes some more convenient data structures for building up local energies.
                       // In 3d need to use mesh data structures.  
     bool keepSolving = true;
+    int outerLoopIteration = 0;
 
     // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;

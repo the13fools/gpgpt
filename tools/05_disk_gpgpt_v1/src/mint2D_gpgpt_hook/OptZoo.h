@@ -18,14 +18,16 @@
  * Enumeration for the different field views.
  */
 
- namespace OptZoo 
+template<int N>
+ class OptZoo 
  {
+  public:
 
-    using SF6 = decltype(TinyAD::scalar_function<6>(TinyAD::range(1)));
+    using ADFunc = decltype(TinyAD::scalar_function<6>(TinyAD::range(1)));
 
 
 // the const test term tried to make all the vectors the all ones or somethgn.
-    void addConstTestTerm(SF6& func, const AppState& appState) {
+    static void addConstTestTerm(ADFunc& func, const AppState& appState) {
 
         std::cout << "add const obj" << std::endl;
 
@@ -76,7 +78,7 @@
 
 // The pinned boundary condition.  
 // TODO,  add in other boundary conditions like mixed neumann and free for meshing examples.  
-void addPinnedBoundaryTerm(SF6& func, AppState& appState) {
+static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
 
@@ -163,9 +165,8 @@ void addPinnedBoundaryTerm(SF6& func, AppState& appState) {
 
 
 
-// The elementwise laplacian term 
-
-void addSmoothnessTerm(SF6& func, AppState& appState) {
+// Deps primal vars 
+static void addSmoothnessTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add smoonthess obj" << std::endl;
 
@@ -257,9 +258,8 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
 }
 
 
-// The elementwise laplacian term 
-
-void addCurlTerm(SF6& func, AppState& appState) {
+// deps primal vars 
+static void addCurlTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add smoonthess obj" << std::endl;
 
@@ -372,60 +372,7 @@ void addCurlTerm(SF6& func, AppState& appState) {
 
 
 
-// 
 
-
-          // T s_perp_term = pow(a.dot(curr_perp),2) + pow(b.dot(curr_perp),2) + pow(c.dot(curr_perp), 2);
-          // T s_perp_term = ((a.dot(curr_perp) + b.dot(curr_perp) + c.dot(curr_perp)) * (curr_perp * curr_perp.transpose())).norm();
-       
-       
-       
-        //   T s_perp_term = ((a.dot(curr_perp) + b.dot(curr_perp) + c.dot(curr_perp)) * (currcurrt)).squaredNorm();
-
-
-// void addCurlTerm(SF6& func, const AppState& appState) {
-
-//     //   Eigen::Vector4d ea = e_projs2.row(cur_surf.data().faceEdges(f_idx, 0));
-//     //       Eigen::Vector4d eb = e_projs2.row(cur_surf.data().faceEdges(f_idx, 1));
-//     //       Eigen::Vector4d ec = e_projs2.row(cur_surf.data().faceEdges(f_idx, 2));
-
-//     //       // Eigen::Vector4<T> ea = e_projs.at(cur_surf.data().faceEdges(f_idx, 0));
-//     //       // Eigen::Vector4<T> eb = e_projs.at(cur_surf.data().faceEdges(f_idx, 1));
-//     //       // Eigen::Vector4<T> ec = e_projs.at(cur_surf.data().faceEdges(f_idx, 2));
-
-//     //       // T curl_term = pow(ea.dot(aat + a_delta) - ea.dot(currcurrt + delta),2);
-//     //       // curl_term +=  pow(eb.dot(bbt + b_delta) - eb.dot(currcurrt + delta),2);
-//     //       // curl_term +=  pow(ec.dot(cct + c_delta) - ec.dot(currcurrt + delta),2);
-
-//     //       T curl_term = pow(ea.dot(aat ) - ea.dot(currcurrt ),2);
-//     //       curl_term +=  pow(eb.dot(bbt ) - eb.dot(currcurrt ),2);
-//     //       curl_term +=  pow(ec.dot(cct ) - ec.dot(currcurrt ),2);
-
-//     //       appState->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
-
-
-//     //       Eigen::Vector2<T> ea_primal = e_projs_primal.at(cur_surf.data().faceEdges(f_idx, 0));
-//     //       Eigen::Vector2<T> eb_primal = e_projs_primal.at(cur_surf.data().faceEdges(f_idx, 1));
-//     //       Eigen::Vector2<T> ec_primal = e_projs_primal.at(cur_surf.data().faceEdges(f_idx, 2));
-
-//     //       T curl_term_primal = pow(ea_primal.dot(a) - ea_primal.dot(curr),2);
-//     //       curl_term_primal +=  pow(eb_primal.dot(b) - eb_primal.dot(curr),2);
-//     //       curl_term_primal +=  pow(ec_primal.dot(c) - ec_primal.dot(curr),2);
-
-//     //       appState->curls_primal(f_idx) = TinyAD::to_passive(curl_term_primal);
-
-//     //       T w_curl_new = std::min(1e8, 1./w_attenuate) * w_curl;
-
-//     // T ret = T(0);
-
-//     //  if (w_s_perp > 0)
-//     //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
-//     //       if (w_curl_new > 0)
-//     //         ret = ret + w_curl_new * curl_term;
-
-
-// }
-
- } // namespace OptZoo
+ }; // namespace OptZoo
 
 #endif // OPTZOO_H

@@ -52,17 +52,11 @@ public:
     virtual void initSimulation()
     {
 
-      appState->meshName = "circle_subdiv";
-
-      // appState->meshName = "circle";
+      // appState->meshName = "circle_subdiv";
+      appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_1000";
-
-
-
       // appState->meshName = "circle_irreg_20000";
-
-
       // appState->meshName = "circle_1000";
       
 
@@ -76,50 +70,45 @@ public:
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
-      // In this example we are setting up an optimization with a vector and a delta per face.  
+      func = TinyAD::scalar_function<6>(TinyAD::range(appState->F.rows()));
+      // auto func = _opt._func;
 
-//       // Set up function with 2D vertex positions as variables.
-//       func = TinyAD::scalar_function<6>(TinyAD::range(F.rows()));
-
-    func = TinyAD::scalar_function<6>(TinyAD::range(appState->F.rows()));
-    // auto func = _opt._func;
-
-    // setup tinyad func
+      // setup tinyad func
 
 
-    /////////////////////////////
-    /// Add terms to the objective function here.  
-    /// Feel free to implement your own terms :). 
-    ///
-    /// There's a lot of opportunity for both human and machine learning 
-    /// by exploring modifications to these operators.  
-    ///
-    /// Auto-diff with sparse hessians is very new, there's a lot to explore! 
-    /////////////////////////////
-    // OptZoo::addConstTestTerm(func, *appState);
-    OptZoo::addPinnedBoundaryTerm(func, *appState);
+      /////////////////////////////
+      /// Add terms to the objective function here.  
+      /// Feel free to implement your own terms :). 
+      ///
+      /// There's a lot of opportunity for both human and machine learning 
+      /// by exploring modifications to these operators.  
+      ///
+      /// Auto-diff with sparse hessians is very new, there's a lot to explore! 
+      /////////////////////////////
+      // OptZoo::addConstTestTerm(func, *appState);
+      OptZoo<6>::addPinnedBoundaryTerm(func, *appState);
 
-    // OptZoo::addPinnedBoundaryTerm(func, *appState);
-    OptZoo::addSmoothnessTerm(func, *appState);
-    OptZoo::addCurlTerm(func, *appState);
-
-
-    appState->config->w_attenuate = 1.;
-    appState->config->w_smooth = 1e5;
-    appState->config->w_curl = 1e1;
-    
+      // OptZoo::addPinnedBoundaryTerm(func, *appState);
+      OptZoo<6>::addSmoothnessTerm(func, *appState);
+      OptZoo<6>::addCurlTerm(func, *appState);
 
 
-// This is some magic to get the tinyAD function to work with the ADFuncRunner interface.
-    _opt = new ADFunc_TinyAD_Instance<6>();
-    _opt->set_tinyad_objective_func(&func);
-    init_opt_state();
-    // _opt->_func = &func;
-    opt = static_cast<ADFuncRunner*>(_opt);
+      appState->config->w_attenuate = 1.;
+      appState->config->w_smooth = 1e5;
+      appState->config->w_curl = 1e1;
+      
 
-    std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
-    // std::cout << "nvars in opt" << _opt->_func->n_vars << std::endl; // get_num_vars
-    std::cout << "nvars in opt" << this->opt->get_num_vars() << std::endl; 
+
+  // This is some magic to get the tinyAD function to work with the ADFuncRunner interface.
+      _opt = new ADFunc_TinyAD_Instance<6>();
+      _opt->set_tinyad_objective_func(&func);
+      init_opt_state();
+      // _opt->_func = &func;
+      opt = static_cast<ADFuncRunner*>(_opt);
+
+      std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
+      // std::cout << "nvars in opt" << _opt->_func->n_vars << std::endl; // get_num_vars
+      std::cout << "nvars in opt" << this->opt->get_num_vars() << std::endl; 
 
 
 
@@ -188,27 +177,17 @@ public:
 
       
 
-            // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
+      // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
       if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 10.;
         appState->keepSolving = true;  
+        appState->outerLoopIteration += 1;
         std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
 
       }
 
 
-      // // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      // if ( appState->keepSolving == false && appState->config->w_smooth_vector > 0)
-      // {
-      //   appState->keepSolving = true;  
-      //   appState->config->w_smooth_vector = 0;
-      //   opt->useProjHessian = true; // reset to use PSD hessian because optimization problem changed.
-
-      //   std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
-
-      // }
-      // std::cout << "appState->config->w_smooth_vector " << appState->config->w_smooth_vector << std::endl;
 
     }
 
@@ -244,3 +223,17 @@ protected:
 
 
 #endif // SOLVE_L2_NETWON_RANK1_H
+
+
+
+      // // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
+      // if ( appState->keepSolving == false && appState->config->w_smooth_vector > 0)
+      // {
+      //   appState->keepSolving = true;  
+      //   appState->config->w_smooth_vector = 0;
+      //   opt->useProjHessian = true; // reset to use PSD hessian because optimization problem changed.
+
+      //   std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
+
+      // }
+      // std::cout << "appState->config->w_smooth_vector " << appState->config->w_smooth_vector << std::endl;
