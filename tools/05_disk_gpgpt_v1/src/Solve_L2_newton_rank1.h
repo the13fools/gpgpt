@@ -52,11 +52,11 @@ public:
     virtual void initSimulation()
     {
 
-      // appState->meshName = "circle_subdiv";
+      appState->meshName = "circle_subdiv";
 
       // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
-      appState->meshName = "circle_1000";
+      // appState->meshName = "circle_1000";
 
 
 
@@ -105,8 +105,8 @@ public:
 
 
     appState->config->w_attenuate = 1.;
-    appState->config->w_smooth = 1e4;
-    appState->config->w_curl = 1e2;
+    appState->config->w_smooth = 1e5;
+    appState->config->w_curl = 1e1;
     
 
 
@@ -189,11 +189,11 @@ public:
       
 
             // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-8)
+      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 10.;
         appState->keepSolving = true;  
-        std::cout << "~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << "~~~~~ ~~~~~~ ~~~~~~" << std::endl;
+        std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
 
       }
 
