@@ -85,7 +85,7 @@ void addPinnedBoundaryTerm(SF6& func, AppState& appState) {
 
      // Evaluate element using either double or TinyAD::Double
         using T = TINYAD_SCALAR_TYPE(element);
-
+        using VAR = std::decay_t<decltype(element)>; // TINYAD_VARIABLES_TYPE(element);
 
 
         // Get variable 2D vertex positions
@@ -104,9 +104,11 @@ void addPinnedBoundaryTerm(SF6& func, AppState& appState) {
         // T w_bound = appState.config->w_bound;
 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-        ElementVars<T> e; 
+        ProcElement<T,VAR> e; 
         // std::cout << "s_curr: " << s_curr << std::endl;
-        e.setElementVars(appState, f_idx, s_curr);
+        // e.setElementVars(appState, f_idx, s_curr);
+        e.setElementVars(appState, f_idx, element);
+
 
         
 
@@ -172,15 +174,18 @@ void addSmoothnessTerm(SF6& func, AppState& appState) {
 
      // Evaluate element using either double or TinyAD::Double
         using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
 
 
 
         // Get variable 2D vertex positions
         Eigen::Index f_idx = element.handle;
-        Eigen::VectorX<T> s_curr = element.variables(f_idx);
+        // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ElementVars<T> e; 
-        e.setElementVars(appState, f_idx, s_curr);
+        ProcElement<T,VAR> e; 
+        // e.setElementVars(appState, f_idx, s_curr);
+        e.setElementVars(appState, f_idx, element);
+
 
 
         // Eigen::Vector2<T> curr =  s_curr.head(2);

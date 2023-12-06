@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include <TinyAD/ScalarFunction.hh>
+
 // #include "UtilsMisc.h"
 
 // This is a helper header for the TinyAD interface of gpgpt.
@@ -16,15 +18,8 @@
 // There's a non-zero performance gain to be had here though.  Pretty low hanging thing to hack in maybe?
 
 
-
-/**
- * ElementVars class 
- */
 template <typename T_active>
-class ElementVars {
-public:
-
-    // ElementVars(AppState& appState) {}
+class ElementData {
 
     Eigen::Index f_idx; 
     Eigen::VectorX<T_active> s_curr;
@@ -37,11 +32,20 @@ public:
     Eigen::MatrixX<T_active> currcurr;
     Eigen::VectorX<T_active> currcurrt;
 
-    Surface* cur_surf;
+        // Eigen::VectorXi bound_face_idx;
 
-    // T w_bound;
+};
 
-    Eigen::VectorXi bound_face_idx;
+
+
+/**
+ * ElementVars class 
+ */
+template <typename T_active, typename ELEM>
+class ProcElement {
+public:
+
+    // ElementVars(AppState& appState) {}
 
     double w_bound;
     double w_smooth_vector;
@@ -50,33 +54,42 @@ public:
     double w_curl;
     double w_attenuate;
 
-    inline void flatten(const Eigen::MatrixX<T_active>& xxt, Eigen::VectorX<T_active>& xxt_flattened)
-    {
-        int xdim = xxt.rows();
+    Surface* cur_surf;
 
-        xxt_flattened.resize(xdim*xdim);
+    // Replace this with ElementData
+    Eigen::Index f_idx; 
+    Eigen::VectorX<T_active> s_curr;
 
-        for (int i = 0; i < xdim; i++)
-        {
-            for (int j = 0; j < xdim; j++)
-            {
-                xxt_flattened(i*xdim + j) = xxt(i)*xxt(j);
-            }
-        }
+    // Eigen::Vector2<T> curr;
+    // Eigen::Vector4<T> delta;
+    Eigen::VectorX<T_active> curr;
+    Eigen::VectorX<T_active> delta;
 
-
-    }
+    Eigen::MatrixX<T_active> currcurr;
+    Eigen::VectorX<T_active> currcurrt;
 
 
+    ElementData<T_active> self_data;
 
-    void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
+    std::vector<ElementData<T_active>> neighbor_data;
 
+    
+    // T w_bound;
+
+
+
+
+
+
+    // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
+    void setElementVars(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
         int primals_size = appState.primals_layout.size;
         int deltas_size = appState.deltas_layout.size;
 
         curr.resize(primals_size);
         delta.resize(deltas_size);
 
+        s_curr = element.variables(f_idx);
         curr =  s_curr.segment(appState.primals_layout.start, primals_size); // head(2);
         delta =  s_curr.segment(appState.deltas_layout.start, deltas_size); // head(2);
 
@@ -99,15 +112,16 @@ public:
 
         currcurrt.resize(primals_size*primals_size);
 
-        flatten(currcurr, currcurrt);
-
-        // for (int i = 0; i < primals_size; i++)
-        // {
-        //     for (int j = 0; j < primals_size; j++)
-        //     {
-        //         currcurrt(i*primals_size + j) = curr(i)*curr(j);
-        //     }
-        // }
+        // flatten(currcurr, currcurrt);
+        // TODO fix this later, not sure why this function isn't having it.  
+        // maybe just copy over the one from UtilsMisc
+        for (int i = 0; i < primals_size; i++)
+        {
+            for (int j = 0; j < primals_size; j++)
+            {
+                currcurrt(i*primals_size + j) = curr(i)*curr(j);
+            }
+        }
         // // currcurrt = flatten(currcurr);
 
         // std::cout << "currcurrt " << currcurrt << std::endl;
@@ -116,7 +130,7 @@ public:
 
         // T w_bound = appState.config->w_bound;
 
-        bound_face_idx = appState.bound_face_idx;
+        // bound_face_idx = appState.bound_face_idx;
 
         w_bound = appState.config->w_bound;
         w_smooth_vector = appState.config->w_smooth_vector;
@@ -132,9 +146,9 @@ public:
 // //// Initialize the neighbor meta-data 
 // ///////////////////
 
-//           Eigen::VectorX<T> s_a = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 0));
-//           Eigen::VectorX<T> s_b = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 1));
-//           Eigen::VectorX<T> s_c = element.variables(e.cur_surf->data().faceNeighbors(f_idx, 2));
+//           Eigen::VectorX<T> s_a = element.variables(cur_surf->data().faceNeighbors(f_idx, 0));
+//           Eigen::VectorX<T> s_b = element.variables(cur_surf->data().faceNeighbors(f_idx, 1));
+//           Eigen::VectorX<T> s_c = element.variables(cur_surf->data().faceNeighbors(f_idx, 2));
 
 
 
@@ -151,14 +165,43 @@ public:
 //           Eigen::Vector4<T> b_delta = s_b.tail(4);
 //           Eigen::Vector4<T> c_delta = s_c.tail(4);
 
-//           Eigen::Vector4<T> aat = flatten(aa);
-//           Eigen::Vector4<T> bbt = flatten(bb);
-//           Eigen::Vector4<T> cct = flatten(cc);
+//         //   Eigen::Vector4<T> aat = flatten(aa);
+//         //   Eigen::Vector4<T> bbt = flatten(bb);
+//         //   Eigen::Vector4<T> cct = flatten(cc);
+//                 currcurrt.resize(primals_size*primals_size);
+
+//         // flatten(currcurr, currcurrt);
+//         // TODO fix this later, not sure why this function isn't having it.  
+//         // maybe just copy over the one from UtilsMisc
+//         for (int i = 0; i < primals_size; i++)
+//         {
+//             for (int j = 0; j < primals_size; j++)
+//             {
+//                 currcurrt(i*primals_size + j) = curr(i)*curr(j);
+//             }
+//         }
 
 //           aat = aat + a_delta;
 //           bbt = bbt + b_delta; 
 //           cct = cct + c_delta;
 //     }
+
+    // inline void flatten(const Eigen::MatrixX<T_active>& xxt, Eigen::VectorX<T_active>& xxt_flattened)
+    // {
+    //     int xdim = xxt.rows();
+
+    //     xxt_flattened.resize(xdim*xdim);
+
+    //     for (int i = 0; i < xdim; i++)
+    //     {
+    //         for (int j = 0; j < xdim; j++)
+    //         {
+    //             xxt_flattened(i*xdim + j) = xxt(i)*xxt(j);
+    //         }
+    //     }
+
+
+    // }
 
 
 
