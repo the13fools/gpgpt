@@ -101,7 +101,12 @@ public:
 
     // OptZoo::addPinnedBoundaryTerm(func, *appState);
     OptZoo::addSmoothnessTerm(func, *appState);
-    // OptZoo::addCurlTerm(func, *appState);
+    OptZoo::addCurlTerm(func, *appState);
+
+
+    appState->config->w_attenuate = 1.;
+    appState->config->w_smooth = 1e4;
+    appState->config->w_curl = 1e2;
     
 
 
@@ -181,17 +186,29 @@ public:
       }
 
 
-      // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      if ( appState->keepSolving == false && appState->config->w_smooth_vector > 0)
-      {
-        appState->keepSolving = true;  
-        appState->config->w_smooth_vector = 0;
-        opt->useProjHessian = true; // reset to use PSD hessian because optimization problem changed.
+      
 
-        std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
+            // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
+      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-8)
+      {
+        appState->config->w_attenuate = appState->config->w_attenuate / 10.;
+        appState->keepSolving = true;  
+        std::cout << "~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << "~~~~~ ~~~~~~ ~~~~~~" << std::endl;
 
       }
-      std::cout << "appState->config->w_smooth_vector " << appState->config->w_smooth_vector << std::endl;
+
+
+      // // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
+      // if ( appState->keepSolving == false && appState->config->w_smooth_vector > 0)
+      // {
+      //   appState->keepSolving = true;  
+      //   appState->config->w_smooth_vector = 0;
+      //   opt->useProjHessian = true; // reset to use PSD hessian because optimization problem changed.
+
+      //   std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
+
+      // }
+      // std::cout << "appState->config->w_smooth_vector " << appState->config->w_smooth_vector << std::endl;
 
     }
 
