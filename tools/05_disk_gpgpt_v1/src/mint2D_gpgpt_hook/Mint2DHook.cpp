@@ -384,7 +384,9 @@ bool Mint2DHook::simulateOneStep() {
         std::cout << "cur_obj: " <<  cur_obj  << " convergence_eps: " << convergence_eps << std::endl;
 
         opt->take_newton_step( opt->get_current_x() );
-        if (opt->_dec < convergence_eps)
+        appState->cur_rel_residual = opt->_dec / cur_obj;
+        appState->cur_abs_residual = opt->_dec;
+        if (appState->cur_rel_residual  < convergence_eps)
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
@@ -425,7 +427,7 @@ void Mint2DHook::resetAppState() {
     appState->currentIteration = 0;
     // appState->currentFileID = 0;
     appState->maxIterations = 5000; // Default maximum iterations
-    appState->convergenceEpsilon = 1e-10;
+    appState->convergenceEpsilon = 1e-12;
     appState->outerLoopIteration = 0;
 
     appState->override_bounds.lower = 0;

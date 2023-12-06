@@ -117,6 +117,8 @@ public:
                       // In 3d need to use mesh data structures.  
     bool keepSolving = true;
     int outerLoopIteration = 0;
+    double cur_rel_residual = 0;
+    double cur_abs_residual = 0;
 
     // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;
@@ -151,7 +153,7 @@ public:
     // GUI state 
     std::unordered_map<Field_View, FieldBounds> fieldBounds;
     bool fieldViewActive [8] = {true, true, true, true, true, true, true, false};
-    bool shouldLogData = true;
+    bool shouldLogData = false;
     Field_View prev_frame_element = Field_View::Element_COUNT;
     Field_View current_element;
     bool showVectorField = true;

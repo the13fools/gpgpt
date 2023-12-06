@@ -11,7 +11,7 @@ MyConfig::MyConfig()
       w_curl(1e5),
       w_s_perp(0.),
       w_attenuate(0.1),
-      convergence_eps(1e-6),
+      convergence_eps(1e-12),
       identity_weight(0.1),
       prev_energy(0.0),
       useProjHessian(true) {
