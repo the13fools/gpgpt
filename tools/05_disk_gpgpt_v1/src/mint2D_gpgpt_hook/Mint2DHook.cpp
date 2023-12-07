@@ -381,13 +381,14 @@ bool Mint2DHook::simulateOneStep() {
         std::cout << std::endl << "*** GLOBAL STEP: " << cur_iter << "*** "  << std::endl;
         std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
         std::cout << "nvars in opt" << opt->get_num_vars() << std::endl; 
-        std::cout << "cur_obj: " <<  cur_obj  << " convergence_eps: " << convergence_eps << std::endl;
+        
 
         opt->take_newton_step( opt->get_current_x() );
-        double rel_res_correction = 1. / sqrt(cur_obj);
+        double rel_res_correction = 1. / cur_obj;
         appState->cur_rel_residual = opt->_dec * rel_res_correction;
         appState->cur_abs_residual = opt->_dec;
-        if (appState->cur_rel_residual  < convergence_eps)
+        std::cout << "cur_obj: " <<  cur_obj  << " conv_eps: " << convergence_eps << "rel_res_correction: " << rel_res_correction << std::endl;
+        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4)
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;

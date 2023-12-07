@@ -52,12 +52,11 @@ public:
     virtual void initSimulation()
     {
 
+      appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
       // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
-      appState->meshName = "circle_1000";
       // appState->meshName = "circle_irreg_20000";
-      // appState->meshName = "circle_1000";
       
 
 
@@ -65,16 +64,12 @@ public:
       // Add file parsing logic here.
       Mint2DHook::initSimulation();
 
+      // move this inside mint2d
       appState->solveStatus = "init L2 newton rank 1";
-
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
       func = TinyAD::scalar_function<6>(TinyAD::range(appState->F.rows()));
-      // auto func = _opt._func;
-
-      // setup tinyad func
-
 
       /////////////////////////////
       /// Add terms to the objective function here.  
@@ -92,6 +87,7 @@ public:
       OptZoo<6>::addSmoothnessTerm(func, *appState);
       OptZoo<6>::addCurlTerm(func, *appState);
 
+      // Update params specific to this solve here
 
       appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e5;
@@ -100,6 +96,12 @@ public:
 
 
   // This is some magic to get the tinyAD function to work with the ADFuncRunner interface.
+  // Basically this file needs to store the actual instanced _opt, but then 
+  // it also needs to be registered on the MintHook2D (which this inherits from)
+  // In order to run the optimization.  
+  //
+  // 
+  // This little bit of boiler plate goes a long way.  
       _opt = new ADFunc_TinyAD_Instance<6>();
       _opt->set_tinyad_objective_func(&func);
       init_opt_state();
@@ -180,7 +182,7 @@ public:
       // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
       if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
       {
-        appState->config->w_attenuate = appState->config->w_attenuate / 10.;
+        appState->config->w_attenuate = appState->config->w_attenuate / 4.;
         appState->keepSolving = true;  
         appState->outerLoopIteration += 1;
         std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
@@ -206,15 +208,6 @@ protected:
 
 
 
-
-  
-  std::vector<Eigen::Matrix2d> rest_shapes;
-// %%% 2 + 4 + 4
-
-
-  // Eigen::ConjugateGradient<Eigen::SparseMatrix<double>> cg_solver;
-
-
     
 };
 
@@ -224,16 +217,3 @@ protected:
 
 #endif // SOLVE_L2_NETWON_RANK1_H
 
-
-
-      // // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      // if ( appState->keepSolving == false && appState->config->w_smooth_vector > 0)
-      // {
-      //   appState->keepSolving = true;  
-      //   appState->config->w_smooth_vector = 0;
-      //   opt->useProjHessian = true; // reset to use PSD hessian because optimization problem changed.
-
-      //   std::cout << "~~~~~~switch off primal smoothness term used to initialize the opt~~~~~" << std::endl;
-
-      // }
-      // std::cout << "appState->config->w_smooth_vector " << appState->config->w_smooth_vector << std::endl;
