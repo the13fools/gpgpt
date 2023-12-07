@@ -90,26 +90,10 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
         using VAR = std::decay_t<decltype(element)>; // TINYAD_VARIABLES_TYPE(element);
 
 
-        // Get variable 2D vertex positions
-        Eigen::Index f_idx = element.handle;
-        Eigen::VectorX<T> s_curr = element.variables(f_idx);
-        // Eigen::Vector2<T> curr =  s_curr.segment(appState.primals_layout.start, appState.primals_layout.size); // head(2);
-        // // Eigen::Vector2<T> curr =  s_curr(igl::find(appState.sel_primals_from_dof));
-        // // find
-        // Eigen::Vector4<T> delta = s_curr.tail(4);
 
-        // Eigen::Matrix2<T> currcurr = curr*curr.transpose();
-        // Eigen::Vector4<T> currcurrt = flatten(currcurr);
-
-        // Surface* cur_surf = appState.cur_surf;
-
-        // T w_bound = appState.config->w_bound;
-
+        // Get boundary annotations 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-        ProcElement<T,VAR> e; 
-        // std::cout << "s_curr: " << s_curr << std::endl;
-        // e.setElementVars(appState, f_idx, s_curr);
-        e.setSelfData(appState, f_idx, element);
+        Eigen::Index f_idx = element.handle;
 
 
         
@@ -119,40 +103,40 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
             // std::cout << "eval boundary obj" << std::endl;
         }
 
-
-        // Surface* cur_surf = appState;
-          // metadata field
-          // Eigen::Vector2<T> metadata = s_curr.segment(2, 2);
-
         // Dirichlet (i.e. pinned) boundary condition
         if (bound_face_idx(f_idx) == 1)
         {
+            ProcElement<T,VAR> e; 
+            e.setSelfData(appState, f_idx, element);
+
+            Eigen::Vector2<T> curr = e.self_data.primals_rank1[0];
+
             Eigen::Vector2<T> targ = appState.frames_orig.row(f_idx);
-            return e.w_bound*(e.self_data.curr-targ).squaredNorm() + e.w_bound*e.self_data.delta.squaredNorm();
+            return e.w_bound*(curr-targ).squaredNorm(); // + e.w_bound*e.self_data.delta.squaredNorm();
         }
 
 
-        // Free boundary condition
-        if (bound_face_idx(f_idx) == -1)
-        {
-            T ret = e.w_bound*e.self_data.delta.squaredNorm();
-            for(int i = 0; i < 3; i++)
-            {
+        // // Free boundary condition
+        // if (bound_face_idx(f_idx) == -1)
+        // {
+        //     T ret = e.w_bound*e.self_data.delta.squaredNorm();
+        //     for(int i = 0; i < 3; i++)
+        //     {
             
-              int neighbor_edge_idx = e.cur_surf->data().faceNeighbors(f_idx, i);
-              if(neighbor_edge_idx > -1)
-              {
-                Eigen::VectorX<T> s_n = element.variables(neighbor_edge_idx);
-                Eigen::Vector2<T> n_i = s_n.head(2);
-                // ret = ret + (n_i-curr).squaredNorm() * w_smooth;
-                Eigen::Matrix2<T> nini = n_i*n_i.transpose();
-                Eigen::Vector4<T> ninit = flatten(nini);
-                ret = ret + (ninit-e.self_data.currcurrt).squaredNorm() * e.w_bound; // * w_smooth * w_attenuate;
-                // ret = ret + (n_i*n_i.transpose()-currcurr).norm() * w_smooth;
-              }
-            }
-            return ret;
-        }
+        //       int neighbor_edge_idx = e.cur_surf->data().faceNeighbors(f_idx, i);
+        //       if(neighbor_edge_idx > -1)
+        //       {
+        //         Eigen::VectorX<T> s_n = element.variables(neighbor_edge_idx);
+        //         Eigen::Vector2<T> n_i = s_n.head(2);
+        //         // ret = ret + (n_i-curr).squaredNorm() * w_smooth;
+        //         Eigen::Matrix2<T> nini = n_i*n_i.transpose();
+        //         Eigen::Vector4<T> ninit = flatten(nini);
+        //         ret = ret + (ninit-e.self_data.currcurrt).squaredNorm() * e.w_bound; // * w_smooth * w_attenuate;
+        //         // ret = ret + (n_i*n_i.transpose()-currcurr).norm() * w_smooth;
+        //       }
+        //     }
+        //     return ret;
+        // }
 
         // Not a boundary element
         return T(0);
@@ -220,8 +204,8 @@ static void addSmoothnessTerm(ADFunc& func, AppState& appState) {
           T dirichlet_term = T(0);
           for (int i = 0; i < e.num_neighbors; i++)
           {
-            primal_dirichlet_term += (e.neighbor_data.at(i).curr - e.self_data.curr).squaredNorm();
-            dirichlet_term += (e.neighbor_data.at(i).currcurrt - e.self_data.currcurrt).squaredNorm();
+            primal_dirichlet_term += (e.neighbor_data.at(i).primals - e.self_data.primals).squaredNorm();
+            dirichlet_term += (e.neighbor_data.at(i).L_2_primals - e.self_data.L_2_primals).squaredNorm();
           }
 
           // T primal_dirichlet_term = (a - e.self_data.curr).squaredNorm() + (b - e.self_data.curr).squaredNorm() + (c - e.self_data.curr).squaredNorm();
@@ -240,11 +224,11 @@ static void addSmoothnessTerm(ADFunc& func, AppState& appState) {
 
           // T delta_dirichlet = (a_delta+b_delta+c_delta-3*delta).squaredNorm()*delta_rescale;
 
-          T delta_norm_term = delta_rescale * e.self_data.delta.squaredNorm();// + delta_dirichlet;
+          // T delta_norm_term = delta_rescale * e.self_data.delta.squaredNorm();// + delta_dirichlet;
 
           T delta_weight = 1.; // std::min(w_curl/100., 1./w_attenuate);
 
-          T ret = delta_norm_term * delta_weight;
+          T ret = T(0);//  delta_norm_term * delta_weight;
           // if (e.w_smooth_vector > 0)
           //   return e.w_smooth_vector * primal_dirichlet_term + ret;
           // if (e.w_smooth > 0)
@@ -326,9 +310,9 @@ static void addCurlTerm(ADFunc& func, AppState& appState) {
           //   primal_dirichlet_term += (e.neighbor_data.at(i).curr - e.self_data.curr).squaredNorm();
           //   dirichlet_term += (e.neighbor_data.at(i).currcurrt - e.self_data.currcurrt).squaredNorm();
           // }
-          T curl_term = pow(ea.dot(e.neighbor_data.at(0).currcurrt ) - ea.dot(e.self_data.currcurrt),2);
-          curl_term +=  pow(eb.dot(e.neighbor_data.at(1).currcurrt ) - eb.dot(e.self_data.currcurrt),2);
-          curl_term +=  pow(ec.dot(e.neighbor_data.at(2).currcurrt ) - ec.dot(e.self_data.currcurrt),2);
+          T curl_term = pow(ea.dot(e.neighbor_data.at(0).L_2_primals ) - ea.dot(e.self_data.L_2_primals),2);
+          curl_term +=  pow(eb.dot(e.neighbor_data.at(1).L_2_primals ) - eb.dot(e.self_data.L_2_primals),2);
+          curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_2_primals ) - ec.dot(e.self_data.L_2_primals),2);
 
           appState.os->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
 
@@ -336,9 +320,9 @@ static void addCurlTerm(ADFunc& func, AppState& appState) {
           Eigen::Vector2<T> eb_primal = appState.C_primal.row(e.cur_surf->data().faceEdges(f_idx, 1));
           Eigen::Vector2<T> ec_primal = appState.C_primal.row(e.cur_surf->data().faceEdges(f_idx, 2));
 
-          T curl_term_primal = pow(ea_primal.dot(e.neighbor_data.at(0).curr) - ea_primal.dot(e.self_data.curr),2);
-          curl_term_primal +=  pow(eb_primal.dot(e.neighbor_data.at(1).curr) - eb_primal.dot(e.self_data.curr),2);
-          curl_term_primal +=  pow(ec_primal.dot(e.neighbor_data.at(2).curr) - ec_primal.dot(e.self_data.curr),2);
+          T curl_term_primal = pow(ea_primal.dot(e.neighbor_data.at(0).primals) - ea_primal.dot(e.self_data.primals),2);
+          curl_term_primal +=  pow(eb_primal.dot(e.neighbor_data.at(1).primals) - eb_primal.dot(e.self_data.primals),2);
+          curl_term_primal +=  pow(ec_primal.dot(e.neighbor_data.at(2).primals) - ec_primal.dot(e.self_data.primals),2);
 
           appState.os->curls_primal(f_idx) = TinyAD::to_passive(curl_term_primal);
 

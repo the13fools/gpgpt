@@ -83,7 +83,6 @@ public:
       // OptZoo::addConstTestTerm(func, *appState);
       OptZoo<6>::addPinnedBoundaryTerm(func, *appState);
 
-      // OptZoo::addPinnedBoundaryTerm(func, *appState);
       OptZoo<6>::addSmoothnessTerm(func, *appState);
       OptZoo<6>::addCurlTerm(func, *appState);
 

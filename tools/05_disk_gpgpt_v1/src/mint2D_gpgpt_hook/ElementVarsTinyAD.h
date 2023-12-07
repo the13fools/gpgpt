@@ -22,18 +22,15 @@ template <typename T_active>
 class ElementData {
 public:
 
-    // Eigen::Index f_idx; 
-    Eigen::Index n_idx; //  faceNeighbors idx
+    Eigen::Index curr_idx; //  faceNeighbors idx
+    Eigen::Index faceNeighbor_idx; //  faceNeighbors idx
+    
     Eigen::VectorX<T_active> dofs_curr_elem;
     std::vector< Eigen::VectorX<T_active> > primals_rank1;
 
-    // Eigen::Vector2<T> curr;
-    // Eigen::Vector4<T> delta;
-    Eigen::VectorX<T_active> curr;
-    Eigen::VectorX<T_active> delta;
-
-    Eigen::MatrixX<T_active> currcurr;
-    Eigen::VectorX<T_active> currcurrt;
+    Eigen::VectorX<T_active> primals;
+    Eigen::VectorX<double> moments; // Moments only get updated during local step for ADMM style algos.  
+    Eigen::VectorX<T_active> deltas;
 
     // These are the lifted primals to moment space.  
     // i.e. if primals_rank1 = [u, v];
@@ -44,6 +41,25 @@ public:
     // entries, just as a base line, will add this in momentarily.  
     Eigen::VectorX<T_active> L_2_primals;
     Eigen::VectorX<T_active> L_4_primals;
+
+    void set_primals_rank1(DOFMemoryLayout& primals_layout)
+    {
+        int primals_size = primals_layout.size;
+        int primal_rank = primals_layout.rank;
+
+        int rank1_size = primals_size/primal_rank; // Elsewhere should check that this is an integer
+
+        primals_rank1.resize(primal_rank);
+        for (int v_i = 0; v_i < primal_rank; v_i++)
+        {
+            primals_rank1[v_i] = dofs_curr_elem.segment(primals_layout.start + v_i*rank1_size, rank1_size);
+        }
+
+        primals.resize(primals_size);
+        primals = dofs_curr_elem.segment(primals_layout.start, primals_size);
+
+    };
+    
 
         // Eigen::VectorXi bound_face_idx;
 
@@ -73,18 +89,7 @@ public:
 
     Surface* cur_surf;
 
-    // Replace this with ElementData
-    Eigen::Index f_idx; 
-    // Eigen::VectorX<T_active> s_curr;
-
-    // // Eigen::Vector2<T> curr;
-    // // Eigen::Vector4<T> delta;
-    // Eigen::VectorX<T_active> curr;
-    // Eigen::VectorX<T_active> delta;
-
-    // Eigen::MatrixX<T_active> currcurr;
-    // Eigen::VectorX<T_active> currcurrt;
-
+    Eigen::Index f_idx; // maybe get rid of this it's redundant. 
 
     ElementData<T_active> self_data;
 
@@ -94,8 +99,8 @@ public:
     // static const Eigen::VectorX<int> L_4_weights << 1, 4, 6, 4, 1;
     // static const Eigen::VectorX<int> L_6_weights << 1, 6, 15, 20, 15, 6, 1;
 
-    
-    // T w_bound;
+    // Eigen::MatrixX<T_active> currcurr;
+    // Eigen::VectorX<T_active> currcurrt;
 
 
     void setSelfData(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
@@ -103,7 +108,11 @@ public:
         setElemState(appState, f_idx);
 
         self_data.dofs_curr_elem = element.variables(f_idx);
-        setL2Vars(appState, f_idx, self_data.dofs_curr_elem, self_data);
+        self_data.set_primals_rank1(appState.primals_layout);
+        
+        self_data.curr_idx = f_idx;
+
+        L2_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
 
     }
 
@@ -118,12 +127,15 @@ public:
         {
             ElementData<T_active> neighbor_data_i;
             int n_idx = cur_surf->data().faceNeighbors(f_idx, i);
-            neighbor_data_i.n_idx = n_idx;
+            neighbor_data_i.curr_idx = n_idx;
+            neighbor_data_i.faceNeighbor_idx = i;
             if (n_idx == -1) continue; // Make sure this is the correct convention.  Do more advance boundary handling later.
             
             num_neighbors += 1;
             neighbor_data_i.dofs_curr_elem = element.variables(cur_surf->data().faceNeighbors(f_idx, i));
-            setL2Vars(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+            neighbor_data_i.set_primals_rank1(appState.primals_layout);
+
+            L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             neighbor_data.push_back(neighbor_data_i);
         }
 
@@ -146,100 +158,36 @@ public:
 
 
     // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
-    void setL2Vars(AppState& appState, const Eigen::Index f_idx, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
+    void L2_primals(AppState& appState, const Eigen::Index f_idx, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
         
-        int primals_size = appState.primals_layout.size;
-        int deltas_size = appState.deltas_layout.size;
+        // Seperate out the primal dofs into rank-1 components
+        // Maybe make this a seperate function. 
+        int nprimals = data.primals_rank1.size();
+        int primals_size = data.primals_rank1[0].size();
+        data.L_2_primals.resize(primals_size*primals_size);
+        data.L_2_primals.setZero();
 
-
-        data.curr.resize(primals_size);
-        data.delta.resize(deltas_size);
-
-        
-        data.curr =  s_curr.segment(appState.primals_layout.start, primals_size); // head(2);
-        data.delta =  s_curr.segment(appState.deltas_layout.start, deltas_size); // head(2);
-
-
-        data.currcurr = data.curr*data.curr.transpose();
-
-        data.currcurrt.resize(primals_size*primals_size);
-
-        // flatten(currcurr, currcurrt);
-        // TODO fix this later, not sure why this function isn't having it.  
-        // maybe just copy over the one from UtilsMisc
-        for (int i = 0; i < primals_size; i++)
+        for (int v_i = 0; v_i < nprimals; v_i++)
         {
-            for (int j = 0; j < primals_size; j++)
+            Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+            // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
+            Eigen::VectorX<T_active> curcurt_flattened;
+            curcurt_flattened.resize(cur.rows()*cur.rows());// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
+        
+            // TODO fix this later
+            for (int i = 0; i < primals_size; i++)
             {
-                data.currcurrt(i*primals_size + j) = data.curr(i)*data.curr(j);
+                for (int j = 0; j < primals_size; j++)
+                {
+                    curcurt_flattened(i*primals_size + j) = cur(i)*cur(j);
+                }
             }
+
+            data.L_2_primals = data.L_2_primals + curcurt_flattened;
+        
         }
 
     }
-
-//     void setNeighborVars()
-//     {
-//         ///////////////////
-// //// Initialize the neighbor meta-data 
-// ///////////////////
-
-//           Eigen::VectorX<T> s_a = element.variables(cur_surf->data().faceNeighbors(f_idx, 0));
-//           Eigen::VectorX<T> s_b = element.variables(cur_surf->data().faceNeighbors(f_idx, 1));
-//           Eigen::VectorX<T> s_c = element.variables(cur_surf->data().faceNeighbors(f_idx, 2));
-
-
-
-//           Eigen::Vector2<T> a = s_a.head(2);
-//           Eigen::Vector2<T> b = s_b.head(2);
-//           Eigen::Vector2<T> c = s_c.head(2);
-
-//           Eigen::Matrix2<T> aa = a*a.transpose();
-//           Eigen::Matrix2<T> bb = b*b.transpose();
-//           Eigen::Matrix2<T> cc = c*c.transpose();
-
-
-//           Eigen::Vector4<T> a_delta = s_a.tail(4);
-//           Eigen::Vector4<T> b_delta = s_b.tail(4);
-//           Eigen::Vector4<T> c_delta = s_c.tail(4);
-
-//         //   Eigen::Vector4<T> aat = flatten(aa);
-//         //   Eigen::Vector4<T> bbt = flatten(bb);
-//         //   Eigen::Vector4<T> cct = flatten(cc);
-//                 currcurrt.resize(primals_size*primals_size);
-
-//         // flatten(currcurr, currcurrt);
-//         // TODO fix this later, not sure why this function isn't having it.  
-//         // maybe just copy over the one from UtilsMisc
-//         for (int i = 0; i < primals_size; i++)
-//         {
-//             for (int j = 0; j < primals_size; j++)
-//             {
-//                 currcurrt(i*primals_size + j) = curr(i)*curr(j);
-//             }
-//         }
-
-//           aat = aat + a_delta;
-//           bbt = bbt + b_delta; 
-//           cct = cct + c_delta;
-//     }
-
-    // inline void flatten(const Eigen::MatrixX<T_active>& xxt, Eigen::VectorX<T_active>& xxt_flattened)
-    // {
-    //     int xdim = xxt.rows();
-
-    //     xxt_flattened.resize(xdim*xdim);
-
-    //     for (int i = 0; i < xdim; i++)
-    //     {
-    //         for (int j = 0; j < xdim; j++)
-    //         {
-    //             xxt_flattened(i*xdim + j) = xxt(i)*xxt(j);
-    //         }
-    //     }
-
-
-    // }
-
 
 
 /**
