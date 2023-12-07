@@ -23,7 +23,8 @@ template<int N>
  {
   public:
 
-    using ADFunc = decltype(TinyAD::scalar_function<6>(TinyAD::range(1)));
+    using ADFunc = TinyAD::ScalarFunction<N, double, long int>; 
+    //decltype(TinyAD::scalar_function<N>(TinyAD::range(1)));
 
 
 // the const test term tried to make all the vectors the all ones or somethgn.
@@ -31,7 +32,7 @@ template<int N>
 
         std::cout << "add const obj" << std::endl;
 
-    func.add_elements<1>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<1>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -82,7 +83,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
 
-    func.add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -154,7 +155,7 @@ static void addSmoothnessTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add smoonthess obj" << std::endl;
 
-    func.add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -247,7 +248,7 @@ static void addCurlTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add smoonthess obj" << std::endl;
 
-    func.add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double

@@ -23,6 +23,7 @@
 
 #include "OptZoo.h"
 
+#define DOFS_PER_ELEMENT 4
 
 
 class Solve_L2_newton_rank1 : public Mint2DHook
@@ -36,7 +37,11 @@ public:
 
       appState->primals_layout = {0, 2};
       appState->moments_layout = {0, 0};
-      appState->deltas_layout = {2, 4};
+      // appState->deltas_layout = {2, 4};
+      appState->deltas_layout = {2, 2};
+
+      assert(DOFS_PER_ELEMENT == (appState->primals_layout.size + appState->moments_layout.size + appState->deltas_layout.size));
+
     }
 
     ~Solve_L2_newton_rank1(){
@@ -69,7 +74,7 @@ public:
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
-      func = TinyAD::scalar_function<6>(TinyAD::range(appState->F.rows()));
+      func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->F.rows()));
 
       /////////////////////////////
       /// Add terms to the objective function here.  
@@ -81,10 +86,11 @@ public:
       /// Auto-diff with sparse hessians is very new, there's a lot to explore! 
       /////////////////////////////
       // OptZoo::addConstTestTerm(func, *appState);
-      OptZoo<6>::addPinnedBoundaryTerm(func, *appState);
+      
+      OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
-      OptZoo<6>::addSmoothnessTerm(func, *appState);
-      OptZoo<6>::addCurlTerm(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothnessTerm(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
 
       // Update params specific to this solve here
 
@@ -101,7 +107,7 @@ public:
   //
   // 
   // This little bit of boiler plate goes a long way.  
-      _opt = new ADFunc_TinyAD_Instance<6>();
+      _opt = new ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT>();
       _opt->set_tinyad_objective_func(&func);
       init_opt_state();
       // _opt->_func = &func;
@@ -110,9 +116,6 @@ public:
       std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
       // std::cout << "nvars in opt" << _opt->_func->n_vars << std::endl; // get_num_vars
       std::cout << "nvars in opt" << this->opt->get_num_vars() << std::endl; 
-
-
-
 
     }
 
@@ -127,9 +130,9 @@ public:
       for(int i = 0; i < nelem; i++)
       {
         appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
-        appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
+        // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
         x.segment<2>(nvars*i) = appState->frames.row(i);
-        x.segment<4>(nvars*i+2) = appState->deltas.row(i);
+        // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
         
       }
       _opt->_cur_x = x;
@@ -170,7 +173,7 @@ public:
       for(int i = 0; i < nelem; i++)
       {
         appState->frames.row(i) = x.segment<2>(nvars*i);
-        appState->deltas.row(i) = x.segment<4>(nvars*i+2);
+        // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
 
         
       }
@@ -200,10 +203,9 @@ protected:
 
 
 
-  // Eigen::MatrixXd metadata;
-    int DOFS_PER_ELEMENT = 6;
-    ADFunc_TinyAD_Instance<6>* _opt;
-    decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
+
+    ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT>* _opt;
+    decltype(TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(1))) func;
 
 
 
