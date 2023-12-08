@@ -151,7 +151,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 // Deps primal vars 
 static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
-    std::cout << "add smoonthess obj" << std::endl;
+    std::cout << "add L4 smoonthess obj" << std::endl;
 
     func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
@@ -202,7 +202,7 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 // Deps primal vars 
 static void addSmoothness_L2x2_Term(ADFunc& func, AppState& appState) {
 
-    std::cout << "add smoonthess obj" << std::endl;
+    std::cout << "add L2^2 smoonthess obj" << std::endl;
 
     func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
@@ -254,7 +254,7 @@ static void addSmoothness_L2x2_Term(ADFunc& func, AppState& appState) {
 // Deps primal vars 
 static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
-    std::cout << "add smoonthess obj" << std::endl;
+    std::cout << "add L2 smoonthess obj" << std::endl;
 
     func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
@@ -347,7 +347,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 // deps primal vars 
 static void addCurlTerm(ADFunc& func, AppState& appState) {
 
-    std::cout << "add smoonthess obj" << std::endl;
+    std::cout << "add L2 curl obj" << std::endl;
 
     func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {

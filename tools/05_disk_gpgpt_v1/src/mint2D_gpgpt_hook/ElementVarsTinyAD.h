@@ -114,6 +114,7 @@ public:
         self_data.curr_idx = f_idx;
 
         L2_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
+        L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
 
     }
 
@@ -137,6 +138,7 @@ public:
             neighbor_data_i.set_primals_rank1(appState.primals_layout);
 
             L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+            L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             neighbor_data.push_back(neighbor_data_i);
         }
 
@@ -227,8 +229,11 @@ public:
         // Maybe make this a seperate function. 
         int nprimals = data.primals_rank1.size();
         int primals_size = data.primals_rank1[0].size();
+        int L4_size = primals_size*primals_size*primals_size*primals_size;
         data.L_4_primals.resize(primals_size*primals_size*primals_size*primals_size);
         data.L_4_primals.setZero();
+
+
 
         // update for n vectors per frame.  
         for (int v_i = 0; v_i < nprimals; v_i++)
@@ -236,7 +241,7 @@ public:
             Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
             // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
             Eigen::VectorX<T_active> curcurt_flattened;
-            curcurt_flattened.resize(cur.rows()*cur.rows());// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
+            curcurt_flattened.resize(L4_size);// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
         
             // TODO fix this later
             int psize = primals_size;
