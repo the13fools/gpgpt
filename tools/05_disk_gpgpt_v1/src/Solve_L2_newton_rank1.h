@@ -23,7 +23,7 @@
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 4
+#define DOFS_PER_ELEMENT 2
 
 
 class Solve_L2_newton_rank1 : public Mint2DHook
@@ -38,7 +38,7 @@ public:
       appState->primals_layout = {0, 2};
       appState->moments_layout = {0, 0};
       // appState->deltas_layout = {2, 4};
-      appState->deltas_layout = {2, 2};
+      appState->deltas_layout = {2, 0};
 
       assert(DOFS_PER_ELEMENT == (appState->primals_layout.size + appState->moments_layout.size + appState->deltas_layout.size));
 
@@ -89,7 +89,10 @@ public:
       
       OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
-      OptZoo<DOFS_PER_ELEMENT>::addSmoothnessTerm(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+
       OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
 
       // Update params specific to this solve here
@@ -184,7 +187,7 @@ public:
       // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
       if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
       {
-        appState->config->w_attenuate = appState->config->w_attenuate / 4.;
+        appState->config->w_attenuate = appState->config->w_attenuate / 2.;
         appState->keepSolving = true;  
         appState->outerLoopIteration += 1;
         std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;

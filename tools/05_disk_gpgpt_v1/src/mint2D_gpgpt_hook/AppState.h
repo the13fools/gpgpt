@@ -61,7 +61,9 @@ public:
     Eigen::VectorXd curls_primal;
     Eigen::VectorXd curls_sym;
     Eigen::VectorXd smoothness_primal;
-    Eigen::VectorXd smoothness_sym;
+    Eigen::VectorXd smoothness_L2;
+    Eigen::VectorXd smoothness_L4;
+    Eigen::VectorXd smoothness_L2x2;
 
 
 
@@ -168,7 +170,7 @@ public:
     int currentIteration; 
     int maxIterations = 9999; // move to config
     int innerLoopIteration;
-    double convergenceEpsilon = 1e-10;
+    double convergenceEpsilon = 1e-12;
     double convergenceThreshold;
     double identityWeight;
     bool isConverged;

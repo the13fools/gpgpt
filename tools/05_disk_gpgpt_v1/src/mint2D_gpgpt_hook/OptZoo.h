@@ -148,10 +148,111 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
 }
 
+// Deps primal vars 
+static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
+
+    std::cout << "add smoonthess obj" << std::endl;
+
+    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+     // Evaluate element using either double or TinyAD::Double
+        using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
+
+        Eigen::Index f_idx = element.handle;
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+// Exit early if on a boundary element. 
+        if (bound_face_idx(f_idx) == 1)
+        {
+            return T(0);
+        }
+
+        ProcElement<T,VAR> e; 
+        // e.setElementVars(appState, f_idx, s_curr);
+        e.setSelfData(appState, f_idx, element);
+        e.setNeighborData(appState, f_idx, element);
+
+
+///////////////////
+//// Initlaize elementwise objectives 
+///////////////////
+
+
+          T dirichlet_term = T(0);
+          for (int i = 0; i < e.num_neighbors; i++)
+          {
+            dirichlet_term += (e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm();
+          }
+
+          appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(dirichlet_term);
+
+          T ret = T(0);//  delta_norm_term * delta_weight;
+          ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+     
+
+          return ret;
+
+    });
+
+}
 
 
 // Deps primal vars 
-static void addSmoothnessTerm(ADFunc& func, AppState& appState) {
+static void addSmoothness_L2x2_Term(ADFunc& func, AppState& appState) {
+
+    std::cout << "add smoonthess obj" << std::endl;
+
+    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+     // Evaluate element using either double or TinyAD::Double
+        using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
+
+        Eigen::Index f_idx = element.handle;
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+// Exit early if on a boundary element. 
+        if (bound_face_idx(f_idx) == 1)
+        {
+            return T(0);
+        }
+
+        ProcElement<T,VAR> e; 
+        // e.setElementVars(appState, f_idx, s_curr);
+        e.setSelfData(appState, f_idx, element);
+        e.setNeighborData(appState, f_idx, element);
+
+
+///////////////////
+//// Initlaize elementwise objectives 
+///////////////////
+
+
+          T dirichlet_term = T(0);
+          for (int i = 0; i < e.num_neighbors; i++)
+          {
+            dirichlet_term += (e.neighbor_data.at(i).L_2x2_primals - e.self_data.L_2x2_primals).squaredNorm();
+          }
+
+          appState.os->smoothness_L2x2(f_idx) = TinyAD::to_passive(dirichlet_term);
+
+          T ret = T(0);//  delta_norm_term * delta_weight;
+          ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+     
+
+          return ret;
+
+    });
+
+}
+
+
+
+// Deps primal vars 
+static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
     std::cout << "add smoonthess obj" << std::endl;
 
@@ -221,7 +322,7 @@ static void addSmoothnessTerm(ADFunc& func, AppState& appState) {
           // std::cout << delta_rescale << std::endl;
 
           appState.os->smoothness_primal(f_idx) = TinyAD::to_passive(primal_dirichlet_term);
-          appState.os->smoothness_sym(f_idx) = TinyAD::to_passive(dirichlet_term);
+          appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(dirichlet_term);
 
           // T delta_dirichlet = (a_delta+b_delta+c_delta-3*delta).squaredNorm()*delta_rescale;
 

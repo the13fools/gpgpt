@@ -64,24 +64,9 @@ void Mint2DHook::drawGUI() {
 void Mint2DHook::updateRenderGeometry() {
     // Update visualization data based on current state in appState
 
-    // appState->renderData.frames.resize(appState->simulationData.frames.rows(), 3);
-    // appState->renderData.frames << appState->simulationData.frames, Eigen::MatrixXd::Zero(appState->simulationData.frames.rows(), 1);
-
-    // appState->renderData.deltas = appState->simulationData.deltas;
-    // appState->renderData.vec_curl = appState->simulationData.curls_primal;
-    // appState->renderData.sym_curl = appState->simulationData.curls_sym;
-    // appState->renderData.frame_smoothness = appState->simulationData.smoothness_primal;
-    // appState->renderData.moment_smoothness = appState->simulationData.smoothness_sym;
-
-
     // Update the vertex positions and other data in Polyscope
     // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
     // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
-
-    
-
-
-
 
 ////
 //////  Here we calculate derived quantities. 
@@ -145,25 +130,9 @@ void Mint2DHook::updateRenderGeometry() {
     // Need to fill out viewer for each of: Field_View { vec_dirch, moment_dirch, sym_curl_residual, primal_curl_residual,
     void Mint2DHook::renderRenderGeometry()
     {
-		// polyscope::getSurfaceMesh("c")->updateVertexPositions(renderP);
-        
-        // polyscope::getSurfaceMesh("c")->centerBoundingBox();
-        // polyscope::getSurfaceMesh("c")->resetTransform();
-
-        // // polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("vec_norms", appState->frame_norms)->setEnabled(true);
-        // polyscope::getSurfaceMesh("c")->addFaceScalarQuantity("vec_norms", appState->curls_primal)->setEnabled(true);
-
-
-        
-        // polyscope::requestRedraw();   
-
-        // std::cout << "render renderGeometry" << std::endl;
-
-        // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
-    // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
 
     // Depending on the current element view, render different quantities
-    
+    // TODO update this to render smoothness and stripe patterns 
 
 
     const char* cur_field = fieldViewToFileStub(appState->current_element).c_str();
@@ -182,7 +151,8 @@ void Mint2DHook::updateRenderGeometry() {
             cur_scalar_quantity = outputData->smoothness_primal;
             break;
         case Field_View::moment_dirch:
-            cur_scalar_quantity = outputData->smoothness_sym;
+            // cur_scalar_quantity = outputData->smoothness_sym;
+            cur_scalar_quantity = outputData->smoothness_L2;
             break;
         case Field_View::primal_curl_residual:
             cur_scalar_quantity = outputData->curls_primal;
@@ -385,7 +355,7 @@ bool Mint2DHook::simulateOneStep() {
 
         opt->take_newton_step( opt->get_current_x() );
         double rel_res_correction = 1. / cur_obj;
-        appState->cur_rel_residual = opt->_dec * rel_res_correction;
+        appState->cur_rel_residual = opt->_dec;// * rel_res_correction;
         appState->cur_abs_residual = opt->_dec;
         std::cout << "cur_obj: " <<  cur_obj  << " conv_eps: " << convergence_eps << "rel_res_correction: " << rel_res_correction << std::endl;
         if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4)
@@ -408,7 +378,7 @@ bool Mint2DHook::simulateOneStep() {
      }
         else if (cur_iter == max_iters) 
         {
-            TINYAD_DEBUG_OUT("Final energy: " << func.eval(opt->get_current_x()));
+            // TINYAD_DEBUG_OUT("Final energy: " << func.eval(opt->get_current_x()));
             cur_iter++;
         }
         else{
@@ -429,7 +399,7 @@ void Mint2DHook::resetAppState() {
     appState->currentIteration = 0;
     // appState->currentFileID = 0;
     appState->maxIterations = 5000; // Default maximum iterations
-    appState->convergenceEpsilon = 1e-12;
+    appState->convergenceEpsilon = 1e-11;
     appState->outerLoopIteration = 0;
 
     appState->override_bounds.lower = 0;
@@ -448,7 +418,9 @@ void Mint2DHook::resetAppState() {
     appState->os->curls_primal.setZero(appState->F.rows());
     appState->os->curls_sym.setZero(appState->F.rows());
     appState->os->smoothness_primal.setZero(appState->F.rows());
-    appState->os->smoothness_sym.setZero(appState->F.rows());
+    appState->os->smoothness_L2.setZero(appState->F.rows());
+    appState->os->smoothness_L4.setZero(appState->F.rows());
+    appState->os->smoothness_L2x2.setZero(appState->F.rows());
 
     appState->prev_frame_element = Field_View::Element_COUNT;
 

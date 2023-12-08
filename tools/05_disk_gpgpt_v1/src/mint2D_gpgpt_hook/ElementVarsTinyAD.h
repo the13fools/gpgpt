@@ -40,6 +40,7 @@ public:
     // For now we don't do the extra optimization of removing the symmetry from these 
     // entries, just as a base line, will add this in momentarily.  
     Eigen::VectorX<T_active> L_2_primals;
+    Eigen::VectorX<T_active> L_2x2_primals;
     Eigen::VectorX<T_active> L_4_primals;
 
     void set_primals_rank1(DOFMemoryLayout& primals_layout)
@@ -167,6 +168,7 @@ public:
         data.L_2_primals.resize(primals_size*primals_size);
         data.L_2_primals.setZero();
 
+        // update for n vectors per frame.  
         for (int v_i = 0; v_i < nprimals; v_i++)
         {
             Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
@@ -187,7 +189,82 @@ public:
         
         }
 
+        // This sets the squared values which scales in the same way as L_4 to make the energy scale invariant. 
+        L2_to_L2x2(data);
+
     }
+
+
+    // There's some cleverer thing to do here to save some computation.  
+    // Look at the matlab mint repo.  Do this for now cause it's easy. 
+    void L2_to_L2x2(ElementData<T_active>& data)
+    {
+        int L2_size = data.L_2_primals.rows();
+        int L2x2_size = L2_size*L2_size;
+        data.L_2x2_primals.resize(L2x2_size);
+        data.L_2x2_primals.setZero();
+
+        Eigen::VectorX<T_active> L_2 = data.L_2_primals;
+            // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
+        Eigen::VectorX<T_active> L_2x2 = data.L_2x2_primals;
+
+        for (int i = 0; i < L2_size; i++)
+        {
+            for (int j = 0; j < L2_size; j++)
+            {
+                L_2x2(i*L2_size + j) = L_2(i)*L_2(j);
+            }
+        }
+
+        data.L_2x2_primals = L_2x2;
+
+    }
+
+        // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
+    void L4_primals(AppState& appState, const Eigen::Index f_idx, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
+        
+        // Seperate out the primal dofs into rank-1 components
+        // Maybe make this a seperate function. 
+        int nprimals = data.primals_rank1.size();
+        int primals_size = data.primals_rank1[0].size();
+        data.L_4_primals.resize(primals_size*primals_size*primals_size*primals_size);
+        data.L_4_primals.setZero();
+
+        // update for n vectors per frame.  
+        for (int v_i = 0; v_i < nprimals; v_i++)
+        {
+            Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+            // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
+            Eigen::VectorX<T_active> curcurt_flattened;
+            curcurt_flattened.resize(cur.rows()*cur.rows());// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
+        
+            // TODO fix this later
+            int psize = primals_size;
+            int psize2 = psize*psize;
+            int psize3 = psize2*psize;
+            for (int i = 0; i < primals_size; i++)
+            {
+                for (int j = 0; j < primals_size; j++)
+                {
+                    for (int k = 0; k < primals_size; k++)
+                    {
+                        for (int l = 0; l < primals_size; l++)
+                        {
+                            curcurt_flattened(i*psize3 + j*psize2 + k*psize + l) = cur(i)*cur(j)*cur(k)*cur(l);
+                        }
+                    }
+                }
+            }
+
+            data.L_4_primals = data.L_4_primals + curcurt_flattened;
+        
+        }
+
+        // This sets the squared values which scales in the same way as L_4 to make the energy scale invariant. 
+        // L2_to_L2x2(data);
+
+    }
+
 
 
 /**

@@ -66,7 +66,9 @@ bool AppState::LogToFile()
                         Serialization::serializeVector(os->smoothness_primal, filePath);
                         break;
                     case Field_View::moment_dirch:
-                        Serialization::serializeVector(os->smoothness_sym, filePath);
+                        Serialization::serializeVector(os->smoothness_L2, filePath);
+                        // TODO FIX THIS LOGGING
+                        // Serialization::serializeVector(os->smoothness_sym, filePath);
                         break;
                     case Field_View::primal_curl_residual:
                         Serialization::serializeVector(os->curls_primal, filePath);

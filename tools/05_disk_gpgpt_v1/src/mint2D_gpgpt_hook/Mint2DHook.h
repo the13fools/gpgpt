@@ -62,7 +62,7 @@ public:
     // Eigen::VectorXd x;
 
     TinyAD::LinearSolver<double> solver; // make this changable 
-    decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
+    // decltype(TinyAD::scalar_function<6>(TinyAD::range(1))) func;
     Eigen::VectorXi bound_face_idx; // the faces on the boundary, for now let tinyAD do the boundary enforcement 
 
 
