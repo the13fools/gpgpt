@@ -398,7 +398,7 @@ void Mint2DHook::resetAppState() {
     // Resetting simulation parameters to default or initial values
     appState->currentIteration = 0;
     // appState->currentFileID = 0;
-    appState->maxIterations = 5000; // Default maximum iterations
+    appState->maxIterations = 9999; // Default maximum iterations
     appState->convergenceEpsilon = 1e-11;
     appState->outerLoopIteration = 0;
 
