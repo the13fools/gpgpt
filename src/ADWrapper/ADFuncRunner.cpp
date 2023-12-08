@@ -113,8 +113,10 @@
 
             _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
             _newton_dir = d;
-            // _dec = dec;
-            _dec = f - this->eval_func_at(_cur_x);  // use this to track the true decrement 
+            _dec = dec;
+            // also log the gradient norm 
+            
+            // _dec = f - this->eval_func_at(_cur_x);  // use this to track the true decrement 
             
             // 
             std::cout << "prev obj " << f << " | current decrement: " << _dec << " | newton dec: " << dec << std::endl;
