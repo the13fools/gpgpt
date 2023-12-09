@@ -355,7 +355,7 @@ bool Mint2DHook::simulateOneStep() {
         
 
         opt->take_newton_step( opt->get_current_x() );
-        double rel_res_correction = 1. / (cur_obj*std::sqrt(cur_obj));
+        double rel_res_correction = 1. / (cur_obj);
         appState->cur_rel_residual = std::max(opt->_dec * rel_res_correction, 1e-13);
         appState->cur_abs_residual = opt->_dec;
         appState->cur_max_gradient_norm = opt->_max_gradient_norm;
@@ -367,7 +367,7 @@ bool Mint2DHook::simulateOneStep() {
         // 1. Relative residual is small
         // 2. Absolute residual is small
         // 3. Gradient norm is small or step progress is negative (converged)
-        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-3 && (appState->cur_max_gradient_norm < 1e-3 || opt->_prev_step_progress < 0)) 
+        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-2 && (appState->cur_max_gradient_norm < 1e-3 || opt->_prev_step_progress < 1e-10)) 
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
@@ -580,7 +580,7 @@ void Mint2DHook::updateOptimizationParameters() {
     // Example implementation (needs to be adapted to specific needs)
     if (appState->currentIteration % 10 == 0) {
         // Adjust weights or parameters every 10 iterations
-        appState->identityWeight *= 0.9; // Example: gradually decrease the identity weight
+        // appState->identityWeight *= 0.9; // Example: gradually decrease the identity weight
     }
     // Add other conditional parameter adjustments as needed
 }
@@ -588,10 +588,10 @@ void Mint2DHook::updateOptimizationParameters() {
 
 void Mint2DHook::checkAndUpdateConvergence(double decrement, double energy) {
     // Example convergence check
-    if (decrement < appState->convergenceThreshold) {
-        appState->isConverged = true;
-        std::cout << "Optimization has converged." << std::endl;
-    }
+    // if (decrement < appState->convergenceThreshold) {
+    //     appState->isConverged = true;
+    //     std::cout << "Optimization has converged." << std::endl;
+    // }
 }
 
 void Mint2DHook::finalizeIteration() {

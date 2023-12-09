@@ -172,10 +172,10 @@ public:
     // simulation metadata 
     int currentIteration; 
     int maxIterations = 9999; // move to config
-    int innerLoopIteration;
+    // int innerLoopIteration; // move this to app state...
     double convergenceEpsilon = 1e-12;
-    double convergenceThreshold;
-    double identityWeight;
+    double convergenceThreshold; // not used right now...
+    // double identityWeight;
     bool isConverged;
 
     // give these better names

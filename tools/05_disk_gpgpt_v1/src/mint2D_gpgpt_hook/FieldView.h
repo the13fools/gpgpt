@@ -17,10 +17,23 @@ enum Field_View {
     vec_dirch,
     moment_dirch,
     primal_curl_residual,
-    sym_curl_residual,
+    sym_zzcurl_residual,
     gui_free,
     Element_COUNT
 };
+
+
+// enum Field_View {
+//     vec_norms,
+//     delta_norms,
+//     vec_dirch,
+//     moment_dirch,
+//     primal_curl_residual,
+//     curl_l2_residual,
+//     curl_l4_residual,
+//     gui_free,
+//     Element_COUNT
+// };
 
 /**
  * Converts a field view enumeration to a string.
