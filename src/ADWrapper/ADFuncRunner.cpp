@@ -35,6 +35,8 @@
             double cur_obj = this->eval_func_at(x);
 
             std::cout << std::endl << "take a newton step.  Cur Objective: " << cur_obj << std::endl;
+            auto t1 = std::chrono::high_resolution_clock::now();
+
 
 
             if (cur_obj < 1e-15)
@@ -111,17 +113,28 @@
                 assert(false); // this should never happen
             }
 
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+            // std::cout << ms_int.count() << "ms\n";
+
+
             _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
             _newton_dir = d;
             _dec = dec;
+            _max_gradient_norm = g.cwiseAbs().maxCoeff(); 
+            _prev_step_progress = f - this->eval_func_at(_cur_x);
+            _prev_step_time = ms_int.count();
+            // _line_search_step_size = ; // can get this from cur_x, x and d
+
+
             // also log the gradient norm 
-            
+
             // _dec = f - this->eval_func_at(_cur_x);  // use this to track the true decrement 
             
             // 
-            std::cout << "prev obj " << f << " | current decrement: " << _dec << " | newton dec: " << dec << std::endl;
+            std::cout << "prev obj " << f << " | _prev_step_progress: " << _prev_step_progress << " | newton dec: " << _dec << "  | max_gradient_norm: " << _max_gradient_norm << std::endl;
 
-          std::cout << "finshed newton step" << std::endl;
+          std::cout << "finshed newton step" << " | solve took " << _prev_step_time << " ms " << std::endl;
 
 
             return _cur_x;

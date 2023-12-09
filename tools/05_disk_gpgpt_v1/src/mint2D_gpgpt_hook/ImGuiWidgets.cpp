@@ -78,9 +78,14 @@ namespace ImGuiWidgets {
         ImGui::Text("Config State:");
                 // ImGui::Text("Current Step Time: %f", appState.currentStepTime);
         ImGui::Text("Current Energy: %f", appState.os->cur_global_objective_val);
+        ImGui::Text("Step Progress: %e | Max Grad Norm: %e | Step Time: %e ms", appState.cur_step_progress, appState.cur_max_gradient_norm, appState.cur_step_time);
         ImGui::Text("smooth primal %.1f bound %.1f curl %.1f smooth %.5f ", (float) appState.config->w_smooth_vector, (float) appState.config->w_bound, (float) appState.config->w_curl, (float) appState.config->w_smooth);
         ImGui::Text("Attenuate weight %e, actual smoothness %e", appState.config->w_attenuate, appState.config->w_attenuate*appState.config->w_smooth);
         ImGui::Text("Relative Residual %e, Absolute Residual %e, Convergence EPS %e", appState.cur_rel_residual, appState.cur_abs_residual, appState.convergenceEpsilon);
+            // 
+        //     std::cout << "prev obj " << f << " | _prev_step_progress: " << _prev_step_progress << " | newton dec: " << _dec << "  | max_gradient_norm: " << _max_gradient_norm << std::endl;
+
+        //   std::cout << "finshed newton step" << " | solve took " << _prev_step_time << " ms " << std::endl;
 
 
 

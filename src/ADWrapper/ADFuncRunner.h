@@ -67,6 +67,11 @@ class ADFuncRunner
         Eigen::VectorXd _cur_x;
         Eigen::VectorXd _newton_dir;
         double _dec;
+        double _max_gradient_norm; 
+        double _prev_step_progress;
+        double _line_search_step_size;
+        double _prev_step_time;
+        
 
 
     protected: 

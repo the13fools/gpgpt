@@ -57,9 +57,9 @@ public:
     virtual void initSimulation()
     {
 
-      // appState->meshName = "circle_1000";
+      appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
-      appState->meshName = "circle";
+      // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
       
@@ -83,7 +83,7 @@ public:
       /// There's a lot of opportunity for both human and machine learning 
       /// by exploring modifications to these operators.  
       ///
-      /// Auto-diff with sparse hessians is very new, there's a lot to explore! 
+      /// convenient auto-diff with sparse hessians is quite new, there's a lot to explore! 
       /////////////////////////////
       // OptZoo::addConstTestTerm(func, *appState);
       
@@ -171,6 +171,9 @@ public:
     {
       int nelem = appState->F.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
+
+      // Try to add post projection curl operator here.  
+
 
       Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)

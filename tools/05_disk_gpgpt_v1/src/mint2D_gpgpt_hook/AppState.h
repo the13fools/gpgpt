@@ -121,6 +121,9 @@ public:
     int outerLoopIteration = 0;
     double cur_rel_residual = 0;
     double cur_abs_residual = 0;
+    double cur_max_gradient_norm = 0;
+    double cur_step_progress = 0;
+    double cur_step_time = 0;
 
     // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;
