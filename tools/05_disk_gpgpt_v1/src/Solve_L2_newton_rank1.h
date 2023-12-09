@@ -58,8 +58,8 @@ public:
     {
 
       // appState->meshName = "circle_1000";
-      // appState->meshName = "circle_subdiv";
-      appState->meshName = "circle";
+      appState->meshName = "circle_subdiv";
+      // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
       

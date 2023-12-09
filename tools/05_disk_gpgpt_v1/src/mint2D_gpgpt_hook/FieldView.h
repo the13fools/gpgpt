@@ -17,7 +17,7 @@ enum Field_View {
     vec_dirch,
     moment_dirch,
     primal_curl_residual,
-    sym_zzcurl_residual,
+    sym_curl_residual,
     gui_free,
     Element_COUNT
 };
