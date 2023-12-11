@@ -277,9 +277,7 @@ namespace ImGuiWidgets {
         // Begin the main ImGui window
         ImGui::Begin("Main Window");
 
-        // Display file scrubber for selecting files
-        ShowFileScrubber(appState);
-
+    
 
         ShowOptWeights(appState);
 
@@ -287,6 +285,8 @@ namespace ImGuiWidgets {
         // ShowFieldViewCheckboxesWithSliders(appState);
     
 
+    // Display file scrubber for selecting files
+        ShowFileScrubber(appState);
 
         // Display a field view scrubber
         ShowFieldViewScrubber(appState, appState.current_element);

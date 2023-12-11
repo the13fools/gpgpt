@@ -52,19 +52,23 @@ public:
     */
 
     std::string objFilePath;
+    // int numIDs = 0;
+
+    int minID = 0;
+    int maxID = 0;
 
 
 private:
     std::string directoryPath;
     std::vector<std::string> bfraFiles;
-    std::vector<std::string> bmomFiles;
+    // std::vector<std::string> bmomFiles;
 
-    std::string largestBfraFile;
-    std::string largestBmomFile;
+    // std::string largestBfraFile;
+    // std::string largestBmomFile;
 
     // Helper functions to scan and sort files
     void scanDirectory();
-    void findLargestIDFile();
+    void findFileBounds();
 };
 
 #endif // FILE_PARSER_H

@@ -26,6 +26,7 @@ inline bool ends_with(std::string const & value, std::string const & ending)
 FileParser::FileParser(const std::string& directoryPath)
     : directoryPath(directoryPath) {
     scanDirectory();
+    findFileBounds();
     std::cout << "FileParser initialized with directory: " << directoryPath << std::endl;
     std::cout << "Found " << bfraFiles.size() << " BFRA files" << std::endl;
 }
@@ -36,11 +37,12 @@ void FileParser::scanDirectory() {
             std::string filename = entry.path().filename().string();
             if (ends_with(filename, ".bfra")) {
                 bfraFiles.push_back(entry.path().string());
-            } else if (ends_with(filename, ".bmom")) {
-                bmomFiles.push_back(entry.path().string());
-            } else if (ends_with(filename, ".obj") && objFilePath.empty()) {
-                objFilePath = entry.path().string(); // Assuming only one .obj file
             }
+            // } else if (ends_with(filename, ".bmom")) {
+            //     bmomFiles.push_back(entry.path().string());
+            // } else if (ends_with(filename, ".obj") && objFilePath.empty()) {
+            //     objFilePath = entry.path().string(); // Assuming only one .obj file
+            // }
         }
     }
     // findLargestIDFile();
@@ -58,6 +60,28 @@ std::string FileParser::getFileWithID(const std::string& prefix, const std::stri
         }
     }
     return ""; // Return empty string if file not found
+}
+
+void FileParser::findFileBounds() {
+    auto fileIdComparator = [](const std::string& file1, const std::string& file2) {
+        int id1 = std::stoi(file1.substr(file1.find_last_of('_') + 1, 6));
+        int id2 = std::stoi(file2.substr(file2.find_last_of('_') + 1, 6));
+        return id1 > id2;
+    };
+
+    if (!bfraFiles.empty()) {
+        std::sort(bfraFiles.begin(), bfraFiles.end(), fileIdComparator);
+    }
+
+    // The largest ID file will now be at the end of the sorted list
+    if (!bfraFiles.empty()) {
+        minID = std::stoi(bfraFiles.front().substr(bfraFiles.front().find_last_of('_') + 1, 6));
+        maxID = std::stoi(bfraFiles.back().substr(bfraFiles.back().find_last_of('_') + 1, 6));
+        std::cout << "minID: " << minID << " maxID: " << maxID << std::endl;
+    }
+
+
+
 }
 
 
@@ -81,28 +105,7 @@ void FileParser::scanDirectory() {
     // findLargestIDFile();
 }
 
-void FileParser::findLargestIDFile() {
-    auto fileIdComparator = [](const std::string& file1, const std::string& file2) {
-        int id1 = std::stoi(file1.substr(file1.find_last_of('_') + 1, 5));
-        int id2 = std::stoi(file2.substr(file2.find_last_of('_') + 1, 5));
-        return id1 > id2;
-    };
 
-    if (!bfraFiles.empty()) {
-        std::sort(bfraFiles.begin(), bfraFiles.end(), fileIdComparator);
-    }
-    if (!bmomFiles.empty()) {
-        std::sort(bmomFiles.begin(), bmomFiles.end(), fileIdComparator);
-    }
-
-    // The largest ID file will now be at the end of the sorted list
-    if (!bfraFiles.empty()) {
-        largestBfraFile = bfraFiles.back();
-    }
-    if (!bmomFiles.empty()) {
-        largestBmomFile = bmomFiles.back();
-    }
-}
 
 bool FileParser::parseFileWithID(Eigen::VectorXd& data, FileType fileType, int fileId) {
     // Logic to determine the file name based on the ID and file type

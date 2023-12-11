@@ -138,15 +138,16 @@ void Mint2DHook::updateRenderGeometry() {
     // Log data if necessary
     if (appState->shouldLogData) {
         // Serialize and save the frame data
-        appState->LogToFile();
         appState->currentFileID++;
+        appState->LogToFile();
+
 
         // Additional logging for any other fields in AppState as needed
     }
 
     if (appState->shouldReload)
     {
-        appState->currentFileID--;
+        // appState->currentFileID--;
         appState->shouldReload = false;
     }
 
@@ -347,6 +348,9 @@ void Mint2DHook::initSimulation() {
         loadPrimaryData();
         loadGuiState();
 
+        // TODO add parsing for this.
+        appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
+
         // appState->objFilePath = fileParser->objFilePath;
 
         if (!igl::readOBJ(fileParser->objFilePath, V, F)) {
@@ -356,7 +360,7 @@ void Mint2DHook::initSimulation() {
         appState->cur_surf = new Surface(V, F);
 
         
-        appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
+
 
         // load mesh from file 
 

@@ -91,7 +91,7 @@ public:
     std::vector<std::string> bfraFiles;
     std::vector<std::string> bmomFiles;
     std::optional<std::string> objFilePath;
-    int currentFileID = 0;
+    int currentFileID = -1;
     bool shouldReload = false; // this is a dynamic var which tells updaterendergeometry to reload data from the current directory
 
 
