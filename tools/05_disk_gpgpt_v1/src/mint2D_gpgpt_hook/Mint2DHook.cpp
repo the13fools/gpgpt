@@ -71,6 +71,46 @@ void Mint2DHook::updateRenderGeometry() {
 ////
 //////  Here we calculate derived quantities. 
 
+    // Check if need to reload, and do this if needed.
+    if (appState->shouldReload) {
+
+        std::cout << "do from file reload" << std::endl;
+
+        pause();
+
+        initSimulation();
+
+        appState->shouldReload = false;
+        // std::cout << "appState->directoryPath " << appState->directoryPath << std::endl;
+        // std::cout << "appState->currentFileID " << appState->currentFileID << std::endl;
+        // std::cout << "appState->meshName " << appState->meshName << std::endl;
+
+        // fileParser = new FileParser(appState->directoryPath);
+        // fileParser = std::make_unique<FileParser>(appState->directoryPath);
+
+        // std::cout << "fileParser->parseLargestFile(appState->frames, FileType::BFRA) " << fileParser->parseLargestFile(appState->frames, FileType::BFRA) << std::endl;
+        // std::cout << "fileParser->parseLargestFile(appState->deltas, FileType::BMOM) " << fileParser->parseLargestFile(appState->deltas, FileType::BMOM) << std::endl;
+
+        // std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
+        // std::cout << "appState->deltas.rows() " << appState->deltas.rows() << std::endl;
+
+        // std::cout << "appState->frames.cols() " << appState->frames.cols() << std::endl;
+        // std::cout << "appState->deltas.cols() " << appState->deltas.cols() << std::endl;
+
+        // std::cout << "appState->frames " << appState->frames << std::endl;
+        // std::cout << "appState->deltas " << appState->deltas << std::endl;
+
+        // std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
+        // std::cout << "appState->deltas.rows() " << appState->deltas.rows() << std::endl;
+
+        // std::cout << "appState->frames.cols() " << appState->frames.cols() << std::endl;
+        // std::cout << "appState->deltas.cols() " << appState->deltas.cols() << std::endl;
+
+        // std::cout << "appState->frames " << appState->frames << std
+
+
+    }
+
 /// 
     appState->os->norms_vec = appState->frames.rowwise().norm();
     appState->os->norms_delta = appState->deltas.rowwise().norm();
@@ -128,8 +168,13 @@ void Mint2DHook::updateRenderGeometry() {
 
 
     // Need to fill out viewer for each of: Field_View { vec_dirch, moment_dirch, sym_curl_residual, primal_curl_residual,
-    void Mint2DHook::renderRenderGeometry()
+void Mint2DHook::renderRenderGeometry()
+{
+
+    if (appState->shouldReload && this->isPaused())
     {
+        updateRenderGeometry();
+    }
 
     // Depending on the current element view, render different quantities
     // TODO update this to render smoothness and stripe patterns 
@@ -233,6 +278,7 @@ void Mint2DHook::pause() {
     PhysicsHook::pause();
     appState->keepSolving = true;
     appState->solveStatus = "paused";
+    std::cout << "paused" << std::endl;
 }
     // Pause the simulati
 
@@ -292,6 +338,20 @@ void Mint2DHook::initSimulation() {
         // fileParser = new FileParser(appState->directoryPath);
         fileParser = std::make_unique<FileParser>(appState->directoryPath);
 
+        loadPrimaryData();
+        loadGuiState();
+
+        // appState->objFilePath = fileParser->objFilePath;
+
+        if (!igl::readOBJ(fileParser->objFilePath, V, F)) {
+            std::cerr << "Failed to load mesh from " << fileParser->objFilePath << std::endl;
+            return;
+        }
+        appState->cur_surf = new Surface(V, F);
+
+        
+        appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
+
         // load mesh from file 
 
 
@@ -318,15 +378,21 @@ void Mint2DHook::initSimulation() {
     appState->V = V;
     appState->F = F;
 
-    this->resetAppState();
+
 
 
     // Initialize other parameters and logging folder
     // initializeOtherParameters();
-    initializeLogFolder();
+
+    if (create_new_dir)
+    {
+        this->resetAppState();
+        initializeLogFolder();
+        appState->directoryPath = appState->logFolderPath;
+    }
 
     // save OBJ file 
-    if (!igl::writeOBJ(appState->logFolderPath + "/" + appState->meshName + ".obj", V, F)) {
+    if (!igl::writeOBJ(appState->directoryPath + "/" + appState->meshName + ".obj", V, F)) {
         std::cerr << "Failed to save mesh to " << appState->logFolderPath << std::endl;
         // return;
     }
@@ -337,6 +403,60 @@ void Mint2DHook::initSimulation() {
     polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
     polyscope::view::resetCameraToHomeView();
 }
+
+bool Mint2DHook::loadPrimaryData() {
+    bool success = true;
+
+    std::vector<FileTypeInfo> fileInfo = {
+        {"frames_", ".bfra", appState->frames},
+        {"deltas_", ".bmom", appState->deltas},
+        {"moments_", ".bmom", appState->moments}
+    };
+
+    for (const auto& info : fileInfo) {
+        std::string file = fileParser->getFileWithID(info.prefix, info.extension, appState->currentFileID);
+        // std::cout << file << std::endl;
+        if (!file.empty()) {
+            if (!Serialization::deserializeMatrix(info.targetMatrix, file)) {
+                std::cerr << "Failed to load data for " << info.prefix << " from file: " << file << std::endl;
+                success = false;
+            }
+        } else {
+            std::cerr << "File not found for " << info.prefix << " with ID: " << appState->currentFileID << std::endl;
+            success = false;
+        }
+    }
+
+
+
+    return success;
+}
+
+
+bool Mint2DHook::loadGuiState() {
+    bool success = true;
+    for (int i = 0; i < Views::Field_View::gui_free; ++i) {
+        Field_View view = static_cast<Field_View>(i);
+        std::string fieldStub = Views::fieldViewToFileStub(view) + "_";
+        std::string fieldFile = fileParser->getFileWithID(fieldStub, ".bdat", appState->currentFileID);
+
+        if (!fieldFile.empty()) {
+            Eigen::VectorXd data;
+            if (!Serialization::deserializeVector(data, fieldFile)) {
+                std::cerr << "Failed to load data for " << fieldStub << " from file: " << fieldFile << std::endl;
+                success = false;
+            } else {
+                // Update the correct field in OutputState based on 'view'
+                // Example: appState.os->norms_vec = data;
+            }
+        } else {
+            std::cerr << "File not found for " << fieldStub << " with ID: " << appState->currentFileID << std::endl;
+            success = false;
+        }
+    }
+    return success;
+}
+
 
 
 
@@ -413,6 +533,7 @@ void Mint2DHook::resetAppState() {
 
     appState->override_bounds.lower = 0;
     appState->override_bounds.upper = 1e-5;
+    appState->shouldReload = false;
 
 
 

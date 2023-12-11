@@ -52,7 +52,7 @@ bool AppState::LogToFile()
                 // Determine the file path based on the field view
                 Field_View cfv = static_cast<Field_View>(i);
                 std::string stub = fieldViewToFileStub(cfv);
-                std::string filePath = this->logFolderPath + "/" + stub + "_" + std::to_string(this->currentFileID + 100000) + ".bfra"; // better to call these bdat
+                std::string filePath = this->logFolderPath + "/" + stub + "_" + std::to_string(this->currentFileID + 100000) + ".bdat"; // better to call these bdat
 
                 // Serialize the corresponding Eigen::Vector
                 switch (static_cast<Field_View>(i)) {

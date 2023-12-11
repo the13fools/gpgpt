@@ -57,8 +57,8 @@ public:
     virtual void initSimulation()
     {
 
-      // appState->meshName = "circle_1000";
-      appState->meshName = "circle_subdiv";
+      appState->meshName = "circle_1000";
+      // appState->meshName = "circle_subdiv";
       // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
@@ -90,7 +90,7 @@ public:
       OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
-      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
       OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
@@ -112,7 +112,14 @@ public:
   // This little bit of boiler plate goes a long way.  
       _opt = new ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT>();
       _opt->set_tinyad_objective_func(&func);
-      init_opt_state();
+      if(appState->shouldReload)
+      {
+        updateOptStateFromAppState();
+      }
+      else
+      {
+        init_opt_state();
+      }
       // _opt->_func = &func;
       opt = static_cast<ADFuncRunner*>(_opt);
 
@@ -198,6 +205,24 @@ public:
       }
 
 
+
+    }
+
+    // this is called after reloading data in order to be able to take forward steps.
+    virtual void updateOptStateFromAppState()
+    {
+      Eigen::VectorXd x = _opt->_cur_x;
+      int nelem = appState->F.rows();
+      int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
+
+      // Eigen::VectorXd x = opt->get_current_x();
+      for(int i = 0; i < nelem; i++)
+      {
+        x.segment<2>(nvars*i) = appState->frames.row(i);
+      }
+      _opt->_cur_x = x;
+
+      // appState->config->w_smooth_vector = 0;
 
     }
 

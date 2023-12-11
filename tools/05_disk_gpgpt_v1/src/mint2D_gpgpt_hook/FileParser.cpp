@@ -14,18 +14,56 @@
 // namespace fs = std::experimental::filesystem;
 namespace fs = std::filesystem;
 
-
-FileParser::FileParser(const std::string& directoryPath)
-    : directoryPath(directoryPath) {
-    scanDirectory();
-}
-
 // https://stackoverflow.com/a/2072890
 inline bool ends_with(std::string const & value, std::string const & ending)
 {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
+
+
+
+FileParser::FileParser(const std::string& directoryPath)
+    : directoryPath(directoryPath) {
+    scanDirectory();
+    std::cout << "FileParser initialized with directory: " << directoryPath << std::endl;
+    std::cout << "Found " << bfraFiles.size() << " BFRA files" << std::endl;
+}
+
+void FileParser::scanDirectory() {
+    for (const auto& entry : fs::directory_iterator(directoryPath)) {
+        if (entry.is_regular_file()) {
+            std::string filename = entry.path().filename().string();
+            if (ends_with(filename, ".bfra")) {
+                bfraFiles.push_back(entry.path().string());
+            } else if (ends_with(filename, ".bmom")) {
+                bmomFiles.push_back(entry.path().string());
+            } else if (ends_with(filename, ".obj") && objFilePath.empty()) {
+                objFilePath = entry.path().string(); // Assuming only one .obj file
+            }
+        }
+    }
+    // findLargestIDFile();
+}
+
+std::string FileParser::getFileWithID(const std::string& prefix, const std::string& extension, int fileId) {
+    std::string targetFile = prefix + std::to_string(fileId + 100000) + extension;
+    // std::cout << targetFile << std::endl;
+    for (const auto& entry : fs::directory_iterator(directoryPath)) {
+        if (entry.is_regular_file()) {
+            std::string filename = entry.path().filename().string();
+            if (filename == targetFile) {
+                return entry.path().string();
+            }
+        }
+    }
+    return ""; // Return empty string if file not found
+}
+
+
+
+/*
+
 
 void FileParser::scanDirectory() {
     for (const auto& entry : fs::directory_iterator(directoryPath)) {
@@ -153,5 +191,7 @@ void FileParser::setDirectoryPath(const std::string& directoryPath) {
     largestBmomFile.clear();
     scanDirectory();
 }
+
+*/
 
 // Other method implementations as necessary...

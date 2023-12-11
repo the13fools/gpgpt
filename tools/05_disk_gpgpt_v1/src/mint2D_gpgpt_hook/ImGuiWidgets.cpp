@@ -18,11 +18,25 @@ namespace ImGuiWidgets {
     }
 
     // Function to display a file scrubber in ImGui
-    void ShowFileScrubber(int& fileIndex, int minIndex, int maxIndex) {
+    // void ShowFileScrubber(int& fileIndex, int minIndex, int maxIndex) {
+    void ShowFileScrubber(AppState& appState)
+    {
         ImGui::Text("File Scrubber:");
 
         // Display a slider to select the current file index
-        ImGui::SliderInt("File Index", &fileIndex, minIndex, maxIndex);
+
+        int* fileIndex = &appState.currentFileID;
+        int minIndex = 0; // appState.minFileIndex;
+        int maxIndex = 10; // appState.fileList.size() - 1;
+        int prevFileIndex = *fileIndex;
+
+        // appState.currentFileIndex, 0, appState.fileList.size() - 1
+        if (ImGui::SliderInt("File Index", fileIndex, minIndex, maxIndex) )
+        {
+            std::cout << "file index changed" << std::endl;
+            std::cout << "prev file index " << prevFileIndex << " | current file index " << *fileIndex <<  std::endl;
+            appState.shouldReload = true;
+        }
     }
 
     // Function to display checkboxes for field views in ImGui
@@ -264,7 +278,7 @@ namespace ImGuiWidgets {
         ImGui::Begin("Main Window");
 
         // Display file scrubber for selecting files
-        // ShowFileScrubber(appState.currentFileIndex, 0, appState.fileList.size() - 1);
+        ShowFileScrubber(appState);
 
 
         ShowOptWeights(appState);

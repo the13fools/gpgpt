@@ -23,6 +23,9 @@ target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES})
 # Use C++17
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
+
+# https://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html 
+# here's a good reason to upgrade to C++ 17
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
 

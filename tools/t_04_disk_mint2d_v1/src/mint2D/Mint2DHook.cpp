@@ -156,7 +156,7 @@
         polyscope::requestRedraw();   
 
         // std::ifstream file;
-        std::string cur_log_file =  cur_log_folder + "/cur_file_iter_" + std::to_string(10000 + cur_iter) + ".png";
+        std::string cur_log_file =  cur_log_folder + "/cur_file_iter_" + std::to_string(100000 + cur_iter) + ".png";
 
         struct stat buffer;   
         bool exists = (stat(cur_log_file.c_str(), &buffer) == 0); 

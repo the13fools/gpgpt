@@ -10,7 +10,8 @@ namespace ImGuiWidgets {
     void ShowOptWeights(AppState& appState);
 
     // Custom ImGui widget functions
-    void ShowFileScrubber(int& fileIndex, int minIndex, int maxIndex);
+    // void ShowFileScrubber(int& fileIndex, int minIndex, int maxIndex);
+    void ShowFileScrubber(AppState& appState);
     void ShowFieldViewCheckboxes(AppState& appState);
     void ShowRunInfo(AppState& appState);
     void ShowPlot(const std::vector<double>& data, const char* label, float minY, float maxY);

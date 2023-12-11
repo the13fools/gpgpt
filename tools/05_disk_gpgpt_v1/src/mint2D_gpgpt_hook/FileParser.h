@@ -27,6 +27,14 @@ public:
     // Constructor with the directory to scan
     explicit FileParser(const std::string& directoryPath);
 
+    std::string getFileWithID(const std::string& prefix, const std::string& extension, int fileId);
+
+
+
+
+
+/*
+
     // Parse a file with a given ID
     bool parseFileWithID(Eigen::VectorXd& data, FileType fileType, int fileId);
 
@@ -41,11 +49,16 @@ public:
     // Update the current directory path
     void setDirectoryPath(const std::string& directoryPath);
 
+    */
+
+    std::string objFilePath;
+
+
 private:
     std::string directoryPath;
     std::vector<std::string> bfraFiles;
     std::vector<std::string> bmomFiles;
-    std::string objFilePath;
+
     std::string largestBfraFile;
     std::string largestBmomFile;
 

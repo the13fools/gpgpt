@@ -123,8 +123,9 @@ public:
     {
         bool ret = false;
         status_mutex.lock();
-        if(running && please_pause)
-            ret = true;
+        ret = is_paused && running;
+        // if(running && please_pause)
+        //     ret = true;
         status_mutex.unlock();
         return ret;
     }
@@ -158,10 +159,12 @@ protected:
             status_mutex.unlock();
             if (pausenow)
             {
+                is_paused = true;
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
             else
             {
+                is_paused = false;
                 done = simulateOneStep();
                 render_mutex.lock();
                 updateRenderGeometry();
@@ -193,6 +196,7 @@ protected:
 
     std::thread *sim_thread;
     bool please_pause;
+    bool is_paused = true;
     bool please_die;
     bool running;
     bool show_sim_buttons = true;

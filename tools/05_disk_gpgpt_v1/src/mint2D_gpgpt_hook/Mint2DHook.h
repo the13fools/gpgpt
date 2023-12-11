@@ -16,6 +16,12 @@
 #include <TinyAD/ScalarFunction.hh>
 #include <TinyAD/Utils/LinearSolver.hh>
 
+struct FileTypeInfo {
+        std::string prefix;
+        std::string extension;
+        Eigen::MatrixXd& targetMatrix;
+};
+
 
 enum class DOFType {
     primals, moments, deltas, gammas, Element_COUNT
@@ -44,12 +50,17 @@ public:
     virtual bool simulateOneStep();
     virtual void pause();
     virtual void updateAppStateFromOptState(){ return; };
+    virtual void updateOptStateFromAppState(){ return; };
 
     void resetAppState();
     void initializeLogFolder(); 
     void initializeOtherParameters(); 
     void initBoundaryConditions();
     void initCurlOperators();
+
+    bool loadPrimaryData();
+    bool loadGuiState();
+
 
 
 // these are moved to appState
