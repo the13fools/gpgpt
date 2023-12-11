@@ -80,7 +80,7 @@ void Mint2DHook::updateRenderGeometry() {
 
         initSimulation();
 
-        appState->shouldReload = false;
+        
         // std::cout << "appState->directoryPath " << appState->directoryPath << std::endl;
         // std::cout << "appState->currentFileID " << appState->currentFileID << std::endl;
         // std::cout << "appState->meshName " << appState->meshName << std::endl;
@@ -142,6 +142,12 @@ void Mint2DHook::updateRenderGeometry() {
         appState->currentFileID++;
 
         // Additional logging for any other fields in AppState as needed
+    }
+
+    if (appState->shouldReload)
+    {
+        appState->currentFileID--;
+        appState->shouldReload = false;
     }
 
 
