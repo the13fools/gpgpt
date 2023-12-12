@@ -173,6 +173,7 @@ public:
     bool showVectorField = true;
     FieldBounds override_bounds; //= {0.0, 1e-4};
     bool override_bounds_active = false;
+    bool show_frames = true;
     bool show_frames_as_lines = true;
     int max_saved_index = 0;
 

@@ -21,7 +21,10 @@ namespace ImGuiWidgets {
         // ImGui::InputDouble("Bound Weight", &c.w_bound);
 
         bool* show_frames_as_lines = &appState.show_frames_as_lines;
+        bool* show_frames = &appState.show_frames;
         std::string show_frames_checkbox = ("draw vectors as lines##cb");
+        ImGui::Checkbox("show frames", show_frames);
+        ImGui::SameLine();
         ImGui::Checkbox(show_frames_checkbox.c_str(), show_frames_as_lines);
 
     }

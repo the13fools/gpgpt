@@ -41,11 +41,12 @@ void FileParser::scanDirectory() {
                 }
                 conf_files.push_back(entry.path().string());
             }
+            else if (ends_with(filename, ".obj") && objFilePath.empty()) {
+                objFilePath = entry.path().string(); // Assuming only one .obj file
+            }
             // } else if (ends_with(filename, ".bmom")) {
             //     bmomFiles.push_back(entry.path().string());
-            // } else if (ends_with(filename, ".obj") && objFilePath.empty()) {
-            //     objFilePath = entry.path().string(); // Assuming only one .obj file
-            // }
+            
         }
     }
     // findLargestIDFile();

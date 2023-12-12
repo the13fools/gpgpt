@@ -257,17 +257,24 @@ void Mint2DHook::renderRenderGeometry()
 
             auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", outputData->frames);
             vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
-            vectorField->setEnabled(true);
+            
 
             auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative)", (-1.) * outputData->frames);
             vectorFieldNeg->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
 
-            if(appState->show_frames_as_lines)
+            if(appState->show_frames && appState->show_frames_as_lines)
             {
+                vectorField->setEnabled(true);
                 vectorFieldNeg->setEnabled(true);
+            }
+            else if (appState->show_frames)
+            {
+                vectorField->setEnabled(true);
+                vectorFieldNeg->setEnabled(false);
             }
             else 
             {
+                vectorField->setEnabled(false);
                 vectorFieldNeg->setEnabled(false);
             }
 
@@ -349,15 +356,23 @@ void Mint2DHook::initSimulation() {
         fileParser = std::make_unique<FileParser>(appState->directoryPath);
         appState->max_saved_index = fileParser->maxID;
 
+        if ( appState->currentFileID == -1 )
+        {
+            appState->currentFileID = appState->max_saved_index-1;
+            appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
+            initConfigValues();
+        }
+
         loadPrimaryData();
         loadGuiState();
 
         // TODO add parsing for this.
         // appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
 
-        // appState->objFilePath = fileParser->objFilePath;
+        appState->objFilePath = fileParser->objFilePath;
 
         // TODO: Fix this to load from file.
+        std::cout << "fileParser->objFilePath " << fileParser->objFilePath << std::endl;
         if (!igl::readOBJ(fileParser->objFilePath, V, F)) {
             std::cerr << "Failed to load mesh from " << fileParser->objFilePath << std::endl;
             return;
