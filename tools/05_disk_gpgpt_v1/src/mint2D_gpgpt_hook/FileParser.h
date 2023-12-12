@@ -60,7 +60,7 @@ public:
 
 private:
     std::string directoryPath;
-    std::vector<std::string> bfraFiles;
+    std::vector<std::string> conf_files;
     // std::vector<std::string> bmomFiles;
 
     // std::string largestBfraFile;

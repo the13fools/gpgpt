@@ -28,15 +28,15 @@ FileParser::FileParser(const std::string& directoryPath)
     scanDirectory();
     findFileBounds();
     std::cout << "FileParser initialized with directory: " << directoryPath << std::endl;
-    std::cout << "Found " << bfraFiles.size() << " BFRA files" << std::endl;
+    std::cout << "Found " << conf_files.size() << " BFRA files" << std::endl;
 }
 
 void FileParser::scanDirectory() {
     for (const auto& entry : fs::directory_iterator(directoryPath)) {
         if (entry.is_regular_file()) {
             std::string filename = entry.path().filename().string();
-            if (ends_with(filename, ".bfra")) {
-                bfraFiles.push_back(entry.path().string());
+            if (ends_with(filename, ".json")) {
+                conf_files.push_back(entry.path().string());
             }
             // } else if (ends_with(filename, ".bmom")) {
             //     bmomFiles.push_back(entry.path().string());
@@ -69,15 +69,20 @@ void FileParser::findFileBounds() {
         return id1 > id2;
     };
 
-    if (!bfraFiles.empty()) {
-        std::sort(bfraFiles.begin(), bfraFiles.end(), fileIdComparator);
+    if (!conf_files.empty()) {
+        std::sort(conf_files.begin(), conf_files.end(), fileIdComparator);
     }
 
     // The largest ID file will now be at the end of the sorted list
-    if (!bfraFiles.empty()) {
-        minID = std::stoi(bfraFiles.front().substr(bfraFiles.front().find_last_of('_') + 1, 6));
-        maxID = std::stoi(bfraFiles.back().substr(bfraFiles.back().find_last_of('_') + 1, 6));
+    if (!conf_files.empty()) {
+        minID = std::stoi(conf_files.front().substr(conf_files.front().find_last_of('_') + 1, 6));
+        maxID = std::stoi(conf_files.back().substr(conf_files.back().find_last_of('_') + 1, 6));
         std::cout << "minID: " << minID << " maxID: " << maxID << std::endl;
+
+
+        for (int i = 0; i < conf_files.size(); ++i) {
+            std::cout << conf_files[i] << std::endl;
+        }
     }
 
 

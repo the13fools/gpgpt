@@ -80,35 +80,6 @@ void Mint2DHook::updateRenderGeometry() {
 
         initSimulation();
 
-        
-        // std::cout << "appState->directoryPath " << appState->directoryPath << std::endl;
-        // std::cout << "appState->currentFileID " << appState->currentFileID << std::endl;
-        // std::cout << "appState->meshName " << appState->meshName << std::endl;
-
-        // fileParser = new FileParser(appState->directoryPath);
-        // fileParser = std::make_unique<FileParser>(appState->directoryPath);
-
-        // std::cout << "fileParser->parseLargestFile(appState->frames, FileType::BFRA) " << fileParser->parseLargestFile(appState->frames, FileType::BFRA) << std::endl;
-        // std::cout << "fileParser->parseLargestFile(appState->deltas, FileType::BMOM) " << fileParser->parseLargestFile(appState->deltas, FileType::BMOM) << std::endl;
-
-        // std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
-        // std::cout << "appState->deltas.rows() " << appState->deltas.rows() << std::endl;
-
-        // std::cout << "appState->frames.cols() " << appState->frames.cols() << std::endl;
-        // std::cout << "appState->deltas.cols() " << appState->deltas.cols() << std::endl;
-
-        // std::cout << "appState->frames " << appState->frames << std::endl;
-        // std::cout << "appState->deltas " << appState->deltas << std::endl;
-
-        // std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
-        // std::cout << "appState->deltas.rows() " << appState->deltas.rows() << std::endl;
-
-        // std::cout << "appState->frames.cols() " << appState->frames.cols() << std::endl;
-        // std::cout << "appState->deltas.cols() " << appState->deltas.cols() << std::endl;
-
-        // std::cout << "appState->frames " << appState->frames << std
-
-
     }
 
 /// 
@@ -128,12 +99,20 @@ void Mint2DHook::updateRenderGeometry() {
 
     outputData = new OutputState(*appState->os);
 
+    // clear previous passive_vars
+
+
 
     // renderState = new AppState(*appState);
 
     outputData->frames.resize(appState->frames.rows(), 3);
     outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
 
+    if (appState->shouldReload)
+    {
+        appState->currentFileID--;
+        appState->shouldReload = false;
+    }
 
     // Log data if necessary
     if (appState->shouldLogData) {
@@ -145,11 +124,9 @@ void Mint2DHook::updateRenderGeometry() {
         // Additional logging for any other fields in AppState as needed
     }
 
-    if (appState->shouldReload)
-    {
-        // appState->currentFileID--;
-        appState->shouldReload = false;
-    }
+
+
+    appState->zeroPassiveVars();
 
 
     // Update all of the calculated quantities of metadata.  
@@ -271,6 +248,22 @@ void Mint2DHook::renderRenderGeometry()
             auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", outputData->frames);
             vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
             vectorField->setEnabled(true);
+
+            auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative)", (-1.) * outputData->frames);
+            vectorFieldNeg->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
+
+            if(appState->show_frames_as_lines)
+            {
+                vectorFieldNeg->setEnabled(true);
+            }
+            else 
+            {
+                vectorFieldNeg->setEnabled(false);
+            }
+
+            
+
+            // auto vectorFieldOrig = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field Orig", appState->frames);
         }
 
         polyscope::requestRedraw();

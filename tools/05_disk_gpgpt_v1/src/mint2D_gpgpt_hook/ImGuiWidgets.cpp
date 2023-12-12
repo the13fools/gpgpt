@@ -10,6 +10,10 @@ namespace ImGuiWidgets {
 
     void ShowOptWeights(AppState& appState)
     {
+                bool* show_frames_as_lines = &appState.show_frames_as_lines;
+        std::string show_frames_checkbox = ("draw vectors as lines##cb");
+        ImGui::Checkbox(show_frames_checkbox.c_str(), show_frames_as_lines);
+        
         MyConfig* c = appState.config;
         ImGui::InputDouble("Smoothness Weight", &c->w_smooth);
         ImGui::InputDouble("S Perp Weight", &c->w_s_perp);
@@ -192,8 +196,10 @@ namespace ImGuiWidgets {
 
     // Function to display a field view scrubber in ImGui
     void ShowFieldViewScrubber(AppState& appState, Field_View& currentField) {
-        ImGui::Text("Field View Scrubber:");
-        ImGui::Text("Current Field: %s", fieldViewToFileStub(currentField).c_str());
+        // ImGui::Text("Field View Scrubber:");
+
+
+        
 
         // Display a combo box to select the current field view
         if (ImGui::BeginCombo("Select Field View", fieldViewToString(currentField).c_str())) {
@@ -209,6 +215,8 @@ namespace ImGuiWidgets {
             }
             ImGui::EndCombo();
         }
+        ImGui::Text("Field String: %s", fieldViewToFileStub(currentField).c_str());
+
 
         bool* active = &appState.fieldViewActive[currentField];
         float* minVal = &appState.fieldBounds[currentField].lower;

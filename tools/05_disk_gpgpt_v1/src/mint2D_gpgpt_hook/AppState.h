@@ -59,8 +59,16 @@ public:
     Eigen::VectorXd norms_moment; // TODO IMPLEMENT THIS!
     Eigen::VectorXd thetas; // TODO  IMPORTANT! 
     Eigen::VectorXd curls_primal;
+
+    // Current curl component of the energy, this should be a constraint that 
+    // is close to numerically zero at convergence.  
     Eigen::VectorXd curls_sym;
     Eigen::VectorXd smoothness_primal;
+
+    // Current smoothness energy
+    Eigen::VectorXd smoothness_sym;
+
+    // Individual components 
     Eigen::VectorXd smoothness_L2;
     Eigen::VectorXd smoothness_L4;
     Eigen::VectorXd smoothness_L2x2;
@@ -88,8 +96,8 @@ public:
     std::string logFolderPath;  // this is where the output gets saved.  
                                 // When load from a directory logFolderPath defaults to same directory, can change this.
     std::string meshName;
-    std::vector<std::string> bfraFiles;
-    std::vector<std::string> bmomFiles;
+    // std::vector<std::string> bfraFiles;
+    // std::vector<std::string> bmomFiles;
     std::optional<std::string> objFilePath;
     int currentFileID = -1;
     bool shouldReload = false; // this is a dynamic var which tells updaterendergeometry to reload data from the current directory
@@ -116,7 +124,7 @@ public:
 
     // Optimization variables
     Surface* cur_surf; // This initializes some more convenient data structures for building up local energies.
-                      // In 3d need to use mesh data structures.  
+                      // In 3d need to use mesh data structures instead of surface.   
     bool keepSolving = true;
     int outerLoopIteration = 0;
     double cur_rel_residual = 0;
@@ -164,6 +172,7 @@ public:
     bool showVectorField = true;
     FieldBounds override_bounds; //= {0.0, 1e-4};
     bool override_bounds_active = false;
+    bool show_frames_as_lines = true;
 
 
     bool LogToFile(); // Log based on fieldViewActive state
@@ -192,6 +201,7 @@ public:
     void updateSliderValue(int value);
     void serializeData();
     void deserializeData();
+    void zeroPassiveVars();
 
     // Additional methods as needed
 };

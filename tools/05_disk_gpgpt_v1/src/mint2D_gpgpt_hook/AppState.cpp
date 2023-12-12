@@ -41,7 +41,7 @@ bool AppState::LogToFile()
     Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + std::to_string(this->currentFileID + 100000) + ".bfra");
     Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + std::to_string(this->currentFileID + 100000) + ".bmom");
 
-    
+    Serialization::serializeConfig(*this->config, this->logFolderPath + "/config" + "_" + std::to_string(this->currentFileID + 100000) + ".json");
 
 
           // Here, we'll also log relevant data to files based on the fieldViewActive flags
@@ -66,9 +66,9 @@ bool AppState::LogToFile()
                         Serialization::serializeVector(os->smoothness_primal, filePath);
                         break;
                     case Field_View::moment_dirch:
-                        Serialization::serializeVector(os->smoothness_L2, filePath);
+                        // Serialization::serializeVector(os->smoothness_L2, filePath);
                         // TODO FIX THIS LOGGING
-                        // Serialization::serializeVector(os->smoothness_sym, filePath);
+                        Serialization::serializeVector(os->smoothness_sym, filePath);
                         break;
                     case Field_View::primal_curl_residual:
                         Serialization::serializeVector(os->curls_primal, filePath);
@@ -85,6 +85,22 @@ bool AppState::LogToFile()
 
 
     return true;
+}
+
+void AppState::zeroPassiveVars()
+{
+    // zero out the passive variables
+    // this->os->norms_vec.setZero();
+    // this->os->norms_delta.setZero();
+    // this->os->norms_moment.setZero();
+    this->os->thetas.setZero();
+    this->os->curls_primal.setZero();
+    this->os->curls_sym.setZero();
+    this->os->smoothness_primal.setZero();
+    this->os->smoothness_sym.setZero();
+    this->os->smoothness_L2.setZero();
+    this->os->smoothness_L4.setZero();
+    this->os->smoothness_L2x2.setZero();
 }
 
 // // Method to log current variables (if logging is enabled)
