@@ -5,20 +5,21 @@
 
 #include <string>
 
-struct MyConfig {
-    MyConfig();
-    double w_bound;
-    double w_smooth;
-    double w_smooth_vector;
-    double w_curl;
-    double w_s_perp;
+class MyConfig {
+    public:
+        MyConfig();
+        double w_bound;
+        double w_smooth;
+        double w_smooth_vector;
+        double w_curl;
+        double w_s_perp;
 
-    double w_attenuate;
+        double w_attenuate;
 
-    double convergence_eps;
-    double identity_weight;
-    double prev_energy;
-    bool useProjHessian;
+        double convergence_eps;
+        double identity_weight;
+        double prev_energy;
+        bool useProjHessian;
 };
 
 #endif // MY_CONFIG_H

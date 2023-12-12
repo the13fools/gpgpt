@@ -33,15 +33,15 @@ void AppState::refreshFileLists() {
 }
 
 
-bool AppState::LogToFile()
+bool AppState::LogToFile(const std::string suffix)
 {
         
 
 // TODO add moments here 
-    Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + std::to_string(this->currentFileID + 100000) + ".bfra");
-    Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + std::to_string(this->currentFileID + 100000) + ".bmom");
+    Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + suffix + ".bfra");
+    Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + suffix + ".bmom");
 
-    Serialization::serializeConfig(*this->config, this->logFolderPath + "/config" + "_" + std::to_string(this->currentFileID + 100000) + ".json");
+    Serialization::serializeConfig(*this->config, this->logFolderPath + "/config" + "_" + suffix + ".json");
 
 
           // Here, we'll also log relevant data to files based on the fieldViewActive flags
@@ -52,7 +52,7 @@ bool AppState::LogToFile()
                 // Determine the file path based on the field view
                 Field_View cfv = static_cast<Field_View>(i);
                 std::string stub = fieldViewToFileStub(cfv);
-                std::string filePath = this->logFolderPath + "/" + stub + "_" + std::to_string(this->currentFileID + 100000) + ".bdat"; // better to call these bdat
+                std::string filePath = this->logFolderPath + "/" + stub + "_" + suffix + ".bdat"; // better to call these bdat
 
                 // Serialize the corresponding Eigen::Vector
                 switch (static_cast<Field_View>(i)) {

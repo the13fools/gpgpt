@@ -13,7 +13,8 @@
 #include "FieldView.h"
 
 #include "Surface.h"
-
+#include <memory>
+ 
 using Field_View = Views::Field_View;
 
 // Enum for identifying field view quantities
@@ -87,7 +88,7 @@ class AppState {
 public:
 
     ~AppState() {
-        delete config;
+        // delete config;
         delete os;
     }
 
@@ -108,7 +109,7 @@ public:
     Eigen::MatrixXi F; // Face indices
 
     /// @brief config optimization variables and params stored and initialized here.  ///
-    MyConfig* config;
+    std::unique_ptr<MyConfig> config;
     Eigen::VectorXi bound_face_idx;  
     // virtual Eigen::VectorXd dofs_to_vars(VariableType t); // TODO: implement this.
     // This would be a map that's used inside of OptZoo functions to make things more generic.  
@@ -166,16 +167,17 @@ public:
     // GUI state 
     std::unordered_map<Field_View, FieldBounds> fieldBounds;
     bool fieldViewActive [8] = {true, true, true, true, true, true, true, false};
-    bool shouldLogData = false;
+    bool shouldLogData = true;
     Field_View prev_frame_element = Field_View::Element_COUNT;
     Field_View current_element;
     bool showVectorField = true;
     FieldBounds override_bounds; //= {0.0, 1e-4};
     bool override_bounds_active = false;
     bool show_frames_as_lines = true;
+    int max_saved_index = 0;
 
 
-    bool LogToFile(); // Log based on fieldViewActive state
+    bool LogToFile(const std::string suffix); // Log based on fieldViewActive state
 
 
     // simulation metadata 

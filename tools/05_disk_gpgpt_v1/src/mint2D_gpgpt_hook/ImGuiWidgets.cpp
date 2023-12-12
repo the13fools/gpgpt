@@ -10,11 +10,15 @@ namespace ImGuiWidgets {
 
     void ShowOptWeights(AppState& appState)
     {
-        MyConfig* c = appState.config;
-        ImGui::InputDouble("Smoothness Weight", &c->w_smooth);
-        ImGui::InputDouble("S Perp Weight", &c->w_s_perp);
-        ImGui::InputDouble("Curl Weight", &c->w_curl);
-        ImGui::InputDouble("Bound Weight", &c->w_bound);
+        // auto c = appState.config;
+        MyConfig& c = *appState.config;
+        
+        // ImGui::InputDouble("S Perp Weight", &c.w_s_perp, 0.0f, 0.0f, "%e");
+        ImGui::InputDouble("Curl Weight", &c.w_curl, 0.0f, 0.0f, "%e");
+        ImGui::InputDouble("Bound Weight", &c.w_bound, 0.0f, 0.0f, "%e");
+        ImGui::InputDouble("Smoothness Weight", &c.w_smooth, 0.0f, 0.0f, "%e");
+        ImGui::InputDouble("Attenuate Weight", &c.w_attenuate, 0.0f, 0.0f, "%e");
+        // ImGui::InputDouble("Bound Weight", &c.w_bound);
 
         bool* show_frames_as_lines = &appState.show_frames_as_lines;
         std::string show_frames_checkbox = ("draw vectors as lines##cb");
@@ -32,7 +36,7 @@ namespace ImGuiWidgets {
 
         int* fileIndex = &appState.currentFileID;
         int minIndex = 0; // appState.minFileIndex;
-        int maxIndex = 10; // appState.fileList.size() - 1;
+        int maxIndex = std::max(appState.max_saved_index, 10); // appState.fileList.size() - 1;
         int prevFileIndex = *fileIndex;
 
         // appState.currentFileIndex, 0, appState.fileList.size() - 1
@@ -111,10 +115,10 @@ namespace ImGuiWidgets {
 
         ImGui::Text("TODO");
         ImGui::Text("Fix curl operator");
-        ImGui::Text("refactor optzoo to use stencils");
-        ImGui::Text("reset/load from folder");
-         ImGui::Text("file scrubber");
-        ImGui::Text("offby1finished issue");
+        // ImGui::Text("refactor optzoo to use stencils");
+        // ImGui::Text("reset/load from folder");
+        //  ImGui::Text("file scrubber");
+        // ImGui::Text("offby1finished issue");
         ImGui::Text("log energy in vector, graph here");
        
 
@@ -287,8 +291,8 @@ namespace ImGuiWidgets {
         ImGui::Begin("Main Window");
 
     
-
-        ShowOptWeights(appState);
+        
+        
 
         // Display checkboxes with min and max sliders for field views
         // ShowFieldViewCheckboxesWithSliders(appState);
@@ -301,6 +305,10 @@ namespace ImGuiWidgets {
         ShowFieldViewScrubber(appState, appState.current_element);
 
         ShowFieldViewCheckboxes(appState);
+
+        ImGui::Begin("Optimization Params");
+        ShowOptWeights(appState);
+        ImGui::End();
 
         // Display run information
          ImGui::Begin("Optimization State");

@@ -108,6 +108,8 @@ void Mint2DHook::updateRenderGeometry() {
     outputData->frames.resize(appState->frames.rows(), 3);
     outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
 
+
+    // 
     if (appState->shouldReload)
     {
         appState->currentFileID--;
@@ -118,15 +120,23 @@ void Mint2DHook::updateRenderGeometry() {
     if (appState->shouldLogData) {
         // Serialize and save the frame data
         appState->currentFileID++;
-        appState->LogToFile();
+        std::string suffix = std::to_string(appState->currentFileID + 100000);
+        appState->LogToFile(suffix);
+
+        if(appState->max_saved_index < appState->currentFileID)
+        {
+            appState->max_saved_index = appState->currentFileID;
+        }
 
 
         // Additional logging for any other fields in AppState as needed
     }
-
+    appState->LogToFile("curr");
 
 
     appState->zeroPassiveVars();
+
+ 
 
 
     // Update all of the calculated quantities of metadata.  
@@ -326,8 +336,8 @@ void Mint2DHook::initSimulation() {
         appState->cur_surf = new Surface(V, F);
 
         // Set default configuration
-        appState->config = new MyConfig(); // Assign default values to the config
-
+        appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
+        initConfigValues();
         // // Serialize default config to a file
         // if (!Serialization::serializeConfig(appState->config, appState->directoryPath + "/config.json")) {
         //     std::cerr << "Failed to save default config to " << appState->directoryPath + "/config.json" << std::endl;
@@ -337,15 +347,17 @@ void Mint2DHook::initSimulation() {
 
         // fileParser = new FileParser(appState->directoryPath);
         fileParser = std::make_unique<FileParser>(appState->directoryPath);
+        appState->max_saved_index = fileParser->maxID;
 
         loadPrimaryData();
         loadGuiState();
 
         // TODO add parsing for this.
-        appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
+        // appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
 
         // appState->objFilePath = fileParser->objFilePath;
 
+        // TODO: Fix this to load from file.
         if (!igl::readOBJ(fileParser->objFilePath, V, F)) {
             std::cerr << "Failed to load mesh from " << fileParser->objFilePath << std::endl;
             return;
@@ -431,15 +443,16 @@ bool Mint2DHook::loadPrimaryData() {
     }
 
     std::string config_path = fileParser->getFileWithID("config_", ".json", appState->currentFileID);
+    std::cout << "config_path " << config_path << std::endl;
     if (!config_path.empty()) {
         if ( !Serialization::deserializeConfig(*appState->config, config_path) ) {
             std::cerr << "Failed to load data for " << "config_" << " from file: " << config_path << std::endl;
             success = false;
         }
-        } else {
-            std::cerr << "File not found for " << "config_" << " with ID: " << appState->currentFileID << std::endl;
-            success = false;
-        }
+    } else {
+        std::cerr << "File not found for " << "config_" << " with ID: " << appState->currentFileID << std::endl;
+        success = false;
+    }
     
 
 
@@ -447,6 +460,18 @@ bool Mint2DHook::loadPrimaryData() {
 
     return success;
 }
+
+// MyConfig* conf_new = appState->config;
+//         if ( !Serialization::deserializeConfig(*conf_new, config_path) ) {
+//             std::cerr << "Failed to load data for " << "config_" << " from file: " << config_path << std::endl;
+//             success = false;
+//         }
+//         else 
+//         {
+//             appState->config = conf_new;
+//         }
+//         // std::cout << "conf_new->w_curl " << conf_new->w_curl << std::endl;
+
 
 
 bool Mint2DHook::loadGuiState() {

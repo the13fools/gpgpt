@@ -157,6 +157,8 @@ bool Serialization::deserializeConfig(MyConfig& config, const std::string& filep
         config.prev_energy = j.at("prev_energy");
         config.useProjHessian = j.at("useProjHessian");
 
+        std::cout << "config.w_curl " << config.w_curl << std::endl;
+
         return true;
     } catch (const std::exception& e) {
         std::cerr << "Error: Unable to deserialize config from JSON: " << e.what() << std::endl;

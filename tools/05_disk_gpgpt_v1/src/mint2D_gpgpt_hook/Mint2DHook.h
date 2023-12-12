@@ -35,6 +35,7 @@ public:
         appState = state;
         outputData = appState->os;
         opt = new ADFunc_TinyAD_Instance<6>();
+        appState->config = std::make_unique<MyConfig>(); 
     //   current_element = Field_View::vec_norms;
     }
     virtual ~Mint2DHook(){
@@ -51,6 +52,7 @@ public:
     virtual void pause();
     virtual void updateAppStateFromOptState(){ return; };
     virtual void updateOptStateFromAppState(){ return; };
+    virtual void initConfigValues(){ return; };
 
     void resetAppState();
     void initializeLogFolder(); 

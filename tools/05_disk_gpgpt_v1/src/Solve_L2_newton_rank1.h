@@ -35,6 +35,8 @@ public:
       appState->solveDescription = "L2_newton_rank1";
 
 
+
+
       appState->primals_layout = {0, 2};
       appState->moments_layout = {0, 0};
       // appState->deltas_layout = {2, 4};
@@ -96,10 +98,6 @@ public:
       OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
 
       // Update params specific to this solve here
-
-      appState->config->w_attenuate = 1.;
-      appState->config->w_smooth = 1e5;
-      appState->config->w_curl = 1e1;
       
 
 
@@ -171,6 +169,14 @@ public:
     {
       return Mint2DHook::simulateOneStep();
 
+    }
+
+    virtual void initConfigValues()
+    {
+      appState->config->w_attenuate = 1.;
+      appState->config->w_smooth = 1e5;
+      appState->config->w_bound = 1e6;
+      appState->config->w_curl = 1e1;
     }
 
 // This is called after each step.  

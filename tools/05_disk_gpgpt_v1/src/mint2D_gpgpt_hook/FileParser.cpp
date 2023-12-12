@@ -28,7 +28,7 @@ FileParser::FileParser(const std::string& directoryPath)
     scanDirectory();
     findFileBounds();
     std::cout << "FileParser initialized with directory: " << directoryPath << std::endl;
-    std::cout << "Found " << conf_files.size() << " BFRA files" << std::endl;
+    std::cout << "Found " << conf_files.size() << " config files" << std::endl;
 }
 
 void FileParser::scanDirectory() {
@@ -36,6 +36,9 @@ void FileParser::scanDirectory() {
         if (entry.is_regular_file()) {
             std::string filename = entry.path().filename().string();
             if (ends_with(filename, ".json")) {
+                if (ends_with(filename, "curr.json")) {
+                    continue;
+                }
                 conf_files.push_back(entry.path().string());
             }
             // } else if (ends_with(filename, ".bmom")) {
@@ -75,14 +78,15 @@ void FileParser::findFileBounds() {
 
     // The largest ID file will now be at the end of the sorted list
     if (!conf_files.empty()) {
-        minID = std::stoi(conf_files.front().substr(conf_files.front().find_last_of('_') + 1, 6));
-        maxID = std::stoi(conf_files.back().substr(conf_files.back().find_last_of('_') + 1, 6));
+        maxID= std::stoi(conf_files.front().substr(conf_files.front().find_last_of('_') + 1, 6)) - 100000;
+        minID = std::stoi(conf_files.back().substr(conf_files.back().find_last_of('_') + 1, 6)) - 100000;
         std::cout << "minID: " << minID << " maxID: " << maxID << std::endl;
 
 
-        for (int i = 0; i < conf_files.size(); ++i) {
-            std::cout << conf_files[i] << std::endl;
-        }
+        // TODO: Parse the energy here.  
+        // for (int i = 0; i < conf_files.size(); ++i) {
+        //     std::cout << conf_files[i] << std::endl;
+        // }
     }
 
 
