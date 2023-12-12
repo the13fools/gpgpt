@@ -430,6 +430,19 @@ bool Mint2DHook::loadPrimaryData() {
         }
     }
 
+    std::string config_path = fileParser->getFileWithID("config_", ".json", appState->currentFileID);
+    if (!config_path.empty()) {
+        if ( !Serialization::deserializeConfig(*appState->config, config_path) ) {
+            std::cerr << "Failed to load data for " << "config_" << " from file: " << config_path << std::endl;
+            success = false;
+        }
+        } else {
+            std::cerr << "File not found for " << "config_" << " with ID: " << appState->currentFileID << std::endl;
+            success = false;
+        }
+    
+
+
 
 
     return success;

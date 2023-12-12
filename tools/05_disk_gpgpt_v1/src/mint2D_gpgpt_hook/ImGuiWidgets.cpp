@@ -10,15 +10,16 @@ namespace ImGuiWidgets {
 
     void ShowOptWeights(AppState& appState)
     {
-                bool* show_frames_as_lines = &appState.show_frames_as_lines;
-        std::string show_frames_checkbox = ("draw vectors as lines##cb");
-        ImGui::Checkbox(show_frames_checkbox.c_str(), show_frames_as_lines);
-        
         MyConfig* c = appState.config;
         ImGui::InputDouble("Smoothness Weight", &c->w_smooth);
         ImGui::InputDouble("S Perp Weight", &c->w_s_perp);
         ImGui::InputDouble("Curl Weight", &c->w_curl);
         ImGui::InputDouble("Bound Weight", &c->w_bound);
+
+        bool* show_frames_as_lines = &appState.show_frames_as_lines;
+        std::string show_frames_checkbox = ("draw vectors as lines##cb");
+        ImGui::Checkbox(show_frames_checkbox.c_str(), show_frames_as_lines);
+
     }
 
     // Function to display a file scrubber in ImGui
