@@ -27,6 +27,7 @@ public:
     
     Eigen::VectorX<T_active> dofs_curr_elem;
     std::vector< Eigen::VectorX<T_active> > primals_rank1;
+    T_active frame_norm_euclidian;
 
     Eigen::VectorX<T_active> primals;
     Eigen::VectorX<double> moments; // Moments only get updated during local step for ADMM style algos.  
@@ -49,12 +50,19 @@ public:
         int primal_rank = primals_layout.rank;
 
         int rank1_size = primals_size/primal_rank; // Elsewhere should check that this is an integer
-
+        
+        frame_norm_euclidian = 0;
         primals_rank1.resize(primal_rank);
         for (int v_i = 0; v_i < primal_rank; v_i++)
         {
             primals_rank1[v_i] = dofs_curr_elem.segment(primals_layout.start + v_i*rank1_size, rank1_size);
+            frame_norm_euclidian += primals_rank1[v_i].squaredNorm();
         }
+
+        if (frame_norm_euclidian < 1e-3) {
+            frame_norm_euclidian = 1e-3;
+        }
+
 
         primals.resize(primals_size);
         primals = dofs_curr_elem.segment(primals_layout.start, primals_size);

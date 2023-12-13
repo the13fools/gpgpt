@@ -30,7 +30,7 @@
 #include "Surface.h"
 #include "UtilsMisc.h"
 
-
+#include <thread>
 
 void Mint2DHook::drawGUI() {
 
@@ -77,6 +77,15 @@ void Mint2DHook::updateRenderGeometry() {
         std::cout << "do from file reload" << std::endl;
 
         pause();
+        // while(!this->isPaused())
+        // {
+        //     // wait for pause
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // }
+        if(!this->isPaused())
+        {
+            std::cout << "failed to pause" << std::endl;
+        }
 
         initSimulation();
 
@@ -87,7 +96,9 @@ void Mint2DHook::updateRenderGeometry() {
     appState->os->norms_delta = appState->deltas.rowwise().norm();
 
     ////// The quantities not explicitly set above are set inside of to_passive calls in optzoo.
-    double cur_obj = opt->eval_func_at(opt->get_current_x());
+    // std::cout << opt->get_current_x() << std::endl;
+    Eigen::VectorXd tmp = opt->get_current_x();
+    double cur_obj = opt->eval_func_at(tmp);
 
     appState->os->cur_global_objective_val = cur_obj;
 
@@ -358,7 +369,7 @@ void Mint2DHook::initSimulation() {
 
         if ( appState->currentFileID == -1 )
         {
-            appState->currentFileID = appState->max_saved_index-1;
+            appState->currentFileID = appState->max_saved_index;
             appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
             initConfigValues();
         }
@@ -401,7 +412,7 @@ void Mint2DHook::initSimulation() {
 
     // fieldViewActive = 
 
-    std::cout << "V.rows() " << V.rows() << "F.rows()" << F.rows() << std::endl;
+    std::cout << "V.rows() " << V.rows() << " F.rows() " << F.rows() << std::endl;
  
  
     // Set mesh data to AppState
@@ -543,7 +554,7 @@ bool Mint2DHook::simulateOneStep() {
         // 1. Relative residual is small
         // 2. Absolute residual is small
         // 3. Gradient norm is small or step progress is negative (converged)
-        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-2 && (appState->cur_max_gradient_norm < 1e-3 || opt->_prev_step_progress < 1e-10)) 
+        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-3 && (appState->cur_max_gradient_norm < 1e-4 || opt->_prev_step_progress < 1e-10)) 
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
