@@ -179,13 +179,13 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 //// Initlaize elementwise objectives 
 ///////////////////
 
-          T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, 2.0);
+          T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, 3.0);
 
 
           T dirichlet_term = T(0);
           for (int i = 0; i < e.num_neighbors; i++)
           {
-            // dirichlet_term += pow((e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm(), 1.0/2.0 );
+            // dirichlet_term += pow((e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm(), 3.0/8.0 );
             dirichlet_term += (e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm() * scale_factor;
           }
 
