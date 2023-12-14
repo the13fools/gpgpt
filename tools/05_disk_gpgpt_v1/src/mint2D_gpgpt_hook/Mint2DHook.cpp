@@ -367,16 +367,6 @@ void Mint2DHook::initSimulation() {
         fileParser = std::make_unique<FileParser>(appState->directoryPath);
         appState->max_saved_index = fileParser->maxID;
 
-        if ( appState->currentFileID == -1 )
-        {
-            appState->currentFileID = appState->max_saved_index;
-            appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
-            initConfigValues();
-        }
-
-        loadPrimaryData();
-        loadGuiState();
-
         // TODO add parsing for this.
         // appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
 
@@ -418,6 +408,23 @@ void Mint2DHook::initSimulation() {
     // Set mesh data to AppState
     appState->V = V;
     appState->F = F;
+
+    if (appState->shouldReload)
+    {
+        
+        if ( appState->currentFileID == -1 )
+        {
+            this->resetAppState();
+            initializeLogFolder();
+            appState->currentFileID = appState->max_saved_index;
+            appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
+            initConfigValues();
+        }
+
+        loadPrimaryData();
+        loadGuiState();
+
+    }
 
 
 
@@ -600,7 +607,7 @@ void Mint2DHook::resetAppState() {
 
     appState->override_bounds.lower = 0;
     appState->override_bounds.upper = 1e-5;
-    appState->shouldReload = false;
+    // appState->shouldReload = false;
 
 
 
