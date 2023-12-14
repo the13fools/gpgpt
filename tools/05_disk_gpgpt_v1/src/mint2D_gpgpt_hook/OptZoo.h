@@ -179,7 +179,8 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 //// Initlaize elementwise objectives 
 ///////////////////
 
-          T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, 3.0);
+          // T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, 6.0/2.0);
+          T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, appState.L4_alpha);
 
 
           T dirichlet_term = T(0);
@@ -305,12 +306,17 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
           // T primal_biharmonic_term = (a + b + c - 3*curr).squaredNorm();
           // T biharmonic_term = (aat+bbt+cct-3*currcurrt).squaredNorm();
 
+          // T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, 2.0/2.0);
+                    T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, appState.L4_alpha);
+
+
           T primal_dirichlet_term = T(0);
           T dirichlet_term = T(0);
           for (int i = 0; i < e.num_neighbors; i++)
           {
+            
             primal_dirichlet_term += (e.neighbor_data.at(i).primals - e.self_data.primals).squaredNorm();
-            dirichlet_term += (e.neighbor_data.at(i).L_2_primals - e.self_data.L_2_primals).squaredNorm();
+            dirichlet_term += (e.neighbor_data.at(i).L_2_primals - e.self_data.L_2_primals).squaredNorm() * scale_factor;
           }
 
           // T primal_dirichlet_term = (a - e.self_data.curr).squaredNorm() + (b - e.self_data.curr).squaredNorm() + (c - e.self_data.curr).squaredNorm();

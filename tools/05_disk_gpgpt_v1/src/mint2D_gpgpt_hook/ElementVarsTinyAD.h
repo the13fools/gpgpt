@@ -56,13 +56,8 @@ public:
         for (int v_i = 0; v_i < primal_rank; v_i++)
         {
             primals_rank1[v_i] = dofs_curr_elem.segment(primals_layout.start + v_i*rank1_size, rank1_size);
-            frame_norm_euclidian += primals_rank1[v_i].squaredNorm();
+            // frame_norm_euclidian += primals_rank1[v_i].squaredNorm();
         }
-
-        if (frame_norm_euclidian < 1e-3) {
-            frame_norm_euclidian = 1e-3;
-        }
-
 
         primals.resize(primals_size);
         primals = dofs_curr_elem.segment(primals_layout.start, primals_size);
@@ -117,12 +112,31 @@ public:
         setElemState(appState, f_idx);
 
         self_data.dofs_curr_elem = element.variables(f_idx);
+
         self_data.set_primals_rank1(appState.primals_layout);
         
         self_data.curr_idx = f_idx;
 
         L2_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
         L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
+
+        for (int i = 0; i < self_data.L_2_primals.rows(); i++)
+        {
+            self_data.frame_norm_euclidian += self_data.L_2_primals(i)*self_data.L_2_primals(i);
+        }
+
+        if (self_data.frame_norm_euclidian < 1e-3) {
+            std::cout << "Warning: frame_norm_euclidian is small: " << self_data.frame_norm_euclidian << std::endl;
+            
+            // std::cout << L_2_primals.rows() << std::endl;
+            // if (L_2_primals.rows() == 0)
+            // {
+            //     throw std::runtime_error("L_2_primals.rows() == 0");
+            // }
+            // std::cout << L_2_primals(0) << " " << L_2_primals(1) << " " << L_2_primals(2) << " " << L_2_primals(3) << std::endl;
+            // frame_norm_euclidian = 1e-3;
+        }
+
 
     }
 

@@ -27,6 +27,8 @@ namespace ImGuiWidgets {
         ImGui::SameLine();
         ImGui::Checkbox(show_frames_checkbox.c_str(), show_frames_as_lines);
 
+        ImGui::InputDouble("L4 alpha", &appState.L4_alpha);
+
     }
 
     // Function to display a file scrubber in ImGui

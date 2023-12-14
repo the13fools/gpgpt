@@ -98,11 +98,19 @@ void Mint2DHook::updateRenderGeometry() {
     ////// The quantities not explicitly set above are set inside of to_passive calls in optzoo.
     // std::cout << opt->get_current_x() << std::endl;
     Eigen::VectorXd tmp = opt->get_current_x();
-    double cur_obj = opt->eval_func_at(tmp);
 
-    appState->os->cur_global_objective_val = cur_obj;
+    try{
+        double cur_obj = opt->eval_func_at(tmp);
 
-    // std::cout << "cur_obj " << cur_obj << std::endl;
+        appState->os->cur_global_objective_val = cur_obj;
+
+        std::cout << "cur_obj " << cur_obj << std::endl;
+    }
+    catch (std::runtime_error& e)
+    {
+        std::cout << "optimization crashing when evaluating the objective " << e.what() << std::endl;
+    }
+
     
 
 
@@ -202,8 +210,8 @@ void Mint2DHook::renderRenderGeometry()
             break;
         case Field_View::moment_dirch:
             // cur_scalar_quantity = outputData->smoothness_sym;
-            // cur_scalar_quantity = outputData->smoothness_L2;
-            cur_scalar_quantity = outputData->smoothness_L4;
+            cur_scalar_quantity = outputData->smoothness_L2;
+            // cur_scalar_quantity = outputData->smoothness_L4;
             break;
         case Field_View::primal_curl_residual:
             cur_scalar_quantity = outputData->curls_primal;
@@ -277,6 +285,14 @@ void Mint2DHook::renderRenderGeometry()
             {
                 vectorField->setEnabled(true);
                 vectorFieldNeg->setEnabled(true);
+                vectorField->setVectorLengthScale(0.01);
+                vectorFieldNeg->setVectorLengthScale(0.01);
+
+                vectorField->setVectorRadius(0.001);
+                vectorFieldNeg->setVectorRadius(0.001);
+
+                
+                
             }
             else if (appState->show_frames)
             {
