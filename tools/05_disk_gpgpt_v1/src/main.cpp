@@ -78,6 +78,15 @@ void drawGUICallback()
             {
                 resetSimulation();
             }
+            if (ImGui::Button("Take one step"))
+            {
+                if (hook->isPaused())
+                {
+                  hook->simulateOneStep();
+                  hook->updateRenderGeometry();
+                }
+                  
+            }
         }
     }
     hook->drawGUI();

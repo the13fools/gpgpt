@@ -412,6 +412,23 @@ void Mint2DHook::initSimulation() {
     appState->V = V;
     appState->F = F;
 
+    if (appState->shouldReload)
+    {
+        
+        if ( appState->currentFileID == -1 )
+        {
+            this->resetAppState();
+            initializeLogFolder();
+            appState->currentFileID = appState->max_saved_index;
+            appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
+            initConfigValues();
+        }
+
+        loadPrimaryData();
+        loadGuiState();
+
+    }
+
 
 
 
@@ -611,7 +628,7 @@ void Mint2DHook::resetAppState() {
 
     appState->override_bounds.lower = 0;
     appState->override_bounds.upper = 1e-5;
-    appState->shouldReload = false;
+    // appState->shouldReload = false;
 
 
 
