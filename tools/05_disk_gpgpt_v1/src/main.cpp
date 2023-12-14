@@ -128,12 +128,13 @@ int main(int argc, char **argv) {
 
   hook = static_cast<Mint2DHook*>(new Solve_L2_newton_rank1());
 
-  hook->appState->directoryPath = args::get(inDir);
 
 
   std::cout << "directoryPath: " << hook->appState->directoryPath << std::endl;
   hook->reset();
   std::cout << "nvars in opt: after reset" << hook->opt->get_num_vars() << std::endl; 
+
+  hook->appState->directoryPath = args::get(inDir);
 
   if ( !( hook->appState->directoryPath.empty() )) {
     // hook->initSimulation();

@@ -368,16 +368,6 @@ void Mint2DHook::initSimulation() {
         fileParser = std::make_unique<FileParser>(appState->directoryPath);
         appState->max_saved_index = fileParser->maxID;
 
-        if ( appState->currentFileID == -1 )
-        {
-            appState->currentFileID = appState->max_saved_index;
-            appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
-            initConfigValues();
-        }
-
-        loadPrimaryData();
-        loadGuiState();
-
         // TODO add parsing for this.
         // appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
 
@@ -390,6 +380,8 @@ void Mint2DHook::initSimulation() {
             return;
         }
         appState->cur_surf = std::make_unique<Surface>(V, F);
+
+        // appState->shouldReload = true;
 
         
 
@@ -429,7 +421,19 @@ void Mint2DHook::initSimulation() {
     if (appState->shouldReload == true)
     {
         std::cout << " reload in progress " << std::endl;
-        this->resetAppState();
+
+        if ( appState->currentFileID == -1 )
+        {
+            this->resetAppState();
+            appState->currentFileID = appState->max_saved_index;
+            appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
+            initConfigValues();
+        }
+
+        
+        loadPrimaryData();
+        loadGuiState();
+        // 
     }
 
     if (create_new_dir)
