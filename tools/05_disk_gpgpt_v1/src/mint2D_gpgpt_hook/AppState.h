@@ -124,7 +124,7 @@ public:
 
 
     // Optimization variables
-    Surface* cur_surf; // This initializes some more convenient data structures for building up local energies.
+    std::unique_ptr<Surface> cur_surf; // This initializes some more convenient data structures for building up local energies.
                       // In 3d need to use mesh data structures instead of surface.   
     bool keepSolving = true;
     int outerLoopIteration = 0;

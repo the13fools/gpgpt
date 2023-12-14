@@ -47,7 +47,7 @@ public:
     }
 
     ~Solve_L2_newton_rank1(){
-      delete _opt;
+      // delete _opt;
     }
 
     virtual void drawGUI()
@@ -108,18 +108,19 @@ public:
   //
   // 
   // This little bit of boiler plate goes a long way.  
-      _opt = new ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT>();
+      _opt = std::make_unique< ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT> >();
       _opt->set_tinyad_objective_func(&func);
       if(appState->shouldReload)
       {
         updateOptStateFromAppState();
+        appState->shouldReload = false;
       }
       else
       {
         init_opt_state();
       }
       // _opt->_func = &func;
-      opt = static_cast<ADFuncRunner*>(_opt);
+      opt = static_cast<ADFuncRunner*>(_opt.get());
 
       std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
       // std::cout << "nvars in opt" << _opt->_func->n_vars << std::endl; // get_num_vars
@@ -241,7 +242,7 @@ protected:
 
 
 
-    ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT>* _opt;
+    std::unique_ptr<ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT> > _opt;
     decltype(TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(1))) func;
 
 

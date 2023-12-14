@@ -98,6 +98,7 @@ void Mint2DHook::updateRenderGeometry() {
     ////// The quantities not explicitly set above are set inside of to_passive calls in optzoo.
     // std::cout << opt->get_current_x() << std::endl;
     Eigen::VectorXd tmp = opt->get_current_x();
+    std::cout << tmp.rows() << " " << tmp.cols() << std::endl;
     double cur_obj = opt->eval_func_at(tmp);
 
     appState->os->cur_global_objective_val = cur_obj;
@@ -351,7 +352,7 @@ void Mint2DHook::initSimulation() {
             std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
             return;
         }
-        appState->cur_surf = new Surface(V, F);
+        appState->cur_surf = std::make_unique<Surface>(V, F);
 
         // Set default configuration
         appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
@@ -388,7 +389,7 @@ void Mint2DHook::initSimulation() {
             std::cerr << "Failed to load mesh from " << fileParser->objFilePath << std::endl;
             return;
         }
-        appState->cur_surf = new Surface(V, F);
+        appState->cur_surf = std::make_unique<Surface>(V, F);
 
         
 
@@ -424,6 +425,12 @@ void Mint2DHook::initSimulation() {
 
     // Initialize other parameters and logging folder
     // initializeOtherParameters();
+
+    if (appState->shouldReload == true)
+    {
+        std::cout << " reload in progress " << std::endl;
+        this->resetAppState();
+    }
 
     if (create_new_dir)
     {

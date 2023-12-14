@@ -155,7 +155,7 @@ public:
 
 
     void setElemState(AppState& appState, const Eigen::Index f_idx) { 
-        cur_surf = appState.cur_surf;
+        cur_surf = appState.cur_surf.get();
 
         w_bound = appState.config->w_bound;
         w_smooth_vector = appState.config->w_smooth_vector;
