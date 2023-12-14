@@ -187,7 +187,9 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
           for (int i = 0; i < e.num_neighbors; i++)
           {
             // dirichlet_term += pow((e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm(), 3.0/8.0 );
-            dirichlet_term += (e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm() * scale_factor;
+            // dirichlet_term += (e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm() * scale_factor;
+            dirichlet_term += (e.neighbor_data.at(i).L_4_krushkal - e.self_data.L_4_krushkal).squaredNorm() * scale_factor;
+
           }
 
           appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(dirichlet_term);

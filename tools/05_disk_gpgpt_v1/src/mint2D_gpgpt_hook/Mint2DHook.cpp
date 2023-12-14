@@ -210,8 +210,8 @@ void Mint2DHook::renderRenderGeometry()
             break;
         case Field_View::moment_dirch:
             // cur_scalar_quantity = outputData->smoothness_sym;
-            cur_scalar_quantity = outputData->smoothness_L2;
-            // cur_scalar_quantity = outputData->smoothness_L4;
+            // cur_scalar_quantity = outputData->smoothness_L2;
+            cur_scalar_quantity = outputData->smoothness_L4;
             break;
         case Field_View::primal_curl_residual:
             cur_scalar_quantity = outputData->curls_primal;

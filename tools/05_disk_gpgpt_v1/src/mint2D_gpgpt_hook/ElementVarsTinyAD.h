@@ -44,6 +44,9 @@ public:
     Eigen::VectorX<T_active> L_2x2_primals;
     Eigen::VectorX<T_active> L_4_primals;
 
+    Eigen::VectorX<T_active> L_2_krushkal;
+    Eigen::VectorX<T_active> L_4_krushkal;
+
     void set_primals_rank1(DOFMemoryLayout& primals_layout)
     {
         int primals_size = primals_layout.size;
@@ -120,13 +123,17 @@ public:
         L2_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
         L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
 
-        for (int i = 0; i < self_data.L_2_primals.rows(); i++)
-        {
-            self_data.frame_norm_euclidian += self_data.L_2_primals(i)*self_data.L_2_primals(i);
-        }
+        // for (int i = 0; i < self_data.L_4_primals.rows(); i++)
+        // {
+        //     // self_data.frame_norm_euclidian += self_data.L_2_primals(i)*self_data.L_2_primals(i);
+        //     self_data.frame_norm_euclidian += self_data.L_4_primals(i)*self_data.L_4_primals(i);
+
+        // }
+
+        self_data.frame_norm_euclidian = 1;
 
         if (self_data.frame_norm_euclidian < 1e-3) {
-            std::cout << "Warning: frame_norm_euclidian is small: " << self_data.frame_norm_euclidian << std::endl;
+            // std::cout << "Warning: frame_norm_euclidian is small: " << self_data.frame_norm_euclidian << std::endl;
             
             // std::cout << L_2_primals.rows() << std::endl;
             // if (L_2_primals.rows() == 0)
@@ -191,25 +198,31 @@ public:
         int primals_size = data.primals_rank1[0].size();
         data.L_2_primals.resize(primals_size*primals_size);
         data.L_2_primals.setZero();
+        data.L_2_krushkal = data.L_2_primals;
 
         // update for n vectors per frame.  
         for (int v_i = 0; v_i < nprimals; v_i++)
         {
             Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+            T_active cur_norm = cur.norm() + 1e-10;
+            Eigen::VectorX<T_active> cur_normalized = cur / cur_norm;
+
             // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
             Eigen::VectorX<T_active> curcurt_flattened;
             curcurt_flattened.resize(cur.rows()*cur.rows());// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
-        
+            Eigen::VectorX<T_active> curcurt_normalized_flattened = curcurt_flattened;
             // TODO fix this later
             for (int i = 0; i < primals_size; i++)
             {
                 for (int j = 0; j < primals_size; j++)
                 {
                     curcurt_flattened(i*primals_size + j) = cur(i)*cur(j);
+                    curcurt_normalized_flattened(i*primals_size + j) = cur_normalized(i)*cur_normalized(j);
                 }
             }
 
             data.L_2_primals = data.L_2_primals + curcurt_flattened;
+            data.L_2_krushkal = data.L_2_krushkal + curcurt_normalized_flattened * cur_norm;
         
         }
 
@@ -254,17 +267,23 @@ public:
         int L4_size = primals_size*primals_size*primals_size*primals_size;
         data.L_4_primals.resize(primals_size*primals_size*primals_size*primals_size);
         data.L_4_primals.setZero();
-
+        data.L_4_krushkal = data.L_4_primals;
 
 
         // update for n vectors per frame.  
         for (int v_i = 0; v_i < nprimals; v_i++)
         {
             Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+            
+            T_active cur_norm = cur.norm() + 1e-10;
+            Eigen::VectorX<T_active> cur_normalized = cur / cur_norm;
+
+
             // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
             Eigen::VectorX<T_active> curcurt_flattened;
             curcurt_flattened.resize(L4_size);// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
-        
+            Eigen::VectorX<T_active> curcurt_normalized_flattened = curcurt_flattened;
+            
             // TODO fix this later
             int psize = primals_size;
             int psize2 = psize*psize;
@@ -278,12 +297,14 @@ public:
                         for (int l = 0; l < primals_size; l++)
                         {
                             curcurt_flattened(i*psize3 + j*psize2 + k*psize + l) = cur(i)*cur(j)*cur(k)*cur(l);
+                            curcurt_normalized_flattened(i*psize3 + j*psize2 + k*psize + l)  = cur_normalized(i)*cur_normalized(j)*cur_normalized(k)*cur_normalized(l); 
                         }
                     }
                 }
             }
 
             data.L_4_primals = data.L_4_primals + curcurt_flattened;
+            data.L_4_krushkal = data.L_4_krushkal + curcurt_normalized_flattened * cur_norm;
         
         }
 
