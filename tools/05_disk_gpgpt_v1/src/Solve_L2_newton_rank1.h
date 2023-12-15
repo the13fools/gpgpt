@@ -91,9 +91,9 @@ public:
       
       OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
-      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
-      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
       OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
 
@@ -176,7 +176,7 @@ public:
     {
       appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e5;
-      appState->config->w_bound = 1e6;
+      appState->config->w_bound = 1e8;
       appState->config->w_curl = 1e1;
     }
 

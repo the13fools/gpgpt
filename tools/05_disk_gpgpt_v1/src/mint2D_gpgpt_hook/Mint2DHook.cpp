@@ -99,11 +99,19 @@ void Mint2DHook::updateRenderGeometry() {
     // std::cout << opt->get_current_x() << std::endl;
     Eigen::VectorXd tmp = opt->get_current_x();
     std::cout << tmp.rows() << " " << tmp.cols() << std::endl;
-    double cur_obj = opt->eval_func_at(tmp);
 
-    appState->os->cur_global_objective_val = cur_obj;
+    try{
+        double cur_obj = opt->eval_func_at(tmp);
 
-    // std::cout << "cur_obj " << cur_obj << std::endl;
+        appState->os->cur_global_objective_val = cur_obj;
+
+        std::cout << "cur_obj " << cur_obj << std::endl;
+    }
+    catch (std::runtime_error& e)
+    {
+        std::cout << "optimization crashing when evaluating the objective " << e.what() << std::endl;
+    }
+
     
 
 
@@ -278,6 +286,14 @@ void Mint2DHook::renderRenderGeometry()
             {
                 vectorField->setEnabled(true);
                 vectorFieldNeg->setEnabled(true);
+                vectorField->setVectorLengthScale(0.01);
+                vectorFieldNeg->setVectorLengthScale(0.01);
+
+                vectorField->setVectorRadius(0.001);
+                vectorFieldNeg->setVectorRadius(0.001);
+
+                
+                
             }
             else if (appState->show_frames)
             {

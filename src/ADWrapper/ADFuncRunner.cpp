@@ -99,6 +99,7 @@
             }
             catch(const std::exception& e)
             {
+              try{
                std::cout << "*** diagonally regularized hessian not PSD. failed to produce a descent direction.  Falling back on SVD projected hessian + increasing regularization weight. ***" << std::endl;
 
               this->eval_func_and_proj_hess_to_psd_local(x);
@@ -111,6 +112,12 @@
                 identity_weight = identity_weight * 10.;
               else 
                 assert(false); // this should never happen
+              }
+              catch(const std::exception& e)
+              {
+                std::cout << x << std::endl;
+                std::cout << H_proj << std::endl;
+              }
             }
 
             auto t2 = std::chrono::high_resolution_clock::now();
