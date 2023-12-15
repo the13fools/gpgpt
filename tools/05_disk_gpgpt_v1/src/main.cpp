@@ -10,7 +10,8 @@
 
 // #include "VizHook.h"
 
-#include "Solve_L2_newton_rank1.h"
+// #include "Solve_L2_newton_rank1.h"
+#include "MiNT_krushkal_rank2.h"
 #include "Mint2DHook.h"
 
 #include <thread>
@@ -44,19 +45,11 @@ void resetSimulation()
     if (!hook)
         return;
 
-  // double w_bound_prev = hook->w_bound;
-  // double w_smooth_prev = hook->w_smooth;
-  // double w_curl_prev = hook->w_curl;
-  // double w_s_perp_prev = hook->w_s_perp;
-
     std::cout << "try to reset" << std::endl;
     hook->reset();
     hook->appState->solveStatus = "reset state";
 
-  // hook->w_bound = w_bound_prev;
-  // hook->w_smooth = w_smooth_prev;
-  // hook->w_curl = w_curl_prev;
-  // hook->w_s_perp = w_s_perp_prev;
+
 
 }
 
@@ -135,7 +128,7 @@ int main(int argc, char **argv) {
   // Initialize polyscope
   polyscope::init();
 
-  hook = static_cast<Mint2DHook*>(new Solve_L2_newton_rank1());
+  hook = static_cast<Mint2DHook*>(new MiNT_krushkal_rank2());
 
 
 

@@ -23,7 +23,7 @@
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 2
+#define DOFS_PER_ELEMENT 4
 
 
 class MiNT_krushkal_rank2 : public Mint2DHook
@@ -32,13 +32,15 @@ public:
     MiNT_krushkal_rank2() : Mint2DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
       appState->solveType = "MiNT_krushkal_rank2";
-      appState->solveDescription = "This solver optimizes for an integrable rank2 vector field on a disk";
+      appState->solveDescription = "This solver optimizes for an integrable rank 2 vector field on a disk";
 
 
 
 
-      appState->primals_layout = {0, 2};
-      appState->moments_layout = {0, 0};
+      appState->primals_layout = {0, 4, 2}; 
+      // This says 4 dofs stored starting at 0 divided into 2 vectors 
+      
+    appState->moments_layout = {0, 0};
       // appState->deltas_layout = {2, 4};
       appState->deltas_layout = {2, 0};
 
@@ -89,13 +91,13 @@ public:
       /////////////////////////////
       // OptZoo::addConstTestTerm(func, *appState);
       
-      OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+    //   OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
-      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+    //   OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
+    //   OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
 
       // Update params specific to this solve here
       
@@ -138,9 +140,9 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
+        appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
-        x.segment<2>(nvars*i) = appState->frames.row(i);
+        x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
         
       }
@@ -192,7 +194,7 @@ public:
       Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        appState->frames.row(i) = x.segment<2>(nvars*i);
+        appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
 
         
@@ -225,7 +227,7 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        x.segment<2>(nvars*i) = appState->frames.row(i);
+        x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
       }
       _opt->_cur_x = x;
 
