@@ -1,18 +1,17 @@
-#ifndef CURLLOCALINTEGRATION_H
-#define CURLLOCALINTEGRATION_H
+#pragma once
 
 #include "FieldIntegration.h"
 
-// Compute s to minimize curl (Ray et al)
-class CurlLocalIntegration : public LocalFieldIntegration
-{
-public:
-    CurlLocalIntegration(double sSmoothnessReg) : sreg_(sSmoothnessReg) {}
+namespace SurfaceFields {
+    // Compute s to minimize curl (Ray et al)
+    class CurlLocalIntegration : public LocalFieldIntegration
+    {
+    public:
+        CurlLocalIntegration(double sSmoothnessReg) : sreg_(sSmoothnessReg) {}
 
-    void locallyIntegrateOneComponent(const Surface &surf, const Eigen::MatrixXd &v, Eigen::VectorXd &s);
+        void locallyIntegrateOneComponent(const Surface& surf, const Eigen::MatrixXd& v, Eigen::VectorXd& s);
 
-private:
-    double sreg_;
-};
-
-#endif
+    private:
+        double sreg_;
+    };
+}

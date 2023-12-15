@@ -23,7 +23,7 @@ template<int N>
  {
   public:
 
-    using ADFunc = TinyAD::ScalarFunction<N, double, long int>; 
+    using ADFunc = TinyAD::ScalarFunction<N, double, Eigen::Index>; 
     //decltype(TinyAD::scalar_function<N>(TinyAD::range(1)));
 
 

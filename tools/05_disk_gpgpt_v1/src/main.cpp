@@ -112,11 +112,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-
-
-  
-
-
   // Options
   polyscope::options::autocenterStructures = true;
   polyscope::view::windowWidth = 1024;
@@ -140,23 +135,12 @@ int main(int argc, char **argv) {
   hook->appState->directoryPath = args::get(inDir);
 
   if ( !( hook->appState->directoryPath.empty() )) {
-    // hook->initSimulation();
-    // hook->appState->objFilePath = args::get(inObj);
     hook->appState->shouldReload = true;
   }
-
-  // hook->initSimulation();
-  // std::cout << "nvars in opt: outside after init" << hook->opt->get_num_vars() << std::endl; 
 
   polyscope::state::userCallback = drawGUICallback;
   polyscope::options::programName = "gpgpt - MINT2D";
   polyscope::options::verbosity = 1;
-
-//   polyscope::GroundPlaneMode::None;
-// polyscope::options::groundPlaneEnabled = false;
-
-// polyscope::screenshotExtension = ".jpg";
-
 
   polyscope::show();
 

@@ -124,90 +124,47 @@ if(APPLE) # AND USE_OpenMP)
     endif()
 endif()
 
+# Add polyscope
+message("\n\n == Init dependencies \n")
 
-
-
-
-# Find Eigen
+# Eigen
 # find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# find_package (SuiteSparse 5.12 NO_MODULE)
+# suite-sparse
 message("build with suite-sparse")
 find_package(SuiteSparse REQUIRED)
 include_directories(${SUITESPARSE_INCLUDE_DIRS})
 
 
-
-
-
-# Add polyscope
-message("\n\n == Init dependencies \n")
-
-
-
 # Libigl
+option(LIBIGL_GLFW                "Build target igl::glfw"                OFF)
+option(LIBIGL_PNG                 "Build target igl::png"                 OFF)
+option(LIBIGL_IMGUI               "Build target igl::imgui"               OFF)
+option(LIBIGL_OPENGL              "Build target igl::opengl"              OFF)
+option(LIBIGL_PREDICATES          "Build target igl::predicates"          OFF)
+option(LIBIGL_COPYLEFT_COMISO     "Build target igl_copyleft::comiso"     OFF)
+option(LIBIGL_COPYLEFT_CORE       "Build target igl_copyleft::core"       ON)
+option(LIBIGL_COPYLEFT_TETGEN     "Build target igl_copyleft::tetgen"     OFF)
+option(LIBIGL_COPYLEFT_CGAL       "Build target igl_copyleft::cgal"       OFF)
+option(LIBIGL_RESTRICTED_TRIANGLE "Build target igl_restricted::triangle" OFF)
 include(libigl)
 
-# Enable the target igl::glfw
-# igl_include(glfw)
+# tinyad
+include(tinyad)
 
-include(FetchContent)
-FetchContent_Declare(
-  tinyad
-  GIT_REPOSITORY https://github.com/patr-schm/tinyad.git
-  GIT_TAG 75093e14ef0d7bb39657c5f3b2aba1251afaa38c
-)
-#FetchContent_MakeAvailable(tinyad)
+# polyscope
+include(polyscope)
 
-FetchContent_GetProperties(tinyad)
-if(NOT tinyad_POPULATED)
-  # Fetch the content using previously declared details
-  FetchContent_Populate(tinyad)
-  message(STATUS "tinyad_SOURCE_DIR: ${tinyad_SOURCE_DIR}")
-  message(STATUS "tinyad_BINARY_DIR: ${tinyad_BINARY_DIR}")
-  add_subdirectory(${tinyad_SOURCE_DIR} ${tinyad_BINARY_DIR})
-endif()
+# json
+include (json)
 
-####################################
+# args
+include (args)
 
-include(FetchContent)
-FetchContent_Declare(
-  polyscope
-  GIT_REPOSITORY https://github.com/nmwsharp/polyscope.git
-  GIT_TAG 2cd38b7496a1e8ff79f615920de2980295bedef7
-)
-#FetchContent_MakeAvailable(polyscope)
-
-FetchContent_GetProperties(polyscope)
-if(NOT polyscope_POPULATED)
-  # Fetch the content using previously declared details
-  FetchContent_Populate(polyscope)
-  message(STATUS "polyscope_SOURCE_DIR: ${polyscope_SOURCE_DIR}")
-  message(STATUS "polyscope_BINARY_DIR: ${polyscope_BINARY_DIR}")
-  add_subdirectory(${polyscope_SOURCE_DIR} ${polyscope_BINARY_DIR})
-endif()
-FetchContent_MakeAvailable(polyscope)
-
-
-FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
-FetchContent_MakeAvailable(json)
-
-FetchContent_Declare(args URL https://github.com/Taywee/args/archive/refs/tags/6.4.6.tar.gz)
-FetchContent_MakeAvailable(args)
-
-# add_subdirectory("/Userss/fool/Documents/mint/polyscope/build/src")
-
-# add_subdirectory("/Users/fool/Documents/mint/polyscope/build/deps")
-# add_subdirectory("/Users/fool/Documents/mint/polyscope/build/src")
-
-# Add your project files
-# file(GLOB SRC_FILES *.cpp)
-
-
-
-
+# spectra
+include(spectra)
 
 
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp)
@@ -219,10 +176,10 @@ file(GLOB ADWRAPPERFILES src/ADWrapper/*.cpp src/ADWrapper/*.h src/ADWrapper/*.h
 add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES} ${ADWRAPPERFILES} ${SURFACEFIELDS})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ${spectra_SOURCE_DIR}/include/Spectra)
 
-if(APPLE) # AND USE_OpenMP)
-  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD stdc++fs) # stdc++fs
+if(MSVC) # AND USE_OpenMP)
+  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD) # stdc++fs
 else() # AND USE_OpenMP)
   target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD stdc++fs) # c++experimental
 endif()

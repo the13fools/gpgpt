@@ -1,20 +1,18 @@
-#ifndef GNGLOBALINTEGRATION_H
-#define GNGLOBALINTEGRATION_H
+#pragma once
 
 #include "FieldIntegration.h"
 
-// Our method, based on Gauss-Newton optimization of theta and s
+namespace SurfaceFields {
+    // Our method, based on Gauss-Newton optimization of theta and s
+    class GNGlobalIntegration : public  GlobalFieldIntegration
+    {
+    public:
+        GNGlobalIntegration(int alternationIters, int powerIters) : outerIters_(alternationIters), powerIters_(powerIters) {}
 
-class GNGlobalIntegration : public  GlobalFieldIntegration
-{
-public:
-    GNGlobalIntegration(int alternationIters, int powerIters) : outerIters_(alternationIters), powerIters_(powerIters) {}
+        void globallyIntegrateOneComponent(const Surface& surf, const Eigen::MatrixXd& v, Eigen::VectorXd& scales, Eigen::VectorXd& theta);
 
-    void globallyIntegrateOneComponent(const Surface &surf, const Eigen::MatrixXd &v, Eigen::VectorXd &scales, Eigen::VectorXd &theta);
-    
-private:
-    int outerIters_;
-    int powerIters_;
-};
-
-#endif
+    private:
+        int outerIters_;
+        int powerIters_;
+    };
+}

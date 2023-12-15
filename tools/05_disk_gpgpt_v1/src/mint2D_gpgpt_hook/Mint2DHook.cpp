@@ -35,26 +35,26 @@
 void Mint2DHook::drawGUI() {
 
 
-// original gui also 
+    // original gui also 
 
-/* 
+    /*
 
-      ImGui::InputDouble("Smoothness Weight", &w_smooth);
-        ImGui::InputDouble("S Perp Weight", &w_s_perp);
-        ImGui::InputDouble("Curl Weight", &w_curl);
-        ImGui::InputDouble("Bound Weight", &w_bound);
+          ImGui::InputDouble("Smoothness Weight", &w_smooth);
+            ImGui::InputDouble("S Perp Weight", &w_s_perp);
+            ImGui::InputDouble("Curl Weight", &w_curl);
+            ImGui::InputDouble("Bound Weight", &w_bound);
 
 
-/// Whatever maybe make this a dropdown eventually 
-// From line 556 of imgui demo: https://skia.googlesource.com/external/github.com/ocornut/imgui/+/refs/tags/v1.73/imgui_demo.cpp
-            const char* element_names[Field_View::Element_COUNT] = { "Vector Norms", "Delta Norms", "Vector Dirichlet", "Symmetric Dirichlet", "Vector Curl", "Symmetric Curl", "free" };
-            const char* current_element_name = (current_element >= 0 && current_element < Field_View::Element_COUNT) ? element_names[current_element] : "Unknown";
-            ImGui::PushItemWidth(300);
-            ImGui::SliderInt("Shading Mode", (int *) &current_element, 0, Element_COUNT - 1, current_element_name);
-            ImGui::PopItemWidth();
-          
+    /// Whatever maybe make this a dropdown eventually
+    // From line 556 of imgui demo: https://skia.googlesource.com/external/github.com/ocornut/imgui/+/refs/tags/v1.73/imgui_demo.cpp
+                const char* element_names[Field_View::Element_COUNT] = { "Vector Norms", "Delta Norms", "Vector Dirichlet", "Symmetric Dirichlet", "Vector Curl", "Symmetric Curl", "free" };
+                const char* current_element_name = (current_element >= 0 && current_element < Field_View::Element_COUNT) ? element_names[current_element] : "Unknown";
+                ImGui::PushItemWidth(300);
+                ImGui::SliderInt("Shading Mode", (int *) &current_element, 0, Element_COUNT - 1, current_element_name);
+                ImGui::PopItemWidth();
 
-*/
+
+    */
 
 
 
@@ -62,36 +62,19 @@ void Mint2DHook::drawGUI() {
 }
 
 void Mint2DHook::updateRenderGeometry() {
-    // Update visualization data based on current state in appState
-
-    // Update the vertex positions and other data in Polyscope
-    // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
-    // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
-
-////
-//////  Here we calculate derived quantities. 
-
     // Check if need to reload, and do this if needed.
     if (appState->shouldReload) {
-
         std::cout << "do from file reload" << std::endl;
-
         pause();
-        // while(!this->isPaused())
-        // {
-        //     // wait for pause
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        // }
-        if(!this->isPaused())
+        if (!this->isPaused())
         {
             std::cout << "failed to pause" << std::endl;
         }
-
         initSimulation();
     }
     appState->updateRenderGeometryNextFrameIfPaused = false;
 
-/// 
+    /// 
     appState->os->norms_vec = appState->frames.rowwise().norm();
     appState->os->norms_delta = appState->deltas.rowwise().norm();
 
@@ -130,7 +113,7 @@ void Mint2DHook::updateRenderGeometry() {
     Eigen::VectorXd tmp = opt->get_current_x();
     std::cout << tmp.rows() << " " << tmp.cols() << std::endl;
 
-    try{
+    try {
         double cur_obj = opt->eval_func_at(tmp);
 
         appState->os->cur_global_objective_val = cur_obj;
@@ -144,10 +127,6 @@ void Mint2DHook::updateRenderGeometry() {
         std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
 
     }
-
-    
-
-
     std::cout << "update render geometry" << std::endl;
 
     outputData = new OutputState(*appState->os);
@@ -178,8 +157,6 @@ void Mint2DHook::updateRenderGeometry() {
     // outputData->frames.resize(appState->frames.rows(), 3);
     // outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
 
-
-    // 
     if (appState->shouldReload)
     {
         appState->currentFileID--;
@@ -193,45 +170,22 @@ void Mint2DHook::updateRenderGeometry() {
         std::string suffix = std::to_string(appState->currentFileID + 100000);
         appState->LogToFile(suffix);
 
-        if(appState->max_saved_index < appState->currentFileID)
+        if (appState->max_saved_index < appState->currentFileID)
         {
             appState->max_saved_index = appState->currentFileID;
         }
-
-
-        // Additional logging for any other fields in AppState as needed
     }
     appState->LogToFile("curr");
 
 
     // appState->zeroPassiveVars();
 
- 
-
-
-    // Update all of the calculated quantities of metadata.  
-
-
-    // Advance simulation statistics in gui. 
-
-
-
-
-
-    // // Handle the gui_free case for the Field_View enum
-    // if (appState->currentElement == Field_View::gui_free) {
-    //     // Implementation for gui_free case
-    //     if (appState->customVisualizationEnabled) {
-    //         // Custom visualization logic
-    //     }
-    // }
-
     // Request a redraw in Polyscope to update the visualization
     polyscope::requestRedraw();
 }
 
 
-    // Need to fill out viewer for each of: Field_View { vec_dirch, moment_dirch, sym_curl_residual, primal_curl_residual,
+// Need to fill out viewer for each of: Field_View { vec_dirch, moment_dirch, sym_curl_residual, primal_curl_residual,
 void Mint2DHook::renderRenderGeometry()
 {
 
@@ -242,14 +196,9 @@ void Mint2DHook::renderRenderGeometry()
     }
 
     // Depending on the current element view, render different quantities
-    // TODO update this to render smoothness and stripe patterns 
+    const std::string cur_field = fieldViewToFileStub(appState->current_element);
 
-
-    const char* cur_field = fieldViewToFileStub(appState->current_element).c_str();
-    
-    // std::cout << cur_field << std::endl;
-
-    Eigen::VectorXd cur_scalar_quantity; 
+    Eigen::VectorXd cur_scalar_quantity;
     switch (appState->current_element) {
         case Field_View::vec_norms:
             cur_scalar_quantity = outputData->norms_vec;
@@ -370,18 +319,26 @@ void Mint2DHook::renderRenderGeometry()
             
 
 
-            
-
-            // auto vectorFieldOrig = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field Orig", appState->frames);
         }
-
-        polyscope::requestRedraw();
-              
-
-
-
-
+        else if (appState->show_frames)
+        {
+            vectorField->setEnabled(true);
+            vectorFieldNeg->setEnabled(false);
+        }
+        else
+        {
+            vectorField->setEnabled(false);
+            vectorFieldNeg->setEnabled(false);
+        }
     }
+
+    polyscope::requestRedraw();
+
+
+
+
+
+}
 
 void Mint2DHook::pause() {
     PhysicsHook::pause();
@@ -389,7 +346,7 @@ void Mint2DHook::pause() {
     appState->solveStatus = "paused";
     std::cout << "paused" << std::endl;
 }
-    // Pause the simulati
+// Pause the simulati
 
 
 
@@ -410,7 +367,7 @@ void Mint2DHook::initSimulation() {
         // return;
     }
 
-  
+
 
     Eigen::MatrixXd V; // Temporary storage for vertices
     Eigen::MatrixXi F; // Temporary storage for faces
@@ -422,15 +379,22 @@ void Mint2DHook::initSimulation() {
 
     // Load mesh and config
     if (create_new_dir) {
-       // Load default mesh and set default config
+        // Load default mesh and set default config
         std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + appState->meshName + ".obj";
-        
+
         // std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
 
         std::cout << default_path << std::endl;
         if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {
             std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
-            return;
+
+            // tricky part for windows
+            default_path = std::string(SOURCE_PATH) + "/tools/shared/" + appState->meshName + ".obj";
+            if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {
+                std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
+                return;
+            }
+
         }
         appState->cur_surf = std::make_unique<Surface>(V, F);
 
@@ -442,7 +406,8 @@ void Mint2DHook::initSimulation() {
         //     std::cerr << "Failed to save default config to " << appState->directoryPath + "/config.json" << std::endl;
         // }
 
-    } else {
+    }
+    else {
 
         // fileParser = new FileParser(appState->directoryPath);
         fileParser = std::make_unique<FileParser>(appState->directoryPath);
@@ -460,42 +425,19 @@ void Mint2DHook::initSimulation() {
             return;
         }
         appState->cur_surf = std::make_unique<Surface>(V, F);
-
-        // appState->shouldReload = true;
-
-        
-
-
-        // load mesh from file 
-
-
-
-        // fileParser->
-        // bool bfraExists = fileParser.parseLargestFile((appState->frames), FileType::BFRA);
-        // bool bmomExists = fileParser.parseLargestFile((appState->deltas), FileType::BMOM);
-
-
-            // Deserialize configuration from a file
-        // if (!Serialization::deserializeConfig(appState->config, appState->directoryPath + "/config.json")) {
-        //     std::cerr << "Failed to load config from " << appState->directoryPath + "/config.json" << std::endl;
-        //     // Handle error, possibly set default config
-        // }
- 
     }
 
-    // fieldViewActive = 
-
     std::cout << "V.rows() " << V.rows() << " F.rows() " << F.rows() << std::endl;
- 
- 
+
+
     // Set mesh data to AppState
     appState->V = V;
     appState->F = F;
 
     if (appState->shouldReload)
     {
-        
-        if ( appState->currentFileID == -1 )
+
+        if (appState->currentFileID == -1)
         {
             this->resetAppState();
             initializeLogFolder();
@@ -509,17 +451,11 @@ void Mint2DHook::initSimulation() {
 
     }
 
-
-
-
-    // Initialize other parameters and logging folder
-    // initializeOtherParameters();
-
     if (appState->shouldReload == true)
     {
         std::cout << " reload in progress " << std::endl;
 
-        if ( appState->currentFileID == -1 )
+        if (appState->currentFileID == -1)
         {
             this->resetAppState();
             appState->currentFileID = appState->max_saved_index;
@@ -527,7 +463,7 @@ void Mint2DHook::initSimulation() {
             initConfigValues();
         }
 
-        
+
         loadPrimaryData();
         loadGuiState();
         // 
@@ -571,7 +507,8 @@ bool Mint2DHook::loadPrimaryData() {
                 std::cerr << "Failed to load data for " << info.prefix << " from file: " << file << std::endl;
                 success = false;
             }
-        } else {
+        }
+        else {
             std::cerr << "File not found for " << info.prefix << " with ID: " << appState->currentFileID << std::endl;
             success = false;
         }
@@ -580,15 +517,16 @@ bool Mint2DHook::loadPrimaryData() {
     std::string config_path = fileParser->getFileWithID("config_", ".json", appState->currentFileID);
     std::cout << "config_path " << config_path << std::endl;
     if (!config_path.empty()) {
-        if ( !Serialization::deserializeConfig(*appState->config, config_path) ) {
+        if (!Serialization::deserializeConfig(*appState->config, config_path)) {
             std::cerr << "Failed to load data for " << "config_" << " from file: " << config_path << std::endl;
             success = false;
         }
-    } else {
+    }
+    else {
         std::cerr << "File not found for " << "config_" << " with ID: " << appState->currentFileID << std::endl;
         success = false;
     }
-    
+
 
 
 
@@ -621,11 +559,13 @@ bool Mint2DHook::loadGuiState() {
             if (!Serialization::deserializeVector(data, fieldFile)) {
                 std::cerr << "Failed to load data for " << fieldStub << " from file: " << fieldFile << std::endl;
                 success = false;
-            } else {
+            }
+            else {
                 // Update the correct field in OutputState based on 'view'
                 // Example: appState.os->norms_vec = data;
             }
-        } else {
+        }
+        else {
             std::cerr << "File not found for " << fieldStub << " with ID: " << appState->currentFileID << std::endl;
             success = false;
         }
@@ -645,12 +585,12 @@ bool Mint2DHook::simulateOneStep() {
     if (cur_iter < max_iters && cur_obj > convergence_eps && appState->keepSolving)
     {
         cur_iter++;
-        std::cout << std::endl << "*** GLOBAL STEP: " << cur_iter << "*** "  << std::endl;
+        std::cout << std::endl << "*** GLOBAL STEP: " << cur_iter << "*** " << std::endl;
         std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
-        std::cout << "nvars in opt" << opt->get_num_vars() << std::endl; 
-        
+        std::cout << "nvars in opt" << opt->get_num_vars() << std::endl;
 
-        opt->take_newton_step( opt->get_current_x() );
+
+        opt->take_newton_step(opt->get_current_x());
         double rel_res_correction = 1. / (cur_obj);
         appState->cur_rel_residual = std::max(opt->_dec * rel_res_correction, 1e-13);
         appState->cur_abs_residual = opt->_dec;
@@ -678,18 +618,18 @@ bool Mint2DHook::simulateOneStep() {
         updateAppStateFromOptState();
         appState->solveStatus = "finished one step";
 
-            
 
-     }
-        else if (cur_iter == max_iters) 
-        {
-            // TINYAD_DEBUG_OUT("Final energy: " << func.eval(opt->get_current_x()));
-            cur_iter++;
-        }
-        else{
-            std::cout << "**** Pause Simulation ****" << std::endl;
-            this->pause();
-        }
+
+    }
+    else if (cur_iter == max_iters)
+    {
+        // TINYAD_DEBUG_OUT("Final energy: " << func.eval(opt->get_current_x()));
+        cur_iter++;
+    }
+    else {
+        std::cout << "**** Pause Simulation ****" << std::endl;
+        this->pause();
+    }
 
     appState->currentIteration = cur_iter;
 
@@ -704,7 +644,7 @@ void Mint2DHook::resetAppState() {
     appState->currentIteration = 0;
     // appState->currentFileID = 0;
     appState->maxIterations = 9999; // Default maximum iterations
-    appState->convergenceEpsilon =  1e-12;// 1e-9;
+    appState->convergenceEpsilon = 1e-12;// 1e-9;
     appState->outerLoopIteration = 0;
 
     appState->override_bounds.lower = 0;
@@ -744,44 +684,44 @@ void Mint2DHook::resetAppState() {
     polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
 }
 
-    //     appState->renderFrames = Eigen::MatrixXd::Zero(F.rows(), 3);
+//     appState->renderFrames = Eigen::MatrixXd::Zero(F.rows(), 3);
 
-    // appState->frames = Eigen::MatrixXd::Zero(F.rows(), 2);
-    // appState->moments = Eigen::MatrixXd::Zero(F.rows(), 0);
-    // appState->deltas = Eigen::MatrixXd::Zero(F.rows(), 4);
-    // //   metadata = Eigen::MatrixXd::Zero(F.rows(), 2);
-    // appState->norms_vec = Eigen::VectorXd::Zero(F.rows());
-    // appState->norms_delta = Eigen::VectorXd::Zero(F.rows());
-    // appState->curls_sym = Eigen::VectorXd::Zero(F.rows());
-    // appState->curls_primal = Eigen::VectorXd::Zero(F.rows());
-    // appState->smoothness_primal = Eigen::VectorXd::Zero(F.rows());
-    // appState->smoothness_sym = Eigen::VectorXd::Zero(F.rows());
+// appState->frames = Eigen::MatrixXd::Zero(F.rows(), 2);
+// appState->moments = Eigen::MatrixXd::Zero(F.rows(), 0);
+// appState->deltas = Eigen::MatrixXd::Zero(F.rows(), 4);
+// //   metadata = Eigen::MatrixXd::Zero(F.rows(), 2);
+// appState->norms_vec = Eigen::VectorXd::Zero(F.rows());
+// appState->norms_delta = Eigen::VectorXd::Zero(F.rows());
+// appState->curls_sym = Eigen::VectorXd::Zero(F.rows());
+// appState->curls_primal = Eigen::VectorXd::Zero(F.rows());
+// appState->smoothness_primal = Eigen::VectorXd::Zero(F.rows());
+// appState->smoothness_sym = Eigen::VectorXd::Zero(F.rows());
 
 
 
-void Mint2DHook::initCurlOperators() 
+void Mint2DHook::initCurlOperators()
 {
     int nedges = appState->cur_surf->nEdges();
     appState->C_primal.resize(nedges, 2);
     appState->C_sym_2.resize(nedges, 4);
     appState->C_sym_4.resize(nedges, 16); // todo add metric to make in reduced form.  
 
-        // e_projs2.resize(nedges,4); 
+    // e_projs2.resize(nedges,4); 
 
 
     std::vector<Eigen::Matrix2d> rots;// 
     std::vector<Eigen::Matrix4d> rstars;
     std::vector<Eigen::Vector4d> e_projs;
 
- 
+
 
     for (int i = 0; i < nedges; i++)
     {
-        Eigen::Vector3d estart = appState->V.row(appState->cur_surf->data().edgeVerts(i,0));
-        Eigen::Vector3d eend = appState->V.row(appState->cur_surf->data().edgeVerts(i,1));
+        Eigen::Vector3d estart = appState->V.row(appState->cur_surf->data().edgeVerts(i, 0));
+        Eigen::Vector3d eend = appState->V.row(appState->cur_surf->data().edgeVerts(i, 1));
         Eigen::Vector3d edge_dir = (eend - estart).normalized();
         Eigen::Matrix2d e_to_x;
-        e_to_x << edge_dir(0),edge_dir(1),-edge_dir(1),edge_dir(0); // Note this rotates the edge into [1,0]
+        e_to_x << edge_dir(0), edge_dir(1), -edge_dir(1), edge_dir(0); // Note this rotates the edge into [1,0]
         // std::cout << e_to_x * edge_dir.head(2) << std::endl<< std::endl; // sanity check.
 // std::cout << flatten(edge_dir.head(2) * edge_dir.head(2).transpose()) << std::endl<< std::endl;
 
@@ -806,16 +746,16 @@ void Mint2DHook::initializeLogFolder() {
     // Retrieve current time
     auto now = std::chrono::system_clock::now();
     auto date = date::floor<date::days>(now);
-    auto ymd = date::year_month_day{date};
+    auto ymd = date::year_month_day{ date };
     auto time = date::make_time(std::chrono::duration_cast<std::chrono::milliseconds>(now - date));
 
     // Construct the log folder path using the mesh name and the current date-time
     std::ostringstream folderStream;
     folderStream << "../../results/" << appState->solveType << "/" << appState->meshName << "_"
-                 << static_cast<unsigned>(ymd.month()) << "_"
-                 << static_cast<unsigned>(ymd.day()) << "_"
-                 << time.hours().count() << "_"
-                 << time.minutes().count();
+        << static_cast<unsigned>(ymd.month()) << "_"
+        << static_cast<unsigned>(ymd.day()) << "_"
+        << time.hours().count() << "_"
+        << time.minutes().count();
 
     // std::cout << "Log folder path: " << folderStream.str() << std::endl;
 
@@ -842,7 +782,7 @@ void Mint2DHook::initBoundaryConditions() {
     // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
 
     Eigen::VectorXi boundaryFaces;
-    igl::on_boundary(appState->F,boundaryFaces, K);
+    igl::on_boundary(appState->F, boundaryFaces, K);
 
     appState->bound_face_idx = boundaryFaces;
 
@@ -850,12 +790,13 @@ void Mint2DHook::initBoundaryConditions() {
     for (int i = 0; i < boundaryFaces.size(); ++i) {
         if (boundaryFaces(i) == 1) { // If face is on the boundary
             Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
-                                           appState->V.row(appState->F(i, 1)) +
-                                           appState->V.row(appState->F(i, 2))) / 3.0;
+                appState->V.row(appState->F(i, 1)) +
+                appState->V.row(appState->F(i, 2))) / 3.0;
 
             if (centroid.norm() < 0.45) { // Custom condition for boundary faces
                 boundaryFaces(i) = -1; // Mark for special handling or exclusion
-            } else {
+            }
+            else {
                 // Set frame orientation based on the centroid
                 Eigen::Vector2d frame = Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
                 appState->frames.row(i) = frame;
@@ -934,12 +875,12 @@ void Mint2DHook::finalizeIteration() {
 
 
 
-    void radialBoundConstraints(const Eigen::MatrixXd& surfNormals, const Eigen::MatrixXd& surfCenters, 
+    void radialBoundConstraints(const Eigen::MatrixXd& surfNormals, const Eigen::MatrixXd& surfCenters,
                             int nAugFrames, const std::string& logname,
                             Eigen::SparseMatrix<double>& B_op_sparse, Eigen::VectorXd& targ_moms);
 
 
-void radialBoundConstraints(const Eigen::MatrixXd& surfNormals, const Eigen::MatrixXd& surfCenters, 
+void radialBoundConstraints(const Eigen::MatrixXd& surfNormals, const Eigen::MatrixXd& surfCenters,
                             int nAugFrames, const std::string& logname,
                             Eigen::SparseMatrix<double>& B_op_sparse, Eigen::VectorXd& targ_moms) {
     // ... existing initialization logic ...
