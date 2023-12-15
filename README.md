@@ -1,6 +1,6 @@
 Use this starter project to accelerate your geometry processing research, yesterday. 
 
-# 🤝 libigl 🤝 TinyAD 🤝 Polyscope 🤝 Physics thread 🤝
+# 🤝 libigl 🤝 TinyAD 🤝 Polyscope 🤝 Physics thread 🤝 foliations 🤝
 
 Welcome to the repository for the wonderful, wonderous, GPGPT!
 
@@ -20,6 +20,37 @@ If you want higher fidelity, by a path tracer like the one in blender, using scr
 animations can then be produced using some ffmpeg scripts we also bake in.  
 
 TODO, a solver, maybe nasoq.  Enzyme, the autodiff tool.  what else?  
+
+# Main Attraction #1 
+
+Mint2D.  
+
+This is a reference implementation of the theory in the companion draft submission.  
+
+Here we implement, blah blah blah.  
+
+
+# Main Attraction #2 
+
+Mint3D.  In which we provide a solution for recovering smooth integrable symmetric frame fields subject to various boundary conditions and optimization objectives.  
+
+In a small step from Mint2D, we implement our primary contribution in this work.  
+
+---
+
+To open a nut, one can act like Serre and strike with unrelenting force, but [I] would gradually soak it to soften it, and almost without effort eventually open it.
+
+       - Grothendieck
+
+# Main Attraction #3 
+
+An open source reference implementation of cube cover.  This powerful technique is broadly useful but there is not currently an avaliable reference implementation for the community to use, this project addresses this gap in the open source geometry processing software landscape.  
+
+
+
+
+
+
 
 --------
 
@@ -109,10 +140,11 @@ https://github.com/glfw/glfw/issues/1743#issuecomment-1229177189
 
 For now until we improve the cmake file we added the following to our ~/.zshrc
 
+```
 export CC=$(which clang)
 export CXX=$(which g++-13)
 export OpenMP_ROOT=$(brew --prefix)/opt/libomp
-
+```
 
 BTW, todo: how to enable gdb on mac https://stackoverflow.com/a/10441587
 

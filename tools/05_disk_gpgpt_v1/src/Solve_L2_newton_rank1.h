@@ -59,9 +59,9 @@ public:
     virtual void initSimulation()
     {
 
-      appState->meshName = "circle_1000";
+      // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
-      // appState->meshName = "circle";
+      appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
       
@@ -91,7 +91,7 @@ public:
       
       OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
-      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 

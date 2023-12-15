@@ -42,7 +42,7 @@ public:
       
     appState->moments_layout = {0, 0};
       // appState->deltas_layout = {2, 4};
-      appState->deltas_layout = {2, 0};
+      appState->deltas_layout = {0, 0};
 
       assert(DOFS_PER_ELEMENT == (appState->primals_layout.size + appState->moments_layout.size + appState->deltas_layout.size));
 
@@ -74,7 +74,7 @@ public:
       Mint2DHook::initSimulation();
 
       // move this inside mint2d
-      appState->solveStatus = "init L2 newton rank 1";
+      appState->solveStatus = "init " + appState->solveType;
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
