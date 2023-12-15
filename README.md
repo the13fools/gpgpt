@@ -66,6 +66,7 @@ This example repository tries to be extremely easy to install, batteries include
 
 This repository includes a lot of gpt generated code, but its a cyborg project with lots of other snippets mixed in.  It's partially an experiment of working with a large language model.  
 
+
 ## Compile
 
 Compile this project using the standard cmake routine:
@@ -75,7 +76,7 @@ Compile this project using the standard cmake routine:
     cmake ..
     make
 
-This should find and build the dependencies and create a `example` binary.
+This should find and build the dependencies and create a `bin/##` binary.
 
 ## Run
 
@@ -89,6 +90,34 @@ A glfw app should launch displaying an animating Armadillo parametrization.
 
 _Derived from
 [parametrization_libigl.cc](https://github.com/patr-schm/TinyAD-Examples/blob/main/apps/parametrization_libigl.cc)_
+
+## SUPER ANNOYING DETAIL
+
+install suite sparse and switch out the solver that tiny ad uses like this: 
+
+```
+#pragma once
+
+// #include <Eigen/SparseCholesky>
+#include <Eigen/CholmodSupport>
+
+namespace TinyAD
+{
+
+template <
+        typename PassiveT = double,
+        typename SolverT =  Eigen::CholmodSupernodalLLT< Eigen::SparseMatrix<PassiveT>> >
+struct LinearSolver
+{
+    SolverT solver;
+    bool sparsity_pattern_dirty = true;
+};
+
+}
+
+// Eigen::SimplicialLDLT<Eigen::SparseMatrix<PassiveT>>>
+
+```
 
 ## Ordering
 
