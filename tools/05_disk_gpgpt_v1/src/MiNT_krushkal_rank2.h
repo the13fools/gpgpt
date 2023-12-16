@@ -18,7 +18,7 @@
 #include "ADWrapper/ADFunc_TinyAD_Instance.h"
 
 
-
+#include <igl/on_boundary.h>
 #include <igl/writeDMAT.h>
 
 #include "OptZoo.h"
@@ -92,13 +92,14 @@ public:
     //    OptZoo::addConstTestTerm(func, *appState);
       
     
-    OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+    // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+    OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
-      OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
+    //   OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
 
-      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
+    //   OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
-    //   OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
     //   OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
 
@@ -134,7 +135,7 @@ public:
     }
 
 
-    void Mint2DHook::initBoundaryConditions() {
+    virtual void initBoundaryConditions() {
         // Assuming boundary faces are identified in AppState
         Eigen::MatrixXi K;
 
@@ -144,6 +145,8 @@ public:
         igl::on_boundary(appState->F,boundaryFaces, K);
 
         appState->bound_face_idx = boundaryFaces;
+
+        appState->frames.resize(appState->F.rows(), DOFS_PER_ELEMENT);
 
         // Initialize boundary conditions
         for (int i = 0; i < boundaryFaces.size(); ++i) {
@@ -156,7 +159,13 @@ public:
                     boundaryFaces(i) = -1; // Mark for special handling or exclusion
                 } else {
                     // Set frame orientation based on the centroid
-                    Eigen::Vector2d frame = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
+                    Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
+
+                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(4);
+                    frame(0) = vec(0);
+                    frame(1) = vec(1);
+                    frame(2) = -vec(1);
+                    frame(3) = vec(0);
                     appState->frames.row(i) = frame;
                 }
             }

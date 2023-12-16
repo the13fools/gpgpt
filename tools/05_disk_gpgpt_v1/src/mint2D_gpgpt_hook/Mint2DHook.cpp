@@ -796,8 +796,7 @@ void Mint2DHook::initializeOtherParameters() {
 }
 
 
-
-virtual void Mint2DHook::initBoundaryConditions() {
+void Mint2DHook::initBoundaryConditions() {
     // Assuming boundary faces are identified in AppState
     Eigen::MatrixXi K;
 
