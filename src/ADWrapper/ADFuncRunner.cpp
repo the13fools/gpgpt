@@ -100,7 +100,7 @@
             catch(const std::exception& e)
             {
               try{
-               std::cout << "*** diagonally regularized hessian not PSD. failed to produce a descent direction.  Falling back on SVD projected hessian + increasing regularization weight. ***" << std::endl;
+               std::cout << "*** diagonally regularized hessian with identity weight: " << identity_weight << " not PSD. failed to produce a descent direction.  Falling back on SVD projected hessian + increasing regularization weight. ***" << std::endl;
 
               this->eval_func_and_proj_hess_to_psd_local(x);
               f = this->get_fval_at_x(); // maybe don't need these two lines 

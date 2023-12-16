@@ -27,6 +27,8 @@ public:
     
     Eigen::VectorX<T_active> dofs_curr_elem;
     std::vector< Eigen::VectorX<T_active> > primals_rank1;
+    std::vector< T_active > primal_norms;
+    
     T_active frame_norm_euclidian;
 
     Eigen::VectorX<T_active> primals;
@@ -56,9 +58,11 @@ public:
         
         frame_norm_euclidian = 0;
         primals_rank1.resize(primal_rank);
+        primal_norms.resize(primal_rank);
         for (int v_i = 0; v_i < primal_rank; v_i++)
         {
             primals_rank1[v_i] = dofs_curr_elem.segment(primals_layout.start + v_i*rank1_size, rank1_size);
+            primal_norms[v_i] = primals_rank1[v_i].squaredNorm();
             // frame_norm_euclidian += primals_rank1[v_i].squaredNorm();
         }
 
@@ -119,6 +123,11 @@ public:
         self_data.set_primals_rank1(appState.primals_layout);
         
         self_data.curr_idx = f_idx;
+
+        
+
+
+
 
         L2_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
         L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);

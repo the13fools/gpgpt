@@ -89,9 +89,12 @@ public:
       ///
       /// convenient auto-diff with sparse hessians is quite new, there's a lot to explore! 
       /////////////////////////////
-      // OptZoo::addConstTestTerm(func, *appState);
+    //    OptZoo::addConstTestTerm(func, *appState);
       
-    //   OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+    
+    OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+
+      OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
 
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
@@ -130,6 +133,49 @@ public:
 
     }
 
+
+    void Mint2DHook::initBoundaryConditions() {
+        // Assuming boundary faces are identified in AppState
+        Eigen::MatrixXi K;
+
+        // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
+
+        Eigen::VectorXi boundaryFaces;
+        igl::on_boundary(appState->F,boundaryFaces, K);
+
+        appState->bound_face_idx = boundaryFaces;
+
+        // Initialize boundary conditions
+        for (int i = 0; i < boundaryFaces.size(); ++i) {
+            if (boundaryFaces(i) == 1) { // If face is on the boundary
+                Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
+                                            appState->V.row(appState->F(i, 1)) +
+                                            appState->V.row(appState->F(i, 2))) / 3.0;
+
+                if (centroid.norm() < 0.45) { // Custom condition for boundary faces
+                    boundaryFaces(i) = -1; // Mark for special handling or exclusion
+                } else {
+                    // Set frame orientation based on the centroid
+                    Eigen::Vector2d frame = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
+                    appState->frames.row(i) = frame;
+                }
+            }
+        }
+
+        appState->frames_orig = appState->frames;
+
+        // 
+
+        // 
+
+    }
+
+
+
+
+
+
+
 // Init state and clone it to the appstate in order to make the visualization accurate.  
     void init_opt_state()
     {
@@ -138,6 +184,7 @@ public:
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Eigen::VectorXd x = opt->get_current_x();
+      appState->frames.resize(nelem, DOFS_PER_ELEMENT);
       for(int i = 0; i < nelem; i++)
       {
         appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;

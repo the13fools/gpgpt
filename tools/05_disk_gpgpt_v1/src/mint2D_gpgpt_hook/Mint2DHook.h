@@ -57,7 +57,7 @@ public:
     void resetAppState();
     void initializeLogFolder(); 
     void initializeOtherParameters(); 
-    void initBoundaryConditions();
+    virtual void initBoundaryConditions();
     void initCurlOperators();
 
     bool loadPrimaryData();

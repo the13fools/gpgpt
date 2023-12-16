@@ -28,7 +28,7 @@ template<int N>
 
 
 // the const test term tried to make all the vectors the all ones or somethgn.
-    static void addConstTestTerm(ADFunc& func, const AppState& appState) {
+    static void addConstTestTerm(ADFunc& func, AppState& appState) {
 
         std::cout << "add const obj" << std::endl;
 
@@ -37,35 +37,35 @@ template<int N>
 
      // Evaluate element using either double or TinyAD::Double
         using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
 
-
-
-        // Get variable 2D vertex positions
         Eigen::Index f_idx = element.handle;
-        Eigen::VectorX<T> s_curr = element.variables(f_idx);
-        Eigen::Vector2<T> curr =  s_curr.head(2);
-        Eigen::Vector4<T> delta = s_curr.tail(4);
+//         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
 
-        Eigen::Matrix2<T> currcurr = curr*curr.transpose();
-        Eigen::Vector4<T> currcurrt = flatten(currcurr);
+// // Exit early if on a boundary element. 
+//         if (bound_face_idx(f_idx) == 1)
+//         {
+//             return T(0);
+//         }
 
-        Surface cur_surf = *(appState.cur_surf);
-
-        T w_bound = appState.config->w_bound;
+        ProcElement<T,VAR> e; 
+        // e.setElementVars(appState, f_idx, s_curr);
+        e.setSelfData(appState, f_idx, element);
+        // e.setNeighborData(appState, f_idx, element);
 
         if (f_idx == 0)
         {
-            // std::cout << "eval const obj" << std::endl;
 
-            // std::cout << " w_bound " << w_bound << " curr " << curr << " delta " << delta << std::endl;
         }
 
 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
       
-        Eigen::Vector2<T> targ = Eigen::Vector2<T>::Ones();
+        Eigen::VectorX<T> targ = Eigen::VectorX<T>::Ones(N);
+
+        Eigen::VectorX<T> curr = e.self_data.dofs_curr_elem;
         
-        return .00001*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
+        return .001*(curr-targ).squaredNorm(); // + w_bound*delta.squaredNorm();
       
 
 
@@ -75,6 +75,64 @@ template<int N>
  
 
 }
+
+
+// the const test term tried to make all the vectors the all ones or somethgn.
+static void addUnitNormTerm(ADFunc& func, AppState& appState) {
+
+        std::cout << "add unit norm (ginzburg-landau) obj" << std::endl;
+
+    func.template add_elements<1>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+        using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
+
+        Eigen::Index f_idx = element.handle;
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+// Exit early if on a boundary element. 
+        if (bound_face_idx(f_idx) == 1)
+        {
+            return T(0);
+        }
+
+        ProcElement<T,VAR> e; 
+        // e.setElementVars(appState, f_idx, s_curr);
+        e.setSelfData(appState, f_idx, element);
+        // e.setNeighborData(appState, f_idx, element);
+
+        if (f_idx == 0)
+        {
+
+        }
+        T ret = T(0);
+        T targ = T(1);
+
+        for (int i = 0; i < e.self_data.primal_norms.size(); i++)
+        {
+            T curr_diff = e.self_data.primal_norms[i] - targ;
+            ret = ret + curr_diff*curr_diff;
+        }
+
+        return ret; 
+
+
+        // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+      
+        // Eigen::Vector2<T> targ = Eigen::Vector2<T>::Ones();
+        
+        // return .00001*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
+      
+
+
+
+    });
+
+ 
+
+}
+
 
 
 // The pinned boundary condition.  
@@ -90,14 +148,9 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
         using T = TINYAD_SCALAR_TYPE(element);
         using VAR = std::decay_t<decltype(element)>; // TINYAD_VARIABLES_TYPE(element);
 
-
-
         // Get boundary annotations 
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
         Eigen::Index f_idx = element.handle;
-
-
-        
 
         if ((int)f_idx == 0)
         {
@@ -110,9 +163,11 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
             ProcElement<T,VAR> e; 
             e.setSelfData(appState, f_idx, element);
 
-            Eigen::Vector2<T> curr = e.self_data.primals_rank1[0];
+            // Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
+            Eigen::VectorX<T> curr = e.self_data.primals;
 
-            Eigen::Vector2<T> targ = appState.frames_orig.row(f_idx);
+
+            Eigen::VectorX<T> targ = appState.frames_orig.row(f_idx);
             return e.w_bound*(curr-targ).squaredNorm(); // + e.w_bound*e.self_data.delta.squaredNorm();
         }
 
@@ -123,7 +178,6 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
         //     T ret = e.w_bound*e.self_data.delta.squaredNorm();
         //     for(int i = 0; i < 3; i++)
         //     {
-            
         //       int neighbor_edge_idx = e.cur_surf->data().faceNeighbors(f_idx, i);
         //       if(neighbor_edge_idx > -1)
         //       {
@@ -147,6 +201,46 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
  
 
 }
+
+
+// // The pinned boundary condition.  
+// // TODO,  add in other boundary conditions like mixed neumann and free for meshing examples.  
+// static void addPinnedBoundaryTerm_rank2_radial(ADFunc& func, AppState& appState) {
+//     std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
+//     func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+//     {
+
+//      // Evaluate element using either double or TinyAD::Double
+//         using T = TINYAD_SCALAR_TYPE(element);
+//         using VAR = std::decay_t<decltype(element)>; // TINYAD_VARIABLES_TYPE(element);
+
+//         // Get boundary annotations 
+//         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+//         Eigen::Index f_idx = element.handle;
+
+//         if ((int)f_idx == 0)
+//         {
+//             // std::cout << "eval boundary obj" << std::endl;
+//         }
+
+//         // Dirichlet (i.e. pinned) boundary condition
+//         if (bound_face_idx(f_idx) == 1)
+//         {
+//             ProcElement<T,VAR> e; 
+//             e.setSelfData(appState, f_idx, element);
+
+//             Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
+
+//             Eigen::VectorX<T> targ = appState.frames_orig.row(f_idx);
+//             return e.w_bound*(curr-targ).squaredNorm(); // + e.w_bound*e.self_data.delta.squaredNorm();
+//         }
+
+
+//         // Not a boundary element
+//         return T(0);
+
+//     });
+// }
 
 // Deps primal vars 
 static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
@@ -318,7 +412,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
           {
             
             primal_dirichlet_term += (e.neighbor_data.at(i).primals - e.self_data.primals).squaredNorm();
-            dirichlet_term += (e.neighbor_data.at(i).L_2_primals - e.self_data.L_2_primals).squaredNorm() * scale_factor;
+            dirichlet_term += (e.neighbor_data.at(i).L_2_krushkal - e.self_data.L_2_krushkal).squaredNorm() * scale_factor;
           }
 
           // T primal_dirichlet_term = (a - e.self_data.curr).squaredNorm() + (b - e.self_data.curr).squaredNorm() + (c - e.self_data.curr).squaredNorm();

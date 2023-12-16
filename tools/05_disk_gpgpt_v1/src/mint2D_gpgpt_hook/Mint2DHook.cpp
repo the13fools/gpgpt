@@ -125,8 +125,25 @@ void Mint2DHook::updateRenderGeometry() {
 
     // renderState = new AppState(*appState);
 
-    outputData->frames.resize(appState->frames.rows(), 3);
-    outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
+    outputData->frames.clear();
+
+    int frame_rank = appState->primals_layout.rank;
+    int vec_dofs = appState->primals_layout.size / frame_rank;
+    int frows = appState->frames.rows();
+
+    if (vec_dofs != 2 )
+        std::cout << "wrong number of dofs for mint2d" << std::endl;
+
+    for(int vid = 0; vid < frame_rank; vid++)
+    {
+        Eigen::MatrixXd vec_cur = Eigen::MatrixXd::Zero(appState->frames.rows(), 3);
+
+        vec_cur << appState->frames.block(0, vid * vec_dofs, frows, vec_dofs),  Eigen::MatrixXd::Zero(frows, 1);
+        outputData->frames.push_back(vec_cur);
+    }
+
+    // outputData->frames.resize(appState->frames.rows(), 3);
+    // outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
 
 
     // 
@@ -273,38 +290,51 @@ void Mint2DHook::renderRenderGeometry()
             //  std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
             //  std::cout << "renderState->frames.rows() " << renderState->frames.rows() << std::endl;
             //  polyscope::getSurfaceMesh("c");
+            
+            int num_vecs = outputData->frames.size();
+            for(int v = 0; v < num_vecs; v++)
+            {
+
+                Eigen::MatrixXd cur_vec = outputData->frames[v];
 
 
-            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field", outputData->frames);
-            vectorField->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
+                double color_shift = (v+1.) * 1.0 / num_vecs;
+
+                auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field " + v, cur_vec);
+                vectorField->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+                auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
+                vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+
+                if(appState->show_frames && appState->show_frames_as_lines)
+                {
+                    vectorField->setEnabled(true);
+                    vectorFieldNeg->setEnabled(true);
+                    vectorField->setVectorLengthScale(0.01);
+                    vectorFieldNeg->setVectorLengthScale(0.01);
+
+                    vectorField->setVectorRadius(0.001);
+                    vectorFieldNeg->setVectorRadius(0.001);
+
+                    
+                    
+                }
+                else if (appState->show_frames)
+                {
+                    vectorField->setEnabled(true);
+                    vectorFieldNeg->setEnabled(false);
+                }
+                else 
+                {
+                    vectorField->setEnabled(false);
+                    vectorFieldNeg->setEnabled(false);
+                }
+
+
+            }
+
+
             
 
-            auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative)", (-1.) * outputData->frames);
-            vectorFieldNeg->setVectorColor(glm::vec3(0.7, 0.7, 0.7));
-
-            if(appState->show_frames && appState->show_frames_as_lines)
-            {
-                vectorField->setEnabled(true);
-                vectorFieldNeg->setEnabled(true);
-                vectorField->setVectorLengthScale(0.01);
-                vectorFieldNeg->setVectorLengthScale(0.01);
-
-                vectorField->setVectorRadius(0.001);
-                vectorFieldNeg->setVectorRadius(0.001);
-
-                
-                
-            }
-            else if (appState->show_frames)
-            {
-                vectorField->setEnabled(true);
-                vectorFieldNeg->setEnabled(false);
-            }
-            else 
-            {
-                vectorField->setEnabled(false);
-                vectorFieldNeg->setEnabled(false);
-            }
 
             
 
@@ -767,7 +797,7 @@ void Mint2DHook::initializeOtherParameters() {
 
 
 
-void Mint2DHook::initBoundaryConditions() {
+virtual void Mint2DHook::initBoundaryConditions() {
     // Assuming boundary faces are identified in AppState
     Eigen::MatrixXi K;
 

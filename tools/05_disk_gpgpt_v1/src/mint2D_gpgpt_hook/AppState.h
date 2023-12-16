@@ -50,7 +50,7 @@ class OutputState
 {
 public: 
 
-    Eigen::MatrixXd frames;
+    std::vector<Eigen::MatrixXd> frames;
 
     // derived variables 
     double cur_global_objective_val;
