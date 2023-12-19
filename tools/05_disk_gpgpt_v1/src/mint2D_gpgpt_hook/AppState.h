@@ -177,7 +177,8 @@ public:
     bool show_frames_as_lines = true;
     int max_saved_index = 0;
 
-    double L4_alpha = 0;
+    // double L4_alpha = 0;
+    float gui_vec_size = .01;
 
 
     bool LogToFile(const std::string suffix); // Log based on fieldViewActive state

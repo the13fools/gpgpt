@@ -63,7 +63,7 @@ public:
         {
             primals_rank1[v_i] = dofs_curr_elem.segment(primals_layout.start + v_i*rank1_size, rank1_size);
             primal_norms[v_i] = primals_rank1[v_i].squaredNorm();
-            // frame_norm_euclidian += primals_rank1[v_i].squaredNorm();
+            frame_norm_euclidian += primals_rank1[v_i].squaredNorm();
         }
 
         primals.resize(primals_size);

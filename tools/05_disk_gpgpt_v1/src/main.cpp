@@ -10,8 +10,8 @@
 
 // #include "VizHook.h"
 
-// #include "Solve_L2_newton_rank1.h"
-#include "MiNT_krushkal_rank2.h"
+#include "Solve_L2_newton_rank1.h"
+// #include "MiNT_krushkal_rank2.h"
 #include "Mint2DHook.h"
 
 #include <thread>
@@ -128,8 +128,8 @@ int main(int argc, char **argv) {
   // Initialize polyscope
   polyscope::init();
 
-  // hook = static_cast<Mint2DHook*>(new Solve_L2_newton_rank1());
-  hook = static_cast<Mint2DHook*>(new MiNT_krushkal_rank2());
+  hook = static_cast<Mint2DHook*>(new Solve_L2_newton_rank1());
+  // hook = static_cast<Mint2DHook*>(new MiNT_krushkal_rank2());
 
 
 

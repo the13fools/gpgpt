@@ -309,8 +309,8 @@ void Mint2DHook::renderRenderGeometry()
                 {
                     vectorField->setEnabled(true);
                     vectorFieldNeg->setEnabled(true);
-                    vectorField->setVectorLengthScale(0.01);
-                    vectorFieldNeg->setVectorLengthScale(0.01);
+                    vectorField->setVectorLengthScale(appState->gui_vec_size);
+                    vectorFieldNeg->setVectorLengthScale(appState->gui_vec_size);
 
                     vectorField->setVectorRadius(0.001);
                     vectorFieldNeg->setVectorRadius(0.001);
@@ -751,9 +751,11 @@ void Mint2DHook::initCurlOperators()
         rots.push_back(e_to_x);
 
         Eigen::Vector4d e_proj = rstar_xcomp_from_r(e_to_x);
+        Eigen::VectorXd e_proj_L4_full = rstar_from_r_L4(e_to_x);
 
         appState->C_primal.row(i) = edge_dir.head(2);
         appState->C_sym_2.row(i) = e_proj;
+        appState->C_sym_4.row(i) = e_proj_L4_full;
 
         // e_projs.push_back(e_proj);
         // e_projs_primal.push_back(edge_dir.head(2));

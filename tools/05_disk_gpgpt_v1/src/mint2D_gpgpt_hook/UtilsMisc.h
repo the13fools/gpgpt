@@ -168,6 +168,64 @@ Eigen::Matrix<ScalarType, Rows * Cols, 1> flatten(const Eigen::Matrix<ScalarType
       return ret;
     }
 
+
+// Do reduced coordinates... 
+    static Eigen::Vector4d rstar_from_r_L4(Eigen::Matrix2d r)
+    {
+        double a = r(0,0);
+        double b = r(0,1);
+        double c = r(1,0);
+        double d = r(1,1);
+    //   ret << a*a, a*b, a*b, b*b;
+    // ret << a*a*a*a, a*a*a*b, a*a*b*a, a*b*a*a, b*a*a*a, a*a*b*b;
+
+        int primals_size = 2;
+        int psize = primals_size;
+        int psize2 = psize*psize;
+        int psize3 = psize2*psize;
+
+        Eigen::VectorXd ret;
+        ret.resize(16);
+
+        for (int i = 0; i < primals_size; i++)
+        {
+            for (int j = 0; j < primals_size; j++)
+            {
+                for (int k = 0; k < primals_size; k++)
+                {
+                    for (int l = 0; l < primals_size; l++)
+                    {
+                        double cur = 1;
+                        if ( i == 0 )
+                            cur *= a; 
+                        else 
+                            cur *= b; 
+
+                        if ( j == 0 )
+                            cur *= a; 
+                        else 
+                            cur *= b; 
+
+                        if ( k == 0 )
+                            cur *= a; 
+                        else 
+                            cur *= b; 
+
+                        if ( l == 0 )
+                            cur *= a; 
+                        else 
+                            cur *= b; 
+
+                        ret(i*psize3 + j*psize2 + k*psize + l) = cur;
+                    }
+                }
+            }
+        }
+
+      // ret << r(0,0), r(0, 1), r(1,0), r(1,1); // could maybe also use v1.resize(1, 4); possibly faster
+      return ret;
+    }
+
 ////////////
 ////  Serialize/Deserialize 
 ////////////

@@ -97,11 +97,11 @@ public:
 
     //   OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
 
-    //   OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-    //   OptZoo<DOFS_PER_ELEMENT>::addCurlTerm(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
 
       // Update params specific to this solve here
       

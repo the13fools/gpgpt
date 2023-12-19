@@ -27,7 +27,12 @@ namespace ImGuiWidgets {
         ImGui::SameLine();
         ImGui::Checkbox(show_frames_checkbox.c_str(), show_frames_as_lines);
 
-        ImGui::InputDouble("L4 alpha", &appState.L4_alpha);
+        // ImGui::InputDouble("Vec Size", &appState.gui_vec_size);
+
+        ImGui::SliderFloat("Vec Size", &appState.gui_vec_size, 1e-4f, 10., "%.16f", ImGuiSliderFlags_Logarithmic);
+
+
+        // ImGui::InputDouble("L4 alpha", &appState.L4_alpha);
 
     }
 
