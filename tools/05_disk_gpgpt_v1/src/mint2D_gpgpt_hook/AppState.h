@@ -179,6 +179,8 @@ public:
 
     // double L4_alpha = 0;
     float gui_vec_size = .01;
+    Views::Sym_Moment_View cur_moment_view = Views::Sym_Moment_View::L2_plus_L4; 
+    Views::Sym_Curl_View cur_curl_view = Views::Sym_Curl_View::L2_plus_L4; 
 
 
     bool LogToFile(const std::string suffix); // Log based on fieldViewActive state
@@ -186,7 +188,7 @@ public:
 
     // simulation metadata 
     int currentIteration; 
-    int maxIterations = 9999; // move to config
+    int maxIterations = 99999; // move to config
     // int innerLoopIteration; // move this to app state...
     double convergenceEpsilon = 1e-12;
     double convergenceThreshold; // not used right now...

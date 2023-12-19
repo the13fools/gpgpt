@@ -507,7 +507,10 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
           curl_term +=  pow(eb.dot(e.neighbor_data.at(1).L_2_primals ) - eb.dot(e.self_data.L_2_primals),2);
           curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_2_primals ) - ec.dot(e.self_data.L_2_primals),2);
 
-          curl_term = curl_term * e.self_data.frame_norm_euclidian;
+        //   curl_term = curl_term * e.self_data.frame_norm_euclidian;
+        // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
+
+        // curl_term = curl_term * norm_passive;
 
 
           appState.os->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
@@ -595,6 +598,11 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
           curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_4_primals ) - ec.dot(e.self_data.L_4_primals),2);
 
         //   curl_term = curl_term / e.self_data.frame_norm_euclidian;
+        // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
+
+        //   curl_term = curl_term / norm_passive;
+
+
           appState.os->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
 
           T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;

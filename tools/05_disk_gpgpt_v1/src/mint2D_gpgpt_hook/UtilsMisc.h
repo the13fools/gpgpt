@@ -174,8 +174,9 @@ Eigen::Matrix<ScalarType, Rows * Cols, 1> flatten(const Eigen::Matrix<ScalarType
     {
         double a = r(0,0);
         double b = r(0,1);
-        double c = r(1,0);
-        double d = r(1,1);
+        // double c = r(1,0);
+        // double d = r(1,1);
+
     //   ret << a*a, a*b, a*b, b*b;
     // ret << a*a*a*a, a*a*a*b, a*a*b*a, a*b*a*a, b*a*a*a, a*a*b*b;
 

@@ -628,7 +628,7 @@ bool Mint2DHook::simulateOneStep() {
         // 1. Relative residual is small
         // 2. Absolute residual is small
         // 3. Gradient norm is small or step progress is negative (converged)
-        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-3 && (appState->cur_max_gradient_norm < 1e-4 || opt->_prev_step_progress < 1e-10)) 
+        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-6 || opt->_prev_step_progress < 1e-10)) 
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;

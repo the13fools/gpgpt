@@ -61,7 +61,7 @@ namespace ImGuiWidgets {
     // Function to display checkboxes for field views in ImGui
     void ShowFieldViewCheckboxes(AppState& appState) {
         
-
+       ImGui::Text("File Logging Controls:");
        bool* log_state_to_file = &appState.shouldLogData; 
        ImGui::Checkbox("log stuff to file", log_state_to_file);
        if ( ImGui::CollapsingHeader("Select Which Views To Log:") ) 
@@ -209,12 +209,8 @@ namespace ImGuiWidgets {
         }
     }
 
-    // Function to display a field view scrubber in ImGui
-    void ShowFieldViewScrubber(AppState& appState, Field_View& currentField) {
-        // ImGui::Text("Field View Scrubber:");
 
-
-        
+    void FieldViewSelector(AppState& appState, Field_View& currentField) {
 
         // Display a combo box to select the current field view
         if (ImGui::BeginCombo("Select Field View", fieldViewToString(currentField).c_str())) {
@@ -230,7 +226,48 @@ namespace ImGuiWidgets {
             }
             ImGui::EndCombo();
         }
-        ImGui::Text("Field String: %s", fieldViewToFileStub(currentField).c_str());
+        // ImGui::Text("Field String: %s", fieldViewToFileStub(currentField).c_str());
+
+
+
+        switch (currentField) {
+            case Field_View::vec_norms:
+                // cur_scalar_quantity = outputData->norms_vec;
+                break;
+            case Field_View::delta_norms:
+                // cur_scalar_quantity = outputData->norms_delta;
+                break;
+            case Field_View::vec_dirch:
+                // cur_scalar_quantity = outputData->smoothness_primal;
+                break;
+            case Field_View::moment_dirch:
+                // cur_scalar_quantity = outputData->smoothness_sym;
+                // cur_scalar_quantity = outputData->smoothness_L2;
+                // cur_scalar_quantity = outputData->smoothness_L4;
+                break;
+            case Field_View::primal_curl_residual:
+                // cur_scalar_quantity = outputData->curls_primal;
+                break;
+            case Field_View::sym_curl_residual:
+                // cur_scalar_quantity = outputData->curls_sym;
+                break;
+            case Field_View::gui_free:
+                // Implement logic for gui_free if required
+                break;
+            default:
+                std::cerr << "Unknown Field_View option selected in AppState." << std::endl;
+                break;
+        }
+
+
+    }
+
+    // Function to display a field view scrubber in ImGui
+    void ShowFieldViewScrubber(AppState& appState, Field_View& currentField) {
+        // ImGui::Text("Field View Scrubber:");
+
+
+        ImGui::Text("Scalar View Bounds:");
 
 
         bool* active = &appState.fieldViewActive[currentField];
@@ -296,9 +333,11 @@ namespace ImGuiWidgets {
         ImGui::PlotLines(label, &values[0], static_cast<int>(values.size()), 0, NULL, minY, maxY, ImVec2(0, 80));
     }
 
+    // void if(appState.current_element == )
+
     void ShowMainGUI(AppState& appState) {
         // Begin the main ImGui window
-        ImGui::Begin("Main Window");
+        ImGui::Begin("Main Interface");
 
     
         
@@ -311,8 +350,14 @@ namespace ImGuiWidgets {
     // Display file scrubber for selecting files
         ShowFileScrubber(appState);
 
+        ImGui::Begin("Select Current Scalar Field");
+        FieldViewSelector(appState, appState.current_element);
+        ImGui::End();
+
         // Display a field view scrubber
         ShowFieldViewScrubber(appState, appState.current_element);
+
+        
 
         ShowFieldViewCheckboxes(appState);
 

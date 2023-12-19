@@ -22,6 +22,20 @@ enum Field_View {
     Element_COUNT
 };
 
+enum class Sym_Moment_View {
+    L2, 
+    L4, 
+    L2_plus_L4
+};
+
+
+enum class Sym_Curl_View {
+    L2,
+    L4,
+    L2_plus_L4
+};
+
+
 
 // enum Field_View {
 //     vec_norms,

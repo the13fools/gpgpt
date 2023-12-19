@@ -140,7 +140,19 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
+        // appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
+
+        Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
+                                            appState->V.row(appState->F(i, 1)) +
+                                            appState->V.row(appState->F(i, 2))) / 3.0;
+
+        double r = centroid.norm() + 1e-10;
+        Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
+        appState->frames.row(i) = frame_cur;
+
+
+        // appState->frames.row(i)
+
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
         x.segment<2>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
