@@ -218,11 +218,11 @@ void Surface::buildGeometricStructures()
         Eigen::Matrix2d BTB1 = data_.Bs[face1].transpose() * data_.Bs[face1];
         Eigen::Matrix2d BTB2 = data_.Bs[face2].transpose() * data_.Bs[face2];
 
-        data_.cDiffs.row(2 * edgeidx) = BTB1.inverse() * data_.Bs[face1].transpose() * (midpt + alpha * commone + beta * t1 - centroids[0]);
+        data_.cDiffs.row(2 * edgeidx) = (BTB1.inverse() * data_.Bs[face1].transpose() * (midpt + alpha * commone + beta * t1 - centroids[0])).transpose();
         Eigen::Vector3d diff1 = centroids[0] - midpt;
         alpha = commone.dot(diff1);
         beta = t1.dot(diff1);
-        data_.cDiffs.row(2 * edgeidx + 1) = BTB2.inverse() * data_.Bs[face2].transpose() * (midpt + alpha*commone + beta * t2 - centroids[1]);
+        data_.cDiffs.row(2 * edgeidx + 1) = (BTB2.inverse() * data_.Bs[face2].transpose() * (midpt + alpha*commone + beta * t2 - centroids[1])).transpose();
 
         Eigen::Vector3d e1 = data_.V.row(data_.F(face1, 1)) - data_.V.row(data_.F(face1, 0));
         Eigen::Vector3d e2 = data_.V.row(data_.F(face1, 2)) - data_.V.row(data_.F(face1, 0));

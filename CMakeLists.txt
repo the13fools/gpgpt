@@ -200,6 +200,7 @@ add_subdirectory(tools/03_disk_bvp_v1)
 add_subdirectory(tools/04_adfunc_wrapper)
 # add_subdirectory(tools/04_disk_mint2d_v1)
 add_subdirectory(tools/05_disk_gpgpt_v1)
+add_subdirectory(tools/06_polyvectors_tool)
 
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})
