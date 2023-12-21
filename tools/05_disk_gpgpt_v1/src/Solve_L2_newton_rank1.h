@@ -60,9 +60,9 @@ public:
     {
 
 
-        appState->meshName = "circle_1000";
+        // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
-      // appState->meshName = "circle";
+      appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
       
@@ -142,15 +142,15 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        // appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
+        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
 
-        Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
-                                            appState->V.row(appState->F(i, 1)) +
-                                            appState->V.row(appState->F(i, 2))) / 3.0;
+        // Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
+        //                                     appState->V.row(appState->F(i, 1)) +
+        //                                     appState->V.row(appState->F(i, 2))) / 3.0;
 
-        double r = centroid.norm() + 1e-10;
-        Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
-        appState->frames.row(i) = frame_cur;
+        // double r = centroid.norm() + 1e-10;
+        // Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
+        // appState->frames.row(i) = frame_cur;
 
 
         // appState->frames.row(i)
