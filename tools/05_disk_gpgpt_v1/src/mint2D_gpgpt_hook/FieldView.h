@@ -11,7 +11,7 @@
  {
 
  
-enum Field_View {
+enum class Field_View {
     vec_norms,
     delta_norms,
     vec_dirch,
@@ -25,14 +25,18 @@ enum Field_View {
 enum class Sym_Moment_View {
     L2, 
     L4, 
-    L2_plus_L4
+    L2_plus_L4,
+    L6, 
+    Element_COUNT
 };
 
 
 enum class Sym_Curl_View {
     L2,
     L4,
-    L2_plus_L4
+    L2_plus_L4,
+    L6, 
+    Element_COUNT
 };
 
 

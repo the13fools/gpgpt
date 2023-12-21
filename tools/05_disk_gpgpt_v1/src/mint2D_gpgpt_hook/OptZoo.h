@@ -203,45 +203,6 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 }
 
 
-// // The pinned boundary condition.  
-// // TODO,  add in other boundary conditions like mixed neumann and free for meshing examples.  
-// static void addPinnedBoundaryTerm_rank2_radial(ADFunc& func, AppState& appState) {
-//     std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
-//     func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
-//     {
-
-//      // Evaluate element using either double or TinyAD::Double
-//         using T = TINYAD_SCALAR_TYPE(element);
-//         using VAR = std::decay_t<decltype(element)>; // TINYAD_VARIABLES_TYPE(element);
-
-//         // Get boundary annotations 
-//         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-//         Eigen::Index f_idx = element.handle;
-
-//         if ((int)f_idx == 0)
-//         {
-//             // std::cout << "eval boundary obj" << std::endl;
-//         }
-
-//         // Dirichlet (i.e. pinned) boundary condition
-//         if (bound_face_idx(f_idx) == 1)
-//         {
-//             ProcElement<T,VAR> e; 
-//             e.setSelfData(appState, f_idx, element);
-
-//             Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
-
-//             Eigen::VectorX<T> targ = appState.frames_orig.row(f_idx);
-//             return e.w_bound*(curr-targ).squaredNorm(); // + e.w_bound*e.self_data.delta.squaredNorm();
-//         }
-
-
-//         // Not a boundary element
-//         return T(0);
-
-//     });
-// }
-
 // Deps primal vars 
 static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
@@ -298,56 +259,6 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
 }
 
-
-// Deps primal vars 
-static void addSmoothness_L2x2_Term(ADFunc& func, AppState& appState) {
-
-    std::cout << "add L2^2 smoonthess obj" << std::endl;
-
-    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
-    {
-
-     // Evaluate element using either double or TinyAD::Double
-        using T = TINYAD_SCALAR_TYPE(element);
-        using VAR = std::decay_t<decltype(element)>; 
-
-        Eigen::Index f_idx = element.handle;
-        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-
-// Exit early if on a boundary element. 
-        if (bound_face_idx(f_idx) == 1)
-        {
-            return T(0);
-        }
-
-        ProcElement<T,VAR> e; 
-        // e.setElementVars(appState, f_idx, s_curr);
-        e.setSelfData(appState, f_idx, element);
-        e.setNeighborData(appState, f_idx, element);
-
-
-///////////////////
-//// Initlaize elementwise objectives 
-///////////////////
-
-
-          T dirichlet_term = T(0);
-          for (int i = 0; i < e.num_neighbors; i++)
-          {
-            dirichlet_term += (e.neighbor_data.at(i).L_2x2_primals - e.self_data.L_2x2_primals).squaredNorm();
-          }
-
-          appState.os->smoothness_L2x2(f_idx) = TinyAD::to_passive(dirichlet_term);
-
-          T ret = T(0);//  delta_norm_term * delta_weight;
-          ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
-     
-
-          return ret;
-
-    });
-
-}
 
 
 
@@ -426,7 +337,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
           T delta_rescale = 1.;
           // std::cout << delta_rescale << std::endl;
 
-          appState.os->smoothness_primal(f_idx) = TinyAD::to_passive(primal_dirichlet_term);
+        //   appState.os->smoothness_primal(f_idx) = TinyAD::to_passive(primal_dirichlet_term);
           appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(dirichlet_term);
 
           // T delta_dirichlet = (a_delta+b_delta+c_delta-3*delta).squaredNorm()*delta_rescale;
@@ -513,7 +424,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
         // curl_term = curl_term * norm_passive;
 
 
-          appState.os->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
+          appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
 
           T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
 
@@ -603,7 +514,7 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
         //   curl_term = curl_term / norm_passive;
 
 
-          appState.os->curls_sym(f_idx) = TinyAD::to_passive(curl_term);
+          appState.os->curl_L4(f_idx) = TinyAD::to_passive(curl_term);
 
           T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
 
@@ -665,3 +576,57 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
  }; // namespace OptZoo
 
 #endif // OPTZOO_H
+
+
+
+
+
+// Deps primal vars 
+// static void addSmoothness_L2x2_Term(ADFunc& func, AppState& appState) {
+
+//     std::cout << "add L2^2 smoonthess obj" << std::endl;
+
+//     func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+//     {
+
+//      // Evaluate element using either double or TinyAD::Double
+//         using T = TINYAD_SCALAR_TYPE(element);
+//         using VAR = std::decay_t<decltype(element)>; 
+
+//         Eigen::Index f_idx = element.handle;
+//         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+// // Exit early if on a boundary element. 
+//         if (bound_face_idx(f_idx) == 1)
+//         {
+//             return T(0);
+//         }
+
+//         ProcElement<T,VAR> e; 
+//         // e.setElementVars(appState, f_idx, s_curr);
+//         e.setSelfData(appState, f_idx, element);
+//         e.setNeighborData(appState, f_idx, element);
+
+
+// ///////////////////
+// //// Initlaize elementwise objectives 
+// ///////////////////
+
+
+//           T dirichlet_term = T(0);
+//           for (int i = 0; i < e.num_neighbors; i++)
+//           {
+//             dirichlet_term += (e.neighbor_data.at(i).L_2x2_primals - e.self_data.L_2x2_primals).squaredNorm();
+//           }
+
+//           appState.os->smoothness_L2x2(f_idx) = TinyAD::to_passive(dirichlet_term);
+
+//           T ret = T(0);//  delta_norm_term * delta_weight;
+//           ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+     
+
+//           return ret;
+
+//     });
+
+// }

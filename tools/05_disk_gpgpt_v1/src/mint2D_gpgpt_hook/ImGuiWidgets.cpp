@@ -67,10 +67,10 @@ namespace ImGuiWidgets {
        if ( ImGui::CollapsingHeader("Select Which Views To Log:") ) 
        {
 
-            for (int i = 0; i < Views::Element_COUNT-1; ++i) {
+            for (int i = 0; i < (int) Views::Field_View::Element_COUNT-1; ++i) {
                 Field_View field = static_cast<Field_View>(i);
                 // const char* fieldName = fieldViewToString(field).c_str();
-                bool* active = &appState.fieldViewActive[field];
+                bool* active = &appState.fieldViewActive[(int) field];
                 
                 
                 std::string field_str = fieldViewToFileStub(field);
@@ -151,7 +151,7 @@ namespace ImGuiWidgets {
 
     // Function to add field view scalars to Polyscope
     void AddFieldViewScalarsToPolyscope(AppState& appState) {
-        for (int i = 0; i < Views::Element_COUNT; ++i) {
+        for (int i = 0; i < (int) Views::Field_View::Element_COUNT; ++i) {
             Field_View field = static_cast<Field_View>(i);
             std::string fieldName = fieldViewToFileStub(field);
             // std::vector<double> scalarValues(appState.fieldData[field].begin(), appState.fieldData[field].end());
@@ -170,10 +170,10 @@ namespace ImGuiWidgets {
     void ShowFieldViewCheckboxesWithSliders(AppState& appState) {
         ImGui::Text("Field Views with Sliders:");
 
-        for (int i = 0; i < Views::Element_COUNT - 1; ++i) {
+        for (int i = 0; i < (int) Views::Field_View::Element_COUNT - 1; ++i) {
             Field_View field = static_cast<Field_View>(i);
             const char* fieldName = fieldViewToFileStub(field).c_str();
-            bool* active = &appState.fieldViewActive[field];
+            bool* active = &appState.fieldViewActive[(int) field];
             float* minVal = &appState.fieldBounds[field].lower;
             float* maxVal = &appState.fieldBounds[field].upper;
 
@@ -214,7 +214,7 @@ namespace ImGuiWidgets {
 
         // Display a combo box to select the current field view
         if (ImGui::BeginCombo("Select Field View", fieldViewToString(currentField).c_str())) {
-            for (int i = 0; i < Views::Element_COUNT; ++i) {
+            for (int i = 0; i < (int) Views::Field_View::Element_COUNT; ++i) {
                 Field_View field = static_cast<Field_View>(i);
                 bool is_selected = (currentField == field);
                 if (ImGui::Selectable(fieldViewToString(field).c_str(), is_selected)) {
@@ -241,6 +241,42 @@ namespace ImGuiWidgets {
                 // cur_scalar_quantity = outputData->smoothness_primal;
                 break;
             case Field_View::moment_dirch:
+             if (ImGui::TreeNode("Choose symmetric dirichlet component"))
+        {
+            Views::Sym_Moment_View selected = appState.cur_moment_view;
+            
+               
+                
+            if (ImGui::Selectable("L2_dirch", selected == Views::Sym_Moment_View::L2))
+            {
+                    selected = Views::Sym_Moment_View::L2;
+            }
+            if (ImGui::Selectable("L4_dirch", selected == Views::Sym_Moment_View::L4))
+            {
+                    selected = Views::Sym_Moment_View::L4;
+            }
+            if (ImGui::Selectable("L2 + L4_dirch", selected == Views::Sym_Moment_View::L2_plus_L4))
+            {
+                    selected = Views::Sym_Moment_View::L2_plus_L4;
+            }
+            if (ImGui::Selectable("L6_dirch", selected == Views::Sym_Moment_View::L6))
+            {
+                    selected = Views::Sym_Moment_View::L6;
+            }
+            
+            if ( appState.cur_moment_view != selected  ) {
+                appState.updateRenderGeometryNextFrameIfPaused = true;
+            }
+            
+
+            appState.cur_moment_view = selected;
+
+            
+            ImGui::TreePop();
+        }
+
+
+
                 // cur_scalar_quantity = outputData->smoothness_sym;
                 // cur_scalar_quantity = outputData->smoothness_L2;
                 // cur_scalar_quantity = outputData->smoothness_L4;
@@ -270,7 +306,7 @@ namespace ImGuiWidgets {
         ImGui::Text("Scalar View Bounds:");
 
 
-        bool* active = &appState.fieldViewActive[currentField];
+        bool* active = &appState.fieldViewActive[(int) currentField];
         float* minVal = &appState.fieldBounds[currentField].lower;
         float* maxVal = &appState.fieldBounds[currentField].upper;
 

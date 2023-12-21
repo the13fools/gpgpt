@@ -47,7 +47,7 @@ bool AppState::LogToFile(const std::string suffix)
           // Here, we'll also log relevant data to files based on the fieldViewActive flags
 
         // Log other Eigen::Vectors based on fieldViewActive flags
-        for (int i = 0; i < Field_View::Element_COUNT; ++i) {
+        for (int i = 0; i < (int) Field_View::Element_COUNT; ++i) {
             if (this->fieldViewActive[i]) {
                 // Determine the file path based on the field view
                 Field_View cfv = static_cast<Field_View>(i);
@@ -100,7 +100,7 @@ void AppState::zeroPassiveVars()
     this->os->smoothness_sym.setZero();
     this->os->smoothness_L2.setZero();
     this->os->smoothness_L4.setZero();
-    this->os->smoothness_L2x2.setZero();
+    // this->os->smoothness_L2x2.setZero();
 }
 
 // // Method to log current variables (if logging is enabled)

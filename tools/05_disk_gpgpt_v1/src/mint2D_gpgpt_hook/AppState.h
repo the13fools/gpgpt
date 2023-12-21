@@ -72,7 +72,12 @@ public:
     // Individual components 
     Eigen::VectorXd smoothness_L2;
     Eigen::VectorXd smoothness_L4;
-    Eigen::VectorXd smoothness_L2x2;
+    // Eigen::VectorXd smoothness_L2x2;
+
+    // Individual components 
+    Eigen::VectorXd curl_L2;
+    Eigen::VectorXd curl_L4;
+    // Eigen::VectorXd curl_L2x2;
 
 
 
@@ -102,7 +107,7 @@ public:
     std::optional<std::string> objFilePath;
     int currentFileID = -1;
     bool shouldReload = false; // this is a dynamic var which tells updaterendergeometry to reload data from the current directory
-
+    bool updateRenderGeometryNextFrameIfPaused = false;
 
     // Init variables 
     Eigen::MatrixXd V; // Vertex positions

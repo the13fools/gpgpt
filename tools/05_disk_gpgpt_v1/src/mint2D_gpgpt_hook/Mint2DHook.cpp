@@ -95,6 +95,36 @@ void Mint2DHook::updateRenderGeometry() {
     appState->os->norms_vec = appState->frames.rowwise().norm();
     appState->os->norms_delta = appState->deltas.rowwise().norm();
 
+
+    // Set the smoothness and curl to visualize according to the gui 
+    switch (appState->cur_moment_view)
+    {
+        case Views::Sym_Moment_View::L2: 
+            appState->os->smoothness_sym = appState->os->smoothness_L2;
+            break;
+        case Views::Sym_Moment_View::L4: 
+            appState->os->smoothness_sym = appState->os->smoothness_L4;
+            break;
+        case Views::Sym_Moment_View::L2_plus_L4: 
+            appState->os->smoothness_sym = appState->os->smoothness_L2 + appState->os->smoothness_L4;
+            break;
+    }
+
+    switch (appState->cur_curl_view)
+    {
+        case Views::Sym_Curl_View::L2: 
+            appState->os->curls_sym = appState->os->curl_L2;
+            break;
+        case Views::Sym_Curl_View::L4: 
+            appState->os->curls_sym = appState->os->curl_L4;
+            break;
+        case Views::Sym_Curl_View::L2_plus_L4: 
+            appState->os->curls_sym = appState->os->curl_L2 + appState->os->curl_L4;
+            break;
+    }
+
+
+
     ////// The quantities not explicitly set above are set inside of to_passive calls in optzoo.
     // std::cout << opt->get_current_x() << std::endl;
     Eigen::VectorXd tmp = opt->get_current_x();
@@ -109,7 +139,10 @@ void Mint2DHook::updateRenderGeometry() {
     }
     catch (std::runtime_error& e)
     {
+        std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
         std::cout << "optimization crashing when evaluating the objective " << e.what() << std::endl;
+        std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
     }
 
     
@@ -171,7 +204,7 @@ void Mint2DHook::updateRenderGeometry() {
     appState->LogToFile("curr");
 
 
-    appState->zeroPassiveVars();
+    // appState->zeroPassiveVars();
 
  
 
@@ -202,9 +235,10 @@ void Mint2DHook::updateRenderGeometry() {
 void Mint2DHook::renderRenderGeometry()
 {
 
-    if (appState->shouldReload && this->isPaused())
+    if ((appState->shouldReload || appState->updateRenderGeometryNextFrameIfPaused) && this->isPaused())
     {
         updateRenderGeometry();
+        appState->updateRenderGeometryNextFrameIfPaused = false;
     }
 
     // Depending on the current element view, render different quantities
@@ -229,7 +263,7 @@ void Mint2DHook::renderRenderGeometry()
         case Field_View::moment_dirch:
             // cur_scalar_quantity = outputData->smoothness_sym;
             // cur_scalar_quantity = outputData->smoothness_L2;
-            cur_scalar_quantity = outputData->smoothness_L4;
+            cur_scalar_quantity = outputData->smoothness_sym;
             break;
         case Field_View::primal_curl_residual:
             cur_scalar_quantity = outputData->curls_primal;
@@ -576,7 +610,7 @@ bool Mint2DHook::loadPrimaryData() {
 
 bool Mint2DHook::loadGuiState() {
     bool success = true;
-    for (int i = 0; i < Views::Field_View::gui_free; ++i) {
+    for (int i = 0; i < (int) Views::Field_View::gui_free; ++i) {
         Field_View view = static_cast<Field_View>(i);
         std::string fieldStub = Views::fieldViewToFileStub(view) + "_";
         std::string fieldFile = fileParser->getFileWithID(fieldStub, ".bdat", appState->currentFileID);
@@ -691,7 +725,9 @@ void Mint2DHook::resetAppState() {
     appState->os->smoothness_primal.setZero(appState->F.rows());
     appState->os->smoothness_L2.setZero(appState->F.rows());
     appState->os->smoothness_L4.setZero(appState->F.rows());
-    appState->os->smoothness_L2x2.setZero(appState->F.rows());
+    appState->os->curl_L2.setZero(appState->F.rows());
+    appState->os->curl_L4.setZero(appState->F.rows());
+    // appState->os->smoothness_L2x2.setZero(appState->F.rows());
 
     appState->prev_frame_element = Field_View::Element_COUNT;
 
