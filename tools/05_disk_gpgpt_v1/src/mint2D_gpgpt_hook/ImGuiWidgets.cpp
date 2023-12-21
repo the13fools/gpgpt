@@ -241,39 +241,35 @@ namespace ImGuiWidgets {
                 // cur_scalar_quantity = outputData->smoothness_primal;
                 break;
             case Field_View::moment_dirch:
-             if (ImGui::TreeNode("Choose symmetric dirichlet component"))
-        {
-            Views::Sym_Moment_View selected = appState.cur_moment_view;
-            
-               
-                
-            if (ImGui::Selectable("L2_dirch", selected == Views::Sym_Moment_View::L2))
-            {
-                    selected = Views::Sym_Moment_View::L2;
-            }
-            if (ImGui::Selectable("L4_dirch", selected == Views::Sym_Moment_View::L4))
-            {
-                    selected = Views::Sym_Moment_View::L4;
-            }
-            if (ImGui::Selectable("L2 + L4_dirch", selected == Views::Sym_Moment_View::L2_plus_L4))
-            {
-                    selected = Views::Sym_Moment_View::L2_plus_L4;
-            }
-            if (ImGui::Selectable("L6_dirch", selected == Views::Sym_Moment_View::L6))
-            {
-                    selected = Views::Sym_Moment_View::L6;
-            }
-            
-            if ( appState.cur_moment_view != selected  ) {
-                appState.updateRenderGeometryNextFrameIfPaused = true;
-            }
-            
+            // List box 
+                if (ImGui::TreeNode("Choose symmetric dirichlet component"))
+                {
+                    Views::Sym_Moment_View selected = appState.cur_moment_view;
+                    
+                    if (ImGui::Selectable("L2_dirch", selected == Views::Sym_Moment_View::L2))
+                    {
+                            selected = Views::Sym_Moment_View::L2;
+                    }
+                    if (ImGui::Selectable("L4_dirch", selected == Views::Sym_Moment_View::L4))
+                    {
+                            selected = Views::Sym_Moment_View::L4;
+                    }
+                    if (ImGui::Selectable("L2 + L4_dirch", selected == Views::Sym_Moment_View::L2_plus_L4))
+                    {
+                            selected = Views::Sym_Moment_View::L2_plus_L4;
+                    }
+                    if (ImGui::Selectable("L6_dirch", selected == Views::Sym_Moment_View::L6))
+                    {
+                            selected = Views::Sym_Moment_View::L6;
+                    }
+                    if ( appState.cur_moment_view != selected  ) {
+                        appState.updateRenderGeometryNextFrameIfPaused = true;
+                    }
+                    appState.cur_moment_view = selected;
 
-            appState.cur_moment_view = selected;
-
-            
-            ImGui::TreePop();
-        }
+                    
+                    ImGui::TreePop();
+                }
 
 
 
@@ -286,6 +282,37 @@ namespace ImGuiWidgets {
                 break;
             case Field_View::sym_curl_residual:
                 // cur_scalar_quantity = outputData->curls_sym;
+                if (ImGui::TreeNode("Choose symmetric dirichlet component"))
+                {
+                    Views::Sym_Curl_View selected = appState.cur_curl_view;
+                    
+                    if (ImGui::Selectable("L2_curl", selected == Views::Sym_Curl_View::L2))
+                    {
+                            selected = Views::Sym_Curl_View::L2;
+                    }
+                    if (ImGui::Selectable("L4_curl", selected == Views::Sym_Curl_View::L4))
+                    {
+                            selected = Views::Sym_Curl_View::L4;
+                    }
+                    if (ImGui::Selectable("L2 + L4_curl", selected == Views::Sym_Curl_View::L2_plus_L4))
+                    {
+                            selected = Views::Sym_Curl_View::L2_plus_L4;
+                    }
+                    if (ImGui::Selectable("L6_curl", selected == Views::Sym_Curl_View::L6))
+                    {
+                            selected = Views::Sym_Curl_View::L6;
+                    }
+                    if ( appState.cur_curl_view != selected  ) {
+                        appState.updateRenderGeometryNextFrameIfPaused = true;
+                    }
+                    appState.cur_curl_view = selected;
+
+                    
+                    ImGui::TreePop();
+                }
+
+
+
                 break;
             case Field_View::gui_free:
                 // Implement logic for gui_free if required

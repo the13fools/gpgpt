@@ -88,8 +88,8 @@ void Mint2DHook::updateRenderGeometry() {
         }
 
         initSimulation();
-
     }
+    appState->updateRenderGeometryNextFrameIfPaused = false;
 
 /// 
     appState->os->norms_vec = appState->frames.rowwise().norm();
@@ -538,6 +538,7 @@ void Mint2DHook::initSimulation() {
         this->resetAppState();
         initializeLogFolder();
         appState->directoryPath = appState->logFolderPath;
+
     }
 
     // save OBJ file 

@@ -170,7 +170,7 @@ Eigen::Matrix<ScalarType, Rows * Cols, 1> flatten(const Eigen::Matrix<ScalarType
 
 
 // Do reduced coordinates... 
-    static Eigen::Vector4d rstar_from_r_L4(Eigen::Matrix2d r)
+    static Eigen::VectorXd rstar_from_r_L4(Eigen::Matrix2d r)
     {
         double a = r(0,0);
         double b = r(0,1);
