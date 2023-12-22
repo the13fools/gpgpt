@@ -130,14 +130,9 @@ public:
 
 
         L2_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
-        L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
+        // L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
 
-        // for (int i = 0; i < self_data.L_4_primals.rows(); i++)
-        // {
-        //     // self_data.frame_norm_euclidian += self_data.L_2_primals(i)*self_data.L_2_primals(i);
-        //     self_data.frame_norm_euclidian += self_data.L_4_primals(i)*self_data.L_4_primals(i);
-
-        // }
+      
 
         self_data.frame_norm_euclidian = 1;
 
@@ -176,7 +171,7 @@ public:
             neighbor_data_i.set_primals_rank1(appState.primals_layout);
 
             L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
-            L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+            // L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             neighbor_data.push_back(neighbor_data_i);
         }
 

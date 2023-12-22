@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
   }
 
   polyscope::state::userCallback = drawGUICallback;
-  polyscope::options::programName = "gpgpt - MINT2D";
+  polyscope::options::programName = "gpgpt - MINT3D";
   polyscope::options::verbosity = 1;
 
   polyscope::show();

@@ -137,14 +137,16 @@ void Mint3DHook::updateRenderGeometry() {
     int vec_dofs = appState->primals_layout.size / frame_rank;
     int frows = appState->frames.rows();
 
-    if (vec_dofs != 2 )
-        std::cout << "wrong number of dofs for mint2d" << std::endl;
+    if (vec_dofs != 3 )
+        std::cout << "wrong number of dofs for mint3d" << std::endl;
+
+    // outputData->frames = appState->frames;
 
     for(int vid = 0; vid < frame_rank; vid++)
     {
         Eigen::MatrixXd vec_cur = Eigen::MatrixXd::Zero(appState->frames.rows(), 3);
 
-        vec_cur << appState->frames.block(0, vid * vec_dofs, frows, vec_dofs),  Eigen::MatrixXd::Zero(frows, 1);
+        vec_cur << appState->frames.block(0, vid * vec_dofs, frows, vec_dofs); // ,  Eigen::MatrixXd::Zero(frows, 1);
         outputData->frames.push_back(vec_cur);
     }
 

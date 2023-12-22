@@ -23,7 +23,7 @@
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 2
+#define DOFS_PER_ELEMENT 3
 
 
 class Solve_L2_newton_rank1 : public Mint3DHook
@@ -37,10 +37,10 @@ public:
 
 
 
-      appState->primals_layout = {0, 2};
+      appState->primals_layout = {0, 3};
       appState->moments_layout = {0, 0};
       // appState->deltas_layout = {2, 4};
-      appState->deltas_layout = {2, 0};
+      appState->deltas_layout = {3, 0};
 
       assert(DOFS_PER_ELEMENT == (appState->primals_layout.size + appState->moments_layout.size + appState->deltas_layout.size));
 
@@ -95,10 +95,10 @@ public:
 
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
-      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
-      OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
 
 
       // Update params specific to this solve here
@@ -142,7 +142,7 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
+        appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
 
         // Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
         //                                     appState->V.row(appState->F(i, 1)) +
@@ -156,7 +156,7 @@ public:
         // appState->frames.row(i)
  
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
-        x.segment<2>(nvars*i) = appState->frames.row(i);
+        x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
         
       }
@@ -192,10 +192,11 @@ public:
                     // Set frame orientation based on the centroid
                     Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
 
-                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(4);
+                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(DOFS_PER_ELEMENT);
                     double theta = atan2(vec(1),vec(0)) * .5; // acos(vec(1)) * .5;
                     frame(0) = cos(theta);
                     frame(1) = sin(theta);
+                    frame(2) = 0.;
                     // frame(2) = -vec(1);
                     // frame(3) = vec(0);
                     appState->frames.row(i) = frame;
@@ -253,7 +254,7 @@ public:
       Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        appState->frames.row(i) = x.segment<2>(nvars*i);
+        appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
 
         
@@ -286,7 +287,7 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        x.segment<2>(nvars*i) = appState->frames.row(i);
+        x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
       }
       _opt->_cur_x = x;
 
