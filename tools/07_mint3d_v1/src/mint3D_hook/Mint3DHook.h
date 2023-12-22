@@ -1,5 +1,5 @@
-#ifndef MINT2DHOOK_H
-#define MINT2DHOOK_H
+#ifndef MINT3DHOOK_H
+#define MINT3DHOOK_H
 
 #include "AppState.h" // Include AppState definition
 #include <Eigen/Dense>
@@ -27,18 +27,18 @@ enum class DOFType {
     primals, moments, deltas, gammas, Element_COUNT
 };
 
-class Mint2DHook : public virtual PhysicsHook
+class Mint3DHook : public virtual PhysicsHook
 {
 public:
 
-    Mint2DHook(AppState* state) : PhysicsHook() {
+    Mint3DHook(AppState* state) : PhysicsHook() {
         appState = state;
         outputData = appState->os;
         opt = new ADFunc_TinyAD_Instance<6>();
         appState->config = std::make_unique<MyConfig>(); 
     //   current_element = Field_View::vec_norms;
     }
-    virtual ~Mint2DHook(){
+    virtual ~Mint3DHook(){
         delete appState;
         delete outputData;
         delete opt;
@@ -104,4 +104,4 @@ private:
     // Other private member variables and functions as needed
 };
 
-#endif // MINT2DHOOK_H
+#endif // MINT3DHOOK_H

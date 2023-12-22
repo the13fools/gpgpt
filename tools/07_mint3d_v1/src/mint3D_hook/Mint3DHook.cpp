@@ -3,7 +3,7 @@
 /////   init simulation
 ///////////////////////
 
-#include "Mint2DHook.h"
+#include "Mint3DHook.h"
 #include "AppState.h"
 #include "FileParser.h"
 #include "Serialization.h"
@@ -32,7 +32,7 @@
 
 #include <thread>
 
-void Mint2DHook::drawGUI() {
+void Mint3DHook::drawGUI() {
 
 
     // original gui also 
@@ -55,7 +55,7 @@ void Mint2DHook::drawGUI() {
     ImGuiWidgets::ShowMainGUI(*appState);
 }
 
-void Mint2DHook::updateRenderGeometry() {
+void Mint3DHook::updateRenderGeometry() {
     // Check if need to reload, and do this if needed.
     if (appState->shouldReload) {
         std::cout << "do from file reload" << std::endl;
@@ -180,7 +180,7 @@ void Mint2DHook::updateRenderGeometry() {
 
 
 // Need to fill out viewer for each of: Field_View { vec_dirch, moment_dirch, sym_curl_residual, primal_curl_residual,
-void Mint2DHook::renderRenderGeometry()
+void Mint3DHook::renderRenderGeometry()
 {
 
     if ((appState->shouldReload || appState->updateRenderGeometryNextFrameIfPaused) && this->isPaused())
@@ -305,7 +305,7 @@ void Mint2DHook::renderRenderGeometry()
 
 }
 
-void Mint2DHook::pause() {
+void Mint3DHook::pause() {
     PhysicsHook::pause();
     appState->keepSolving = true;
     appState->solveStatus = "paused";
@@ -316,7 +316,7 @@ void Mint2DHook::pause() {
 
 
 
-void Mint2DHook::initSimulation() {
+void Mint3DHook::initSimulation() {
     // Load mesh using igl::readOBJ
         // igl::readOBJ("/home/josh/Documents/mint_redux/geometry-processing-starter-kit/tools/shared/" + cur_mesh_name + ".obj", V, F);
 
@@ -450,7 +450,7 @@ void Mint2DHook::initSimulation() {
     polyscope::view::resetCameraToHomeView();
 }
 
-bool Mint2DHook::loadPrimaryData() {
+bool Mint3DHook::loadPrimaryData() {
     bool success = true;
 
     std::vector<FileTypeInfo> fileInfo = {
@@ -496,7 +496,7 @@ bool Mint2DHook::loadPrimaryData() {
 
 
 
-bool Mint2DHook::loadGuiState() {
+bool Mint3DHook::loadGuiState() {
     bool success = true;
     for (int i = 0; i < (int) Views::Field_View::gui_free; ++i) {
         Field_View view = static_cast<Field_View>(i);
@@ -525,7 +525,7 @@ bool Mint2DHook::loadGuiState() {
 
 
 
-bool Mint2DHook::simulateOneStep() {
+bool Mint3DHook::simulateOneStep() {
     appState->solveStatus = "simulate one step";
     int max_iters = appState->maxIterations;
     int cur_iter = appState->currentIteration;
@@ -588,7 +588,7 @@ bool Mint2DHook::simulateOneStep() {
 }
 
 
-void Mint2DHook::resetAppState() {
+void Mint3DHook::resetAppState() {
     // Resetting simulation parameters to default or initial values
     appState->currentIteration = 0;
     // appState->currentFileID = 0;
@@ -634,7 +634,7 @@ void Mint2DHook::resetAppState() {
 }
 
 
-void Mint2DHook::initCurlOperators()
+void Mint3DHook::initCurlOperators()
 {
     int nedges = appState->cur_surf->nEdges();
     appState->C_primal.resize(nedges, 2);
@@ -677,7 +677,7 @@ void Mint2DHook::initCurlOperators()
 
 }
 
-void Mint2DHook::initializeLogFolder() {
+void Mint3DHook::initializeLogFolder() {
     // Retrieve current time
     auto now = std::chrono::system_clock::now();
     auto date = date::floor<date::days>(now);
@@ -705,12 +705,12 @@ void Mint2DHook::initializeLogFolder() {
 }
 
 
-void Mint2DHook::initializeOtherParameters() {
+void Mint3DHook::initializeOtherParameters() {
     // ... implementation for initializing other parameters ...
 }
 
 
-void Mint2DHook::initBoundaryConditions() {
+void Mint3DHook::initBoundaryConditions() {
     // Assuming boundary faces are identified in AppState
     Eigen::MatrixXi K;
 
@@ -752,7 +752,7 @@ void Mint2DHook::initBoundaryConditions() {
 
 
 
-void Mint2DHook::updateOptimizationParameters() {
+void Mint3DHook::updateOptimizationParameters() {
     // Example implementation (needs to be adapted to specific needs)
     if (appState->currentIteration % 10 == 0) {
         // Adjust weights or parameters every 10 iterations
@@ -762,7 +762,7 @@ void Mint2DHook::updateOptimizationParameters() {
 }
 
 
-void Mint2DHook::checkAndUpdateConvergence(double decrement, double energy) {
+void Mint3DHook::checkAndUpdateConvergence(double decrement, double energy) {
     // Example convergence check
     // if (decrement < appState->convergenceThreshold) {
     //     appState->isConverged = true;
@@ -770,7 +770,7 @@ void Mint2DHook::checkAndUpdateConvergence(double decrement, double energy) {
     // }
 }
 
-void Mint2DHook::finalizeIteration() {
+void Mint3DHook::finalizeIteration() {
     // Log current state if necessary
     // Check for additional stopping conditions
     // Example:

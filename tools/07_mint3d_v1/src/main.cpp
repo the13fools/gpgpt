@@ -10,9 +10,9 @@
 
 // #include "VizHook.h"
 
-// #include "Solve_L2_newton_rank1.h"
-#include "MiNT_krushkal_rank2.h"
-#include "Mint2DHook.h"
+#include "Solve_L2_newton_rank1.h"
+// #include "MiNT_krushkal_rank2.h"
+#include "Mint3DHook.h"
 
 #include <thread>
 
@@ -20,7 +20,7 @@
 
 
 
-static Mint2DHook *hook = NULL;
+static Mint3DHook *hook = NULL;
 
 
 void toggleSimulation()
@@ -123,8 +123,8 @@ int main(int argc, char **argv) {
   // Initialize polyscope
   polyscope::init();
 
-  // hook = static_cast<Mint2DHook*>(new Solve_L2_newton_rank1());
-  hook = static_cast<Mint2DHook*>(new MiNT_krushkal_rank2());
+  hook = static_cast<Mint3DHook*>(new Solve_L2_newton_rank1());
+  // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank2());
 //
 
 
