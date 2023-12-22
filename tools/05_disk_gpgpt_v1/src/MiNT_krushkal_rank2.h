@@ -164,10 +164,19 @@ public:
                     Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
 
                     Eigen::VectorXd frame = Eigen::VectorXd::Zero(4);
-                    frame(0) = vec(0);
-                    frame(1) = vec(1);
-                    frame(2) = -vec(1);
-                    frame(3) = vec(0);
+
+                    double theta = atan2(vec(1),vec(0)) * .25; // acos(vec(1)) * .5;
+                    frame(0) = cos(theta);
+                    frame(1) = sin(theta);
+                    frame(2) = -sin(theta);
+                    frame(3) = cos(theta);
+
+
+
+                    // frame(0) = vec(0);
+                    // frame(1) = vec(1);
+                    // frame(2) = -vec(1);
+                    // frame(3) = vec(0);
                     appState->frames.row(i) = frame;
                 }
             }

@@ -17,7 +17,7 @@
 #include "ADWrapper/ADFuncRunner.h"
 #include "ADWrapper/ADFunc_TinyAD_Instance.h"
 
-
+#include <igl/on_boundary.h>
 
 #include <igl/writeDMAT.h>
 
@@ -60,9 +60,9 @@ public:
     {
 
 
-        appState->meshName = "circle_1000";
+        // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
-      // appState->meshName = "circle";
+      appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
       
@@ -154,7 +154,7 @@ public:
 
 
         // appState->frames.row(i)
-
+ 
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
         x.segment<2>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
@@ -163,6 +163,51 @@ public:
       _opt->_cur_x = x;
 
       appState->config->w_smooth_vector = 0;
+
+    }
+
+    virtual void initBoundaryConditions() {
+        // Assuming boundary faces are identified in AppState
+        Eigen::MatrixXi K;
+
+        // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
+
+        Eigen::VectorXi boundaryFaces;
+        igl::on_boundary(appState->F,boundaryFaces, K);
+
+        appState->bound_face_idx = boundaryFaces;
+
+        appState->frames.resize(appState->F.rows(), DOFS_PER_ELEMENT);
+
+        // Initialize boundary conditions
+        for (int i = 0; i < boundaryFaces.size(); ++i) {
+            if (boundaryFaces(i) == 1) { // If face is on the boundary
+                Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
+                                            appState->V.row(appState->F(i, 1)) +
+                                            appState->V.row(appState->F(i, 2))) / 3.0;
+
+                if (centroid.norm() < 0.45) { // Custom condition for boundary faces
+                    boundaryFaces(i) = -1; // Mark for special handling or exclusion
+                } else {
+                    // Set frame orientation based on the centroid
+                    Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
+
+                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(4);
+                    double theta = atan2(vec(1),vec(0)) * .5; // acos(vec(1)) * .5;
+                    frame(0) = cos(theta);
+                    frame(1) = sin(theta);
+                    // frame(2) = -vec(1);
+                    // frame(3) = vec(0);
+                    appState->frames.row(i) = frame;
+                }
+            }
+        }
+
+        appState->frames_orig = appState->frames;
+
+        // 
+
+        // 
 
     }
 
