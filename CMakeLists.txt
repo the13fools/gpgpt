@@ -144,7 +144,7 @@ option(LIBIGL_PNG                 "Build target igl::png"                 OFF)
 option(LIBIGL_IMGUI               "Build target igl::imgui"               OFF)
 option(LIBIGL_OPENGL              "Build target igl::opengl"              OFF)
 option(LIBIGL_PREDICATES          "Build target igl::predicates"          OFF)
-option(LIBIGL_COPYLEFT_COMISO     "Build target igl_copyleft::comiso"     OFF)
+option(LIBIGL_COPYLEFT_COMISO     "Build target igl_copyleft::comiso"     ON)
 option(LIBIGL_COPYLEFT_CORE       "Build target igl_copyleft::core"       ON)
 option(LIBIGL_COPYLEFT_TETGEN     "Build target igl_copyleft::tetgen"     OFF)
 option(LIBIGL_COPYLEFT_CGAL       "Build target igl_copyleft::cgal"       OFF)
@@ -179,9 +179,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_S
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ${spectra_SOURCE_DIR}/include/Spectra)
 
 if(MSVC) # AND USE_OpenMP)
-  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD) # stdc++fs
+  target_link_libraries(${PROJECT_NAME} igl::core igl_copyleft::comiso polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD) # stdc++fs
 else() # AND USE_OpenMP)
-  target_link_libraries(${PROJECT_NAME} igl::core polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD stdc++fs) # c++experimental
+  target_link_libraries(${PROJECT_NAME} igl::core igl_copyleft::comiso polyscope ${SUITESPARSE_LIBRARIES} nlohmann_json::nlohmann_json TinyAD stdc++fs) # c++experimental
 endif()
 
 
