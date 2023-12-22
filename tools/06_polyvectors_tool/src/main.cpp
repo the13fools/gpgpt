@@ -1,6 +1,7 @@
 #include "polyscope/point_cloud.h"
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
+#include "polyscope/curve_network.h"
 
 #include <igl/doublearea.h>
 #include <igl/cotmatrix_entries.h>
@@ -18,6 +19,10 @@
 #include "../src/SurfaceFields/VectorFields2PolyVectors.h"
 #include "../src/SurfaceFields/StripePatternIntegration.h"
 #include "../src/SurfaceFields/UpsampleSurfaceFields.h"
+#include "../src/SurfaceFields/FieldSurface.h"
+#include "../src/SurfaceFields/Weave.h"
+#include "../src/SurfaceFields/CoverMesh.h"
+#include "../src/SurfaceFields/Permutations.h"
 
 
 Eigen::MatrixXd mesh_pts;
@@ -344,6 +349,59 @@ void myCallback() {
 
   if (ImGui::Button("Show Error")) {
     renderErrFields();
+  }
+
+  if (ImGui::Button("Round Vector Fields")) {
+      int nfields = poly_vecs.rows() / mesh_faces.rows();
+      int nfaces = mesh_faces.rows();
+      // step 1: build weave
+      std::unique_ptr<Weave> weave = std::make_unique<Weave>(mesh_pts, mesh_faces, nfields);
+      for (int i = 0; i < nfaces; i++) {
+          for (int j = 0; j < nfields; j++) {
+              int vidx = weave->fs->vidx(i, j);
+              weave->fs->vectorFields.segment<2>(vidx) = poly_vecs.row(nfields * i + j).transpose();
+          }
+      }
+      // step 2: comb the vector fields
+      weave->combFieldsOnFieldSurface();
+      //reassignAllPermutations(*weave);
+
+      // step 3: get the singularities
+      std::vector<std::pair<int, int> > topsingularities;
+      std::vector<std::pair<int, int> > geosingularities;
+      findSingularVertices(*weave, topsingularities, geosingularities);
+
+      std::vector<std::pair<int, int> > todelete = topsingularities;
+      for (int i = 0; i < geosingularities.size(); i++)
+          todelete.push_back(geosingularities[i]);
+
+      // step 4: cover mesh
+      CoverMesh* cover_mesh = weave->createCover(todelete);
+
+      // step 5: integration
+      std::unique_ptr<SurfaceFields::StripePatternsGlobalIntegration> ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+      cover_mesh->integrateField(ptr.get(), rescale_ratio);
+
+      // step 7: render cover surface
+      Eigen::MatrixXd renderQCover;
+      Eigen::MatrixXi renderFCover;
+
+      std::vector<Eigen::Vector3d> face_vectors;
+
+      std::vector<Eigen::Vector3d> cut_pts;
+      std::vector<std::vector<int>> cut_edges;
+
+      cover_mesh->createVisualization(renderQCover, renderFCover, face_vectors, cut_pts, cut_edges);
+
+      // step 8: rendering
+      auto cover_surf = polyscope::registerSurfaceMesh("cover mesh", renderQCover, renderFCover);
+      Eigen::MatrixXd cover_phi = paintPhi(cover_mesh->theta);
+      cover_surf->addVertexColorQuantity("phi", cover_phi);
+      cover_surf->addFaceVectorQuantity("vecs", face_vectors);
+      polyscope::registerCurveNetwork("cuts", cut_pts, cut_edges);
+
+      delete cover_mesh;
+
   }
 
 }

@@ -62,14 +62,31 @@ void Mint2DHook::drawGUI() {
 }
 
 void Mint2DHook::updateRenderGeometry() {
+    // Update visualization data based on current state in appState
+
+    // Update the vertex positions and other data in Polyscope
+    // polyscope::getSurfaceMesh("c")->updateVertexPositions(appState->V);
+    // polyscope::getSurfaceMesh("c")->updateFaceIndices(appState->F);
+
+////
+//////  Here we calculate derived quantities. 
+
     // Check if need to reload, and do this if needed.
     if (appState->shouldReload) {
+
         std::cout << "do from file reload" << std::endl;
+
         pause();
+        // while(!this->isPaused())
+        // {
+        //     // wait for pause
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // }
         if (!this->isPaused())
         {
             std::cout << "failed to pause" << std::endl;
         }
+
         initSimulation();
     }
     appState->updateRenderGeometryNextFrameIfPaused = false;
@@ -82,28 +99,28 @@ void Mint2DHook::updateRenderGeometry() {
     // Set the smoothness and curl to visualize according to the gui 
     switch (appState->cur_moment_view)
     {
-        case Views::Sym_Moment_View::L2: 
-            appState->os->smoothness_sym = appState->os->smoothness_L2;
-            break;
-        case Views::Sym_Moment_View::L4: 
-            appState->os->smoothness_sym = appState->os->smoothness_L4;
-            break;
-        case Views::Sym_Moment_View::L2_plus_L4: 
-            appState->os->smoothness_sym = appState->os->smoothness_L2 + appState->os->smoothness_L4;
-            break;
+    case Views::Sym_Moment_View::L2:
+        appState->os->smoothness_sym = appState->os->smoothness_L2;
+        break;
+    case Views::Sym_Moment_View::L4:
+        appState->os->smoothness_sym = appState->os->smoothness_L4;
+        break;
+    case Views::Sym_Moment_View::L2_plus_L4:
+        appState->os->smoothness_sym = appState->os->smoothness_L2 + appState->os->smoothness_L4;
+        break;
     }
 
     switch (appState->cur_curl_view)
     {
-        case Views::Sym_Curl_View::L2: 
-            appState->os->curls_sym = appState->os->curl_L2;
-            break;
-        case Views::Sym_Curl_View::L4: 
-            appState->os->curls_sym = appState->os->curl_L4;
-            break;
-        case Views::Sym_Curl_View::L2_plus_L4: 
-            appState->os->curls_sym = appState->os->curl_L2 + appState->os->curl_L4;
-            break;
+    case Views::Sym_Curl_View::L2:
+        appState->os->curls_sym = appState->os->curl_L2;
+        break;
+    case Views::Sym_Curl_View::L4:
+        appState->os->curls_sym = appState->os->curl_L4;
+        break;
+    case Views::Sym_Curl_View::L2_plus_L4:
+        appState->os->curls_sym = appState->os->curl_L2 + appState->os->curl_L4;
+        break;
     }
 
 
@@ -127,6 +144,10 @@ void Mint2DHook::updateRenderGeometry() {
         std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
 
     }
+
+
+
+
     std::cout << "update render geometry" << std::endl;
 
     outputData = new OutputState(*appState->os);
@@ -143,20 +164,22 @@ void Mint2DHook::updateRenderGeometry() {
     int vec_dofs = appState->primals_layout.size / frame_rank;
     int frows = appState->frames.rows();
 
-    if (vec_dofs != 2 )
+    if (vec_dofs != 2)
         std::cout << "wrong number of dofs for mint2d" << std::endl;
 
-    for(int vid = 0; vid < frame_rank; vid++)
+    for (int vid = 0; vid < frame_rank; vid++)
     {
         Eigen::MatrixXd vec_cur = Eigen::MatrixXd::Zero(appState->frames.rows(), 3);
 
-        vec_cur << appState->frames.block(0, vid * vec_dofs, frows, vec_dofs),  Eigen::MatrixXd::Zero(frows, 1);
+        vec_cur << appState->frames.block(0, vid * vec_dofs, frows, vec_dofs), Eigen::MatrixXd::Zero(frows, 1);
         outputData->frames.push_back(vec_cur);
     }
 
     // outputData->frames.resize(appState->frames.rows(), 3);
     // outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
 
+
+    // 
     if (appState->shouldReload)
     {
         appState->currentFileID--;
@@ -174,11 +197,34 @@ void Mint2DHook::updateRenderGeometry() {
         {
             appState->max_saved_index = appState->currentFileID;
         }
+
+
+        // Additional logging for any other fields in AppState as needed
     }
     appState->LogToFile("curr");
 
 
     // appState->zeroPassiveVars();
+
+
+
+
+    // Update all of the calculated quantities of metadata.  
+
+
+    // Advance simulation statistics in gui. 
+
+
+
+
+
+    // // Handle the gui_free case for the Field_View enum
+    // if (appState->currentElement == Field_View::gui_free) {
+    //     // Implementation for gui_free case
+    //     if (appState->customVisualizationEnabled) {
+    //         // Custom visualization logic
+    //     }
+    // }
 
     // Request a redraw in Polyscope to update the visualization
     polyscope::requestRedraw();
@@ -196,36 +242,41 @@ void Mint2DHook::renderRenderGeometry()
     }
 
     // Depending on the current element view, render different quantities
-    const std::string cur_field = fieldViewToFileStub(appState->current_element);
+    // TODO update this to render smoothness and stripe patterns 
+
+
+    const char* cur_field = fieldViewToFileStub(appState->current_element).c_str();
+
+    // std::cout << cur_field << std::endl;
 
     Eigen::VectorXd cur_scalar_quantity;
     switch (appState->current_element) {
-        case Field_View::vec_norms:
-            cur_scalar_quantity = outputData->norms_vec;
-            break;
-        case Field_View::delta_norms:
-            cur_scalar_quantity = outputData->norms_delta;
-            break;
-        case Field_View::vec_dirch:
-            cur_scalar_quantity = outputData->smoothness_primal;
-            break;
-        case Field_View::moment_dirch:
-            // cur_scalar_quantity = outputData->smoothness_sym;
-            // cur_scalar_quantity = outputData->smoothness_L2;
-            cur_scalar_quantity = outputData->smoothness_sym;
-            break;
-        case Field_View::primal_curl_residual:
-            cur_scalar_quantity = outputData->curls_primal;
-            break;
-        case Field_View::sym_curl_residual:
-            cur_scalar_quantity = outputData->curls_sym;
-            break;
-        case Field_View::gui_free:
-            // Implement logic for gui_free if required
-            break;
-        default:
-            std::cerr << "Unknown Field_View option selected in AppState." << std::endl;
-            break;
+    case Field_View::vec_norms:
+        cur_scalar_quantity = outputData->norms_vec;
+        break;
+    case Field_View::delta_norms:
+        cur_scalar_quantity = outputData->norms_delta;
+        break;
+    case Field_View::vec_dirch:
+        cur_scalar_quantity = outputData->smoothness_primal;
+        break;
+    case Field_View::moment_dirch:
+        // cur_scalar_quantity = outputData->smoothness_sym;
+        // cur_scalar_quantity = outputData->smoothness_L2;
+        cur_scalar_quantity = outputData->smoothness_sym;
+        break;
+    case Field_View::primal_curl_residual:
+        cur_scalar_quantity = outputData->curls_primal;
+        break;
+    case Field_View::sym_curl_residual:
+        cur_scalar_quantity = outputData->curls_sym;
+        break;
+    case Field_View::gui_free:
+        // Implement logic for gui_free if required
+        break;
+    default:
+        std::cerr << "Unknown Field_View option selected in AppState." << std::endl;
+        break;
     }
 
     if (appState->current_element == Field_View::gui_free)
@@ -257,63 +308,71 @@ void Mint2DHook::renderRenderGeometry()
         }
     }
 
-//     if (appState->current_element != Field_View::gui_free)
-//     {
-//         // cur_scalar_field->setEnabled(true);
-//         // cur_scalar_field->setMapRange(appState->fieldViewActive[appState->current_element]);
-//         // (cur_field
-// // getBoundsPair
-//     }
+    //     if (appState->current_element != Field_View::gui_free)
+    //     {
+    //         // cur_scalar_field->setEnabled(true);
+    //         // cur_scalar_field->setMapRange(appState->fieldViewActive[appState->current_element]);
+    //         // (cur_field
+    // // getBoundsPair
+    //     }
 
-        // Update other visualization properties based on AppState
-        // Example: Vector field visualization
-        if (appState->showVectorField) {
-            //  std::cout << "show vector field" << std::endl;
+            // Update other visualization properties based on AppState
+            // Example: Vector field visualization
+    if (appState->showVectorField) {
+        //  std::cout << "show vector field" << std::endl;
 
-            //  std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
-            //  std::cout << "renderState->frames.rows() " << renderState->frames.rows() << std::endl;
-            //  polyscope::getSurfaceMesh("c");
-            
-            int num_vecs = outputData->frames.size();
-            for(int v = 0; v < num_vecs; v++)
+        //  std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
+        //  std::cout << "renderState->frames.rows() " << renderState->frames.rows() << std::endl;
+        //  polyscope::getSurfaceMesh("c");
+
+        int num_vecs = outputData->frames.size();
+        for (int v = 0; v < num_vecs; v++)
+        {
+
+            Eigen::MatrixXd cur_vec = outputData->frames[v];
+
+
+            double color_shift = (v + 1.) * 1.0 / num_vecs;
+
+            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field " + v, cur_vec);
+            vectorField->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+            auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
+            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+
+            if (appState->show_frames && appState->show_frames_as_lines)
             {
+                vectorField->setEnabled(true);
+                vectorFieldNeg->setEnabled(true);
+                vectorField->setVectorLengthScale(appState->gui_vec_size);
+                vectorFieldNeg->setVectorLengthScale(appState->gui_vec_size);
 
-                Eigen::MatrixXd cur_vec = outputData->frames[v];
+                vectorField->setVectorRadius(0.001);
+                vectorFieldNeg->setVectorRadius(0.001);
 
-
-                double color_shift = (v+1.) * 1.0 / num_vecs;
-
-                auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field " + v, cur_vec);
-                vectorField->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
-                auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
-                vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
-
-                if(appState->show_frames && appState->show_frames_as_lines)
-                {
-                    vectorField->setEnabled(true);
-                    vectorFieldNeg->setEnabled(true);
-                    vectorField->setVectorLengthScale(appState->gui_vec_size);
-                    vectorFieldNeg->setVectorLengthScale(appState->gui_vec_size);
-
-                    vectorField->setVectorRadius(0.001);
-                    vectorFieldNeg->setVectorRadius(0.001);
-
-                    
-                    
-                }
-                else if (appState->show_frames)
-                {
-                    vectorField->setEnabled(true);
-                    vectorFieldNeg->setEnabled(false);
-                }
-                else 
-                {
-                    vectorField->setEnabled(false);
-                    vectorFieldNeg->setEnabled(false);
-                }
 
 
             }
+            else if (appState->show_frames)
+            {
+                vectorField->setEnabled(true);
+                vectorFieldNeg->setEnabled(false);
+            }
+            else
+            {
+                vectorField->setEnabled(false);
+                vectorFieldNeg->setEnabled(false);
+            }
+
+
+        }
+
+
+
+
+
+
+
+        // auto vectorFieldOrig = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field Orig", appState->frames);
     }
 
     polyscope::requestRedraw();
@@ -371,14 +430,7 @@ void Mint2DHook::initSimulation() {
         std::cout << default_path << std::endl;
         if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {
             std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
-
-            // tricky part for windows
-            default_path = std::string(SOURCE_PATH) + "/tools/shared/" + appState->meshName + ".obj";
-            if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {
-                std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
-                return;
-            }
-
+            return;
         }
         appState->cur_surf = std::make_unique<Surface>(V, F);
 
@@ -409,7 +461,30 @@ void Mint2DHook::initSimulation() {
             return;
         }
         appState->cur_surf = std::make_unique<Surface>(V, F);
+
+        // appState->shouldReload = true;
+
+
+
+
+        // load mesh from file 
+
+
+
+        // fileParser->
+        // bool bfraExists = fileParser.parseLargestFile((appState->frames), FileType::BFRA);
+        // bool bmomExists = fileParser.parseLargestFile((appState->deltas), FileType::BMOM);
+
+
+            // Deserialize configuration from a file
+        // if (!Serialization::deserializeConfig(appState->config, appState->directoryPath + "/config.json")) {
+        //     std::cerr << "Failed to load config from " << appState->directoryPath + "/config.json" << std::endl;
+        //     // Handle error, possibly set default config
+        // }
+
     }
+
+    // fieldViewActive = 
 
     std::cout << "V.rows() " << V.rows() << " F.rows() " << F.rows() << std::endl;
 
@@ -434,6 +509,12 @@ void Mint2DHook::initSimulation() {
         loadGuiState();
 
     }
+
+
+
+
+    // Initialize other parameters and logging folder
+    // initializeOtherParameters();
 
     if (appState->shouldReload == true)
     {
@@ -533,7 +614,7 @@ bool Mint2DHook::loadPrimaryData() {
 
 bool Mint2DHook::loadGuiState() {
     bool success = true;
-    for (int i = 0; i < (int) Views::Field_View::gui_free; ++i) {
+    for (int i = 0; i < (int)Views::Field_View::gui_free; ++i) {
         Field_View view = static_cast<Field_View>(i);
         std::string fieldStub = Views::fieldViewToFileStub(view) + "_";
         std::string fieldFile = fileParser->getFileWithID(fieldStub, ".bdat", appState->currentFileID);
@@ -587,7 +668,7 @@ bool Mint2DHook::simulateOneStep() {
         // 1. Relative residual is small
         // 2. Absolute residual is small
         // 3. Gradient norm is small or step progress is negative (converged)
-        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->_prev_step_progress < 1e-10)) 
+        if (appState->cur_rel_residual < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-6 || opt->_prev_step_progress < 1e-10))
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
