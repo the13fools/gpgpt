@@ -10,7 +10,7 @@ file(GLOB FRONTENDFILES src/mint3D_hook/*.cpp src/mint3D_hook/*.h src/mint3D_hoo
 # file(GLOB ADWRAPPER ../src/04_adfunc_wrapper/ADWrapper/*.cpp ../src/04_adfunc_wrapper/ADWrapper/*.h )
 
 add_executable(${PROJECT_NAME}  ${SRCFILES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ../../src ../../lib src/mint2D_gpgpt_hook)
+target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ../../src ../../lib src/mint3D_hook)
 target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES})
 # target_sources(${PROJECT_NAME} PUBLIC ${FRONTENDFILES} ${ADWRAPPER})
 

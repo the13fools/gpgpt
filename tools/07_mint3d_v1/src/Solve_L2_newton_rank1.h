@@ -4,7 +4,7 @@
 
 
 #include "PhysicsHook.h"
-#include "Mint2DHook.h"
+#include "Mint3DHook.h"
 
 #include "Surface.h"
 
@@ -26,10 +26,10 @@
 #define DOFS_PER_ELEMENT 2
 
 
-class Solve_L2_newton_rank1 : public Mint2DHook
+class Solve_L2_newton_rank1 : public Mint3DHook
 {
 public:
-    Solve_L2_newton_rank1() : Mint2DHook(new AppState()) {
+    Solve_L2_newton_rank1() : Mint3DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
       appState->solveType = "L2_newton_rank1";
       appState->solveDescription = "L2_newton_rank1";
@@ -52,7 +52,7 @@ public:
 
     virtual void drawGUI()
     {
-      Mint2DHook::drawGUI();
+      Mint3DHook::drawGUI();
 
     }
 
@@ -71,7 +71,7 @@ public:
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
-      Mint2DHook::initSimulation();
+      Mint3DHook::initSimulation();
 
       // move this inside mint2d
       appState->solveStatus = "init L2 newton rank 1";
@@ -214,7 +214,7 @@ public:
 
     virtual void updateRenderGeometry()
     {
-      Mint2DHook::updateRenderGeometry();
+      Mint3DHook::updateRenderGeometry();
 
     }
 
@@ -223,13 +223,13 @@ public:
 
     virtual void renderRenderGeometry()
     {
-      Mint2DHook::renderRenderGeometry();
+      Mint3DHook::renderRenderGeometry();
     }
 
 
     virtual bool simulateOneStep()
     {
-      return Mint2DHook::simulateOneStep();
+      return Mint3DHook::simulateOneStep();
 
     }
 
