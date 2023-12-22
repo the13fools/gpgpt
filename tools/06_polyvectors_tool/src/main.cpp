@@ -125,8 +125,37 @@ Eigen::MatrixXd paintPhi(const Eigen::VectorXd& phi, Eigen::VectorXd* brightness
     color(i, 2) = b;
   }
   return color;
+}
 
+Eigen::MatrixXd calculateErr(const Surface& surf, const Eigen::MatrixXd& vec, const Eigen::VectorXd& scalars) {
+  int nfaces = surf.data().F.rows();
+  Eigen::MatrixXd err(nfaces, 2);
 
+  for(int i = 0; i < nfaces; i++) {
+    int v0 = surf.data().F(i, 0);
+    int v1 = surf.data().F(i, 1);
+    int v2 = surf.data().F(i, 2);
+
+    Eigen::Vector2d tmp_v = {scalars[v1] - scalars[v0], scalars[v2] - scalars[v0]};
+    Eigen::Matrix2d BTB = surf.data().Bs[i].transpose() * surf.data().Bs[i];
+    tmp_v = BTB.inverse() * tmp_v;
+
+    Eigen::Vector2d diff = tmp_v - (vec.row(i).segment<2>(0)).transpose();
+    err.row(i) = diff.transpose();
+  }
+
+  return err;
+}
+
+Eigen::MatrixXd getExtVecs(const Surface& surf, const Eigen::MatrixXd& vec) {
+  Eigen::MatrixXd face_vecs(surf.data().F.rows(), 3);
+  for(int fid = 0; fid < surf.data().F.rows(); fid++) {
+    Eigen::Vector2d v;
+    v << vector_fields(fid, 0), vector_fields(fid, 1);
+    Eigen::Vector3d v_ext = surf.data().Bs[fid] * v;
+    face_vecs.row(fid) = v_ext.transpose();
+  }
+  return face_vecs;
 }
 
 void renderScalarFields() {
@@ -156,6 +185,34 @@ void renderScalarFields() {
   }
 }
 
+
+void renderErrFields() {
+  int nscalar = scalar_fields.size();
+
+  int nfaces = mesh_faces.rows();
+  int nvecs = vector_fields.rows() / nfaces;
+
+  if(nscalar != nvecs) {
+    return;
+  }
+
+  auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+
+  for(int i = 0; i < nvecs; i++) {
+    Eigen::MatrixXd vecs(nfaces, 2);
+    for(int fid = 0; fid < nfaces; fid++) {
+      vecs.row(fid) = vector_fields.row(nvecs * fid + i);
+    }
+    Eigen::MatrixXd err = calculateErr(surf, vecs, scalar_fields[i]);
+    Eigen::MatrixXd ext_err = getExtVecs(surf, err);
+    Eigen::VectorXd err_norm(nfaces);
+    for(int fid = 0; fid < nfaces; fid++) {
+      err_norm[fid] = ext_err.row(fid).norm();
+    }
+    surf_mesh->addFaceVectorQuantity("err vec " + std::to_string(i), ext_err);
+    surf_mesh->addFaceScalarQuantity("err " + std::to_string(i), err_norm);
+  }
+}
 
 
 void load() {
@@ -283,6 +340,10 @@ void myCallback() {
       edge_one_forms.emplace_back(edge_omega);
     }
     renderScalarFields();
+  }
+
+  if (ImGui::Button("Show Error")) {
+    renderErrFields();
   }
 
 }
