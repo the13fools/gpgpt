@@ -39,12 +39,6 @@ void Mint2DHook::drawGUI() {
 
     /*
 
-          ImGui::InputDouble("Smoothness Weight", &w_smooth);
-            ImGui::InputDouble("S Perp Weight", &w_s_perp);
-            ImGui::InputDouble("Curl Weight", &w_curl);
-            ImGui::InputDouble("Bound Weight", &w_bound);
-
-
     /// Whatever maybe make this a dropdown eventually
     // From line 556 of imgui demo: https://skia.googlesource.com/external/github.com/ocornut/imgui/+/refs/tags/v1.73/imgui_demo.cpp
                 const char* element_names[Field_View::Element_COUNT] = { "Vector Norms", "Delta Norms", "Vector Dirichlet", "Symmetric Dirichlet", "Vector Curl", "Symmetric Curl", "free" };
@@ -257,63 +251,50 @@ void Mint2DHook::renderRenderGeometry()
         }
     }
 
-//     if (appState->current_element != Field_View::gui_free)
-//     {
-//         // cur_scalar_field->setEnabled(true);
-//         // cur_scalar_field->setMapRange(appState->fieldViewActive[appState->current_element]);
-//         // (cur_field
-// // getBoundsPair
-//     }
 
-        // Update other visualization properties based on AppState
-        // Example: Vector field visualization
-        if (appState->showVectorField) {
-            //  std::cout << "show vector field" << std::endl;
 
-            //  std::cout << "appState->frames.rows() " << appState->frames.rows() << std::endl;
-            //  std::cout << "renderState->frames.rows() " << renderState->frames.rows() << std::endl;
-            //  polyscope::getSurfaceMesh("c");
-            
-            int num_vecs = outputData->frames.size();
-            for(int v = 0; v < num_vecs; v++)
+    if (appState->showVectorField) {
+        
+        int num_vecs = outputData->frames.size();
+        for(int v = 0; v < num_vecs; v++)
+        {
+
+            Eigen::MatrixXd cur_vec = outputData->frames[v];
+
+
+            double color_shift = (v+1.) * 1.0 / num_vecs;
+
+            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field " + v, cur_vec);
+            vectorField->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+            auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
+            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+
+            if(appState->show_frames && appState->show_frames_as_lines)
             {
+                vectorField->setEnabled(true);
+                vectorFieldNeg->setEnabled(true);
+                vectorField->setVectorLengthScale(appState->gui_vec_size);
+                vectorFieldNeg->setVectorLengthScale(appState->gui_vec_size);
 
-                Eigen::MatrixXd cur_vec = outputData->frames[v];
+                vectorField->setVectorRadius(0.001);
+                vectorFieldNeg->setVectorRadius(0.001);
 
-
-                double color_shift = (v+1.) * 1.0 / num_vecs;
-
-                auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field " + v, cur_vec);
-                vectorField->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
-                auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
-                vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
-
-                if(appState->show_frames && appState->show_frames_as_lines)
-                {
-                    vectorField->setEnabled(true);
-                    vectorFieldNeg->setEnabled(true);
-                    vectorField->setVectorLengthScale(appState->gui_vec_size);
-                    vectorFieldNeg->setVectorLengthScale(appState->gui_vec_size);
-
-                    vectorField->setVectorRadius(0.001);
-                    vectorFieldNeg->setVectorRadius(0.001);
-
-                    
-                    
-                }
-                else if (appState->show_frames)
-                {
-                    vectorField->setEnabled(true);
-                    vectorFieldNeg->setEnabled(false);
-                }
-                else 
-                {
-                    vectorField->setEnabled(false);
-                    vectorFieldNeg->setEnabled(false);
-                }
-
-
+                
+                
             }
+            else if (appState->show_frames)
+            {
+                vectorField->setEnabled(true);
+                vectorFieldNeg->setEnabled(false);
+            }
+            else 
+            {
+                vectorField->setEnabled(false);
+                vectorFieldNeg->setEnabled(false);
+            }
+
+
+        }
     }
 
     polyscope::requestRedraw();
@@ -330,7 +311,7 @@ void Mint2DHook::pause() {
     appState->solveStatus = "paused";
     std::cout << "paused" << std::endl;
 }
-// Pause the simulati
+// Pause the simulation
 
 
 
@@ -355,11 +336,6 @@ void Mint2DHook::initSimulation() {
 
     Eigen::MatrixXd V; // Temporary storage for vertices
     Eigen::MatrixXi F; // Temporary storage for faces
-
-    // Check if .bfra and .bmom files exist
-
-    // bool bfraExists = false;
-    // bool bmomExists = false;
 
     // Load mesh and config
     if (create_new_dir) {
@@ -517,17 +493,6 @@ bool Mint2DHook::loadPrimaryData() {
 
     return success;
 }
-
-// MyConfig* conf_new = appState->config;
-//         if ( !Serialization::deserializeConfig(*conf_new, config_path) ) {
-//             std::cerr << "Failed to load data for " << "config_" << " from file: " << config_path << std::endl;
-//             success = false;
-//         }
-//         else 
-//         {
-//             appState->config = conf_new;
-//         }
-//         // std::cout << "conf_new->w_curl " << conf_new->w_curl << std::endl;
 
 
 
