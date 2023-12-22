@@ -141,8 +141,9 @@ namespace ImGuiWidgets {
     // Function to draw a file loader widget in ImGui
     void DrawFileLoader(AppState& appState) {
         ImGui::Text("File Loader:");
+    
 
-        // ImGui::InputText("Directory", &appState.directoryPath);
+        // ImGui::InputText("Directory", appState.directoryPath.c_str());
         if (ImGui::Button("Load Files")) {
             appState.refreshFileLists();
             // appState.setDefaultFileIndices();
@@ -423,6 +424,8 @@ namespace ImGuiWidgets {
         
 
         ShowFieldViewCheckboxes(appState);
+
+        DrawFileLoader(appState);
 
         ImGui::Begin("Optimization Params");
         ShowOptWeights(appState);

@@ -314,22 +314,6 @@ void Mint2DHook::renderRenderGeometry()
 
 
             }
-
-
-            
-
-
-        }
-        else if (appState->show_frames)
-        {
-            vectorField->setEnabled(true);
-            vectorFieldNeg->setEnabled(false);
-        }
-        else
-        {
-            vectorField->setEnabled(false);
-            vectorFieldNeg->setEnabled(false);
-        }
     }
 
     polyscope::requestRedraw();
@@ -684,20 +668,6 @@ void Mint2DHook::resetAppState() {
     polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
 }
 
-//     appState->renderFrames = Eigen::MatrixXd::Zero(F.rows(), 3);
-
-// appState->frames = Eigen::MatrixXd::Zero(F.rows(), 2);
-// appState->moments = Eigen::MatrixXd::Zero(F.rows(), 0);
-// appState->deltas = Eigen::MatrixXd::Zero(F.rows(), 4);
-// //   metadata = Eigen::MatrixXd::Zero(F.rows(), 2);
-// appState->norms_vec = Eigen::VectorXd::Zero(F.rows());
-// appState->norms_delta = Eigen::VectorXd::Zero(F.rows());
-// appState->curls_sym = Eigen::VectorXd::Zero(F.rows());
-// appState->curls_primal = Eigen::VectorXd::Zero(F.rows());
-// appState->smoothness_primal = Eigen::VectorXd::Zero(F.rows());
-// appState->smoothness_sym = Eigen::VectorXd::Zero(F.rows());
-
-
 
 void Mint2DHook::initCurlOperators()
 {
@@ -846,94 +816,3 @@ void Mint2DHook::finalizeIteration() {
 }
 
 
-
-/*
-*
-*
-*
-*
-
-  bool boundaryConditionsLoaded = false;
-    // Logic to check and load boundary conditions from a file
-    // If successful:
-    // boundaryConditionsLoaded = true;
-
-    if (!boundaryConditionsLoaded) {
-        // Set default boundary conditions
-        Eigen::MatrixXd surfNormals; // Initialize with surface normals of your mesh
-        Eigen::MatrixXd surfCenters; // Initialize with surface centers of your mesh
-
-        // Call the radialBoundConstraints function
-        Eigen::SparseMatrix<double> B_op_sparse;
-        Eigen::VectorXd targ_moms;
-        radialBoundConstraints(surfNormals, surfCenters, appState.nAugFrames, appState.logFolderPath + "/default_boundary.targ",
-                               B_op_sparse, targ_moms);
-
-        // Now B_op_sparse and targ_moms have default boundary conditions
-        // Apply these conditions to your simulation as needed
-    }
-
-
-
-    void radialBoundConstraints(const Eigen::MatrixXd& surfNormals, const Eigen::MatrixXd& surfCenters,
-                            int nAugFrames, const std::string& logname,
-                            Eigen::SparseMatrix<double>& B_op_sparse, Eigen::VectorXd& targ_moms);
-
-
-void radialBoundConstraints(const Eigen::MatrixXd& surfNormals, const Eigen::MatrixXd& surfCenters,
-                            int nAugFrames, const std::string& logname,
-                            Eigen::SparseMatrix<double>& B_op_sparse, Eigen::VectorXd& targ_moms) {
-    // ... existing initialization logic ...
-
-    // Processing surface normals and centers
-    Eigen::MatrixXd selNormals = surfNormals;
-    selNormals.col(2).setZero();
-    Eigen::VectorXd normValues = selNormals.rowwise().norm();
-    std::vector<int> curPinnedBoundIndices;
-
-    for (int i = 0; i < normValues.size(); ++i) {
-        if (normValues(i) > std::sqrt(0.001)) {
-            curPinnedBoundIndices.push_back(i);
-        }
-    }
-
-    Eigen::MatrixXd selCenters(curPinnedBoundIndices.size(), 3);
-    for (size_t i = 0; i < curPinnedBoundIndices.size(); ++i) {
-        selCenters.row(i) = surfCenters.row(curPinnedBoundIndices[i]);
-    }
-
-    int ntets = nAugFrames - static_cast<int>(selNormals.rows());
-    Eigen::MatrixXd pinnedFrames(3, 3 * curPinnedBoundIndices.size());
-
-    // Processing pinned frames
-    for (size_t i = 0; i < curPinnedBoundIndices.size(); ++i) {
-        Eigen::Vector3d tc = selCenters.row(i);
-        double theta = std::atan2(tc.y(), tc.x());
-        double r = tc.x() * tc.x() + tc.y() * tc.y();
-        r = std::sqrt(r);
-
-        // Rotation matrix
-        Eigen::Matrix3d rot;
-        rot << std::cos(theta), -std::sin(theta), 0,
-               std::sin(theta), std::cos(theta), 0,
-               0, 0, 1;
-
-        // Apply transformation
-        Eigen::Matrix3d f = rot; // Add your transformation logic here
-        pinnedFrames.block<3, 3>(0, 3 * i) = f;
-    }
-
-    // TODO: Export to TARG file using `writeTARG` function and import using `readTARG` function
-
-    // You need to implement writeTARG and readTARG functions to handle file IO
-    // Example: writeTARG(logname, pinnedFrames);
-    // Example: readTARG(logname, B_op_sparse, targ_moms);
-
-    // Visualization logic if needed
-    // visualizeFrameField(pinnedFrames, selCenters); // Implement as needed
-}
-
-
-
-
-*/

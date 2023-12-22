@@ -13,11 +13,11 @@
  
 enum class Field_View {
     vec_norms,
+    moment_dirch,
+    sym_curl_residual,
     delta_norms,
     vec_dirch,
-    moment_dirch,
     primal_curl_residual,
-    sym_curl_residual,
     gui_free,
     Element_COUNT
 };
