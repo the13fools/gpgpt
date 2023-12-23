@@ -12,7 +12,7 @@ namespace Serialization{
 // Eigen Serialization
 bool serializeVector(const Eigen::VectorXd& vec, const std::string& filepath);
 bool deserializeVector(Eigen::VectorXd& vec, const std::string& filepath);
-bool serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath);
+bool serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath, int vector_per_element = 1);
 bool deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath);
 
 // MyConfig Serialization

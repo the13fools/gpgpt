@@ -137,6 +137,11 @@ int main(int argc, char **argv) {
   if ( !( hook->appState->directoryPath.empty() )) {
     hook->appState->shouldReload = true;
   }
+  else 
+  {
+    hook->reset();
+  }
+
 
   polyscope::state::userCallback = drawGUICallback;
   polyscope::options::programName = "gpgpt - MINT3D";
