@@ -8,6 +8,7 @@
 #include "FieldSurface.h"
 #include "Permutations.h"
 #include "CoverMesh.h"
+#include <memory>
 
 #include "../Surface.h"
 
