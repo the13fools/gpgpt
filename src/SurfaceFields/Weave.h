@@ -43,6 +43,7 @@ public:
     int nHandles() const { return handles.size(); }    
     
     CoverMesh *createCover(const std::vector<std::pair<int, int> > &singularities) const;
+    std::pair<std::vector<Eigen::Vector3d>, std::vector<std::vector<int>>> getPermuatedEdges();
 
     void combFieldsOnFieldSurface();
 

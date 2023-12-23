@@ -60,8 +60,7 @@ CoverMesh::CoverMesh(const Surface &originalSurf, const Eigen::MatrixXd &V, cons
 
     theta.resize(fs->nVerts());
     theta.setZero();
-    
-    renderScale_ = 1.0;
+   
 
     initializeSplitMesh(oldToNewVertMap);
 }
@@ -75,7 +74,7 @@ CoverMesh::~CoverMesh()
 }
 
 
-void CoverMesh::createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F,
+void CoverMesh::createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F, Eigen::VectorXd& splitted_theta,
     std::vector<Eigen::Vector3d>& face_vectors,
     std::vector<Eigen::Vector3d>& cut_pts, std::vector<std::vector<int>>& cut_edges)
 {
@@ -84,6 +83,7 @@ void CoverMesh::createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F,
     int origfaces = originalSurf_->nFaces();
     V = data_.splitMesh->data().V;
     F = data_.splitMesh->data().F;
+    splitted_theta.setZero(V.rows());
 
     face_vectors.resize(ncovers_ * origfaces);
 
@@ -95,9 +95,13 @@ void CoverMesh::createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F,
         }
     }
 
+    for (int i = 0; i < V.rows(); i++) {
+        int cover_vid = visMeshToCoverMesh(i);
+        splitted_theta[i] = theta[cover_vid];
+    }
+
     int ncutedges = data_.splitMeshCuts.size();
     int nsliceedges = slicedEdges.size();
-    cut_pts.resize(2 * (ncutedges + nsliceedges));
     for (int i = 0; i < ncutedges; i++)
     {
         int edgeid = data_.splitMeshCuts[i];
@@ -253,8 +257,13 @@ void CoverMesh::roundAntipodalCovers(int numISOLines)
 void CoverMesh::integrateField(SurfaceFields::StripePatternsGlobalIntegration* gmethod, double globalScale)
 {
     int globalverts = fs->nVerts();
+    std::cout << "global verts: " << globalverts << std::endl;
     theta.resize(globalverts);
     theta.setZero();
+
+    //comp_pts.clear();
+    //comp_faces.clear();
+    //comp_thetas.clear();
 
     // create a mesh without deleted faces
     int undeletedFaces = fs->numUndeletedFaces();
@@ -271,6 +280,13 @@ void CoverMesh::integrateField(SurfaceFields::StripePatternsGlobalIntegration* g
             fid++;
         }        
     }
+
+    //Eigen::MatrixXd global_vecs(globalfaces, 2);
+    //for (int i = 0; i < globalfaces; i++) {
+    //    global_vecs.row(i) = fs->v(i, 0).transpose();
+    //}
+    //igl::writeOBJ("global_mesh.obj", fs->data().V, fs->data().F);
+    //serializeMatrix(global_vecs, "global_vec.brfa");
     
     // separate cut mesh into connected components
     Eigen::VectorXi components;    
@@ -305,6 +321,8 @@ void CoverMesh::integrateField(SurfaceFields::StripePatternsGlobalIntegration* g
                 idx++;
             }
         }
+
+        std::cout << "comp faces: " << compF.row(0) << std::endl;
         
         Eigen::MatrixXd prunedV;
         Eigen::MatrixXi prunedF;
@@ -313,23 +331,35 @@ void CoverMesh::integrateField(SurfaceFields::StripePatternsGlobalIntegration* g
         // connected component surface
         Surface surf(prunedV, prunedF);
         
-        igl::writeOBJ("pruned_mesh_" + std::to_string(component) + ".obj", prunedV, prunedF);
-        serializeMatrix(compField, "pruned_fields_" + std::to_string(component) + ".bfra");
+        //igl::writeOBJ("pruned_mesh_" + std::to_string(component) + ".obj", prunedV, prunedF);
+        //serializeMatrix(compField, "pruned_fields_" + std::to_string(component) + ".bfra");
 
         std::cout << "Built connected component surface" << std::endl;
         Eigen::VectorXd compTheta;
 
+        compField *= globalScale;
         gmethod->globallyIntegrateOneComponent(surf, compField, compTheta);
+        std::cout << "comp field's first row: " << compField.row(0) << std::endl;
+        std::cout << "compTheta's norm: " << compTheta.norm() << std::endl;
+
+        //comp_pts.push_back(prunedV);
+        //comp_faces.push_back(prunedF);
+        //comp_thetas.push_back(compTheta);
         
-        
+        int ncount = 0;
         // map component theta to the global theta vector
         for (int i = 0; i < globalverts; i++)
         {
             if (I[i] != -1) {
                 theta[i] = compTheta[I[i]];
+                ncount++;
+                if ((fs->data().V.row(i) - prunedV.row(I[i])).norm()) {
+                    std::cout << fs->data().V.row(i) << ", " << prunedV.row(I[i]) << std::endl;
+                }
             }
                            
-        }        
+        }    
+        std::cout << compTheta.size() << ", " << ncount << std::endl;
     }
 }
 
@@ -355,13 +385,12 @@ void CoverMesh::initializeSplitMesh(const Eigen::VectorXi &oldToNewVertMap)
     int newfaces = ncovers_*origfaces;
     Eigen::MatrixXd V(newverts, 3);
     Eigen::MatrixXi F(newfaces, 3);
-    //renderScale_ = 1.0 / std::max(rows, meshesperrow);
-    renderScale_ = 1.0;
+
     for (int i = 0; i < ncovers_; i++)
     {
         for (int j = 0; j < origverts; j++)
         {
-            V.row(i*origverts + j) = data_.splitOffsets[i].transpose() + renderScale_ * originalSurf_->data().V.row(j);
+            V.row(i*origverts + j) = data_.splitOffsets[i].transpose() +  originalSurf_->data().V.row(j);
         }
         for (int j = 0; j < origfaces; j++)
         {
@@ -417,7 +446,7 @@ static double periodicDiff(double a, double b)
     return diff;
 }
 
-void CoverMesh::gradThetaDeviation(Eigen::VectorXd &error) const
+void CoverMesh::gradThetaDeviation(Eigen::VectorXd &error, double globalScale) const
 {
     int nfaces = fs->nFaces();
     error.resize(nfaces);
@@ -440,10 +469,11 @@ void CoverMesh::gradThetaDeviation(Eigen::VectorXd &error) const
                 Eigen::Matrix2d BTBinv = BTB.inverse();
                 Eigen::Vector2d grad = BTBinv * diffs;
                 Eigen::Vector3d grademb = B * grad;
-                Eigen::Vector3d vemb = B*fs->data().Js.block<2,2>(2*i,0)*fs->v(i,0);
-                Eigen::Vector3d n = fs->faceNormal(i);
-                double theta = asin(grademb.cross(vemb).dot(n) / grademb.norm() / vemb.norm());
-                error[i] = fabs( theta ) / (0.5 * M_PI);
+                Eigen::Vector3d vemb = B*fs->data().Js.block<2,2>(2*i,0)*fs->v(i,0) * globalScale;
+                error[i] = (grademb - vemb).norm();
+                //Eigen::Vector3d n = fs->faceNormal(i);
+                //double theta = asin(grademb.cross(vemb).dot(n) / grademb.norm() / vemb.norm());
+                //error[i] = fabs( theta ) / (0.5 * M_PI);
             }
         }
     }

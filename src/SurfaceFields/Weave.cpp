@@ -114,6 +114,48 @@ static void alignFrame(std::vector<Eigen::Vector3d>& from, const std::vector<Eig
     from = newvecs;
 }
 
+std::pair<std::vector<Eigen::Vector3d>, std::vector<std::vector<int>>> Weave::getPermuatedEdges() {
+    int nCover = fs->nFields() * 2;
+    int nfaces = fs->nFaces();
+    int nverts = fs->nVerts();
+    std::vector<Eigen::MatrixXd> perms;
+    Eigen::MatrixXd perm;
+    perms = _augmentPs();
+    Eigen::MatrixXd eye = Eigen::MatrixXd::Identity(nCover, nCover);
+    int not_identity = 0;
+
+    std::vector<Eigen::Vector3d> pts;
+    std::vector<std::vector<int>> edges;
+
+    for (int e = 0; e < fs->nEdges(); e++)
+    {
+        perm = perms[e];
+        int f1Id = fs->data().E(e, 0);
+        int f2Id = fs->data().E(e, 1);
+        if (f1Id == -1 || f2Id == -1)
+            continue;
+        int v1ID = fs->data().edgeVerts(e, 0);
+        int v2ID = fs->data().edgeVerts(e, 1);
+        int v1f1 = -1, v2f1 = -1, v1f2 = -1, v2f2 = -1;
+        for (int i = 0; i < 3; i++)
+        { // find the vid at face (0,1,or 2)
+            if (fs->data().F(f1Id, i) == v1ID) v1f1 = i;
+            if (fs->data().F(f1Id, i) == v2ID) v2f1 = i;
+            if (fs->data().F(f2Id, i) == v1ID) v1f2 = i;
+            if (fs->data().F(f2Id, i) == v2ID) v2f2 = i;
+        }
+        assert((v1f1 != -1) && (v2f1 != -1) && (v1f2 != -1) && (v2f2 != -1));
+        if ((perm - eye).norm() != 0)
+        {   // perm == I case
+            pts.push_back(fs->data().V.row(v1ID));
+            pts.push_back(fs->data().V.row(v2ID));
+            edges.push_back({ (int)pts.size() - 2, (int)pts.size() - 1 });
+        }
+    }
+
+    return { pts, edges };
+}
+
 
 CoverMesh* Weave::createCover(const std::vector<std::pair<int, int> >& singularities) const
 {
@@ -126,6 +168,9 @@ CoverMesh* Weave::createCover(const std::vector<std::pair<int, int> >& singulari
     Eigen::MatrixXd eye = Eigen::MatrixXd::Identity(nCover, nCover);
     // Compute points to glue
     vector<vector<long> > adj_list(nCover * nfaces * 3);
+
+    int not_identity = 0;
+
     for (int e = 0; e < fs->nEdges(); e++)
     {
         perm = perms[e];
@@ -160,6 +205,7 @@ CoverMesh* Weave::createCover(const std::vector<std::pair<int, int> >& singulari
         }
         else
         { // perm != I case
+            not_identity++;
             for (int l1 = 0; l1 < nCover; l1++)
             {
                 int l2 = -1;
@@ -176,6 +222,9 @@ CoverMesh* Weave::createCover(const std::vector<std::pair<int, int> >& singulari
             }
         }
     }
+
+    std::cout << "not identity number: " << not_identity << std::endl;
+
     // Do some glueing
     vector<vector<long> > gluePointList;
     vector<bool> toSearchFlag(nCover * nfaces * 3, 1);
