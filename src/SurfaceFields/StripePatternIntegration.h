@@ -2,15 +2,18 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+
+#include "GlobalFieldIntegration.h"
+
 #include "../Surface.h"
 
 
 namespace SurfaceFields {
 // Stripe patterns on the surface
-class StripePatternsGlobalIntegration
+class StripePatternsGlobalIntegration : public GlobalFieldIntegration
 {
 public:
-  void globallyIntegrateOneComponent(const Surface& surf, const Eigen::MatrixXd& v, Eigen::VectorXd& theta, Eigen::VectorXd* edge_omega = nullptr);
+  virtual void globallyIntegrateOneComponent(const Surface& surf, const Eigen::MatrixXd& v, Eigen::VectorXd& theta, Eigen::VectorXd* edge_omega = nullptr) override;
 
 private:
   // Get edge one forms from the input face vectors, where the face vectors will be rescaled by "scales", and averaged by face area (if provided)

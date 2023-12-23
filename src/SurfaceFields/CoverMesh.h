@@ -5,7 +5,7 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include "StripePatternIntegration.h"
+#include "GlobalFieldIntegration.h"
 
 class FieldSurface;
 class Weave;
@@ -34,18 +34,18 @@ public:
     FieldSurface *fs;
     Eigen::VectorXd theta;
     
-    void createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F,
+    void createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F, Eigen::VectorXd& splitted_theta,
         std::vector<Eigen::Vector3d>& face_vectors,
         std::vector<Eigen::Vector3d>& cutPts, std::vector<std::vector<int>>& cut_edges);
 
-    void integrateField(SurfaceFields::StripePatternsGlobalIntegration* gmethod, double globalScale);
+    void integrateField(SurfaceFields::GlobalFieldIntegration* gmethod, double globalScale);
     void roundAntipodalCovers(int numISOLines);
-    double renderScale() {return renderScale_;}
     const Surface &splitMesh() const;
-    void gradThetaDeviation(Eigen::VectorXd &error) const;
+    void gradThetaDeviation(Eigen::VectorXd &error, double globalScale) const;
     
     // maps indices of vertices on the visualization mesh to corresponding "parent" vertices on the cover mesh
     int visMeshToCoverMesh(int vertid);
+
    
 private:
     void initializeSplitMesh(const Eigen::VectorXi &oldToNewVertMap);
@@ -55,7 +55,6 @@ private:
     CoverData data_;
     int ncovers_;
     Surface *originalSurf_;
-    double renderScale_;    
     // edges along which the multiple cover is cut to create a topological disk
     std::vector<int> slicedEdges;
 };

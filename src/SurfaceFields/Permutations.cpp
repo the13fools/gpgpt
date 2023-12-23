@@ -85,13 +85,14 @@ void reassignOnePermutation(Weave &weave, int edge, Eigen::MatrixXi &P)
     int f = weave.fs->data().E(edge, 0);
     int g = weave.fs->data().E(edge, 1);
 
+    int m = weave.fs->nFields();
+    P.resize(m, m);
+    P.setZero();
+
     if (f == -1 || g == -1)
         return;
 
     Eigen::Vector3d n = weave.fs->faceNormal(f);
-    int m = weave.fs->nFields();
-    P.resize(m, m);
-    P.setZero();
 
     //gather the vectors
     std::vector<Eigen::Vector3d> fvecs;
@@ -150,10 +151,6 @@ int reassignAllPermutations(Weave &weave)
     int count = 0;
     for (int i = 0; i < nedges; i++)
     {
-        if (i == 105) {
-            std::cout << i << std::endl;
-        }
-        
         Eigen::MatrixXi P;
         reassignOnePermutation(weave, i, P);
         if (P != weave.fs->Ps(i))

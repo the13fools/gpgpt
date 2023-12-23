@@ -14,15 +14,48 @@
 #include <igl/principal_curvature.h>
 #include <igl/hsv_to_rgb.h>
 
+#include <unordered_set>
 #include <sstream>
 
 #include "../src/SurfaceFields/VectorFields2PolyVectors.h"
 #include "../src/SurfaceFields/StripePatternIntegration.h"
+#include "../src/SurfaceFields/MIGlobalIntegration.h"
+#include "../src/SurfaceFields/GlobalFieldIntegration.h"
 #include "../src/SurfaceFields/UpsampleSurfaceFields.h"
-#include "../src/SurfaceFields/FieldSurface.h"
-#include "../src/SurfaceFields/Weave.h"
-#include "../src/SurfaceFields/CoverMesh.h"
-#include "../src/SurfaceFields/Permutations.h"
+#include "../src/SurfaceFields/RoundVectorFields.h"
+
+// Serialize Eigen matrix to a binary file
+static bool serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath) {
+    try {
+        std::ofstream outFile(filepath, std::ios::binary);
+        if (!outFile.is_open()) {
+            std::cerr << "Error: Unable to open file for writing: " << filepath << std::endl;
+            return false;
+        }
+
+        // Write matrix rows and cols
+        int rows = static_cast<int>(mat.rows());
+        int cols = static_cast<int>(mat.cols());
+        outFile.write(reinterpret_cast<char*>(&rows), sizeof(int));
+        outFile.write(reinterpret_cast<char*>(&cols), sizeof(int));
+
+        // Write matrix data
+        outFile.write(reinterpret_cast<const char*>(mat.data()), rows * cols * sizeof(double));
+        outFile.close();
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: Unable to serialize matrix: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+enum IntegrationType {
+    kBomme = 0,
+    kKnoppel = 1,
+};
+
+IntegrationType int_type = kKnoppel;
 
 
 Eigen::MatrixXd mesh_pts;
@@ -43,6 +76,24 @@ void loadMesh(const std::string& mesh_path, Eigen::MatrixXd& V, Eigen::MatrixXi&
     igl::readOBJ(new_path, V, F);
   }
 }
+
+static Eigen::VectorXd checkLocalIntegrability(Surface& surf, const Eigen::MatrixXd& vec) {
+    int nedges = surf.nEdges();
+    Eigen::VectorXd edge_err = Eigen::VectorXd::Zero(nedges);
+    for (int i = 0; i < nedges; i++) {
+        int f0 = surf.data().E(i, 0);
+        int f1 = surf.data().E(i, 1);
+
+        if (f0 != -1 && f1 != -1) {
+            Eigen::Vector3d edge = (surf.data().V.row(surf.data().edgeVerts(i, 1)) - surf.data().V.row(surf.data().edgeVerts(i, 0))).transpose();
+            Eigen::Vector3d v0 = surf.data().Bs[f0] * (vec.row(f0).transpose());
+            Eigen::Vector3d v1 = surf.data().Bs[f1] * (vec.row(f1).transpose());
+            edge_err[i] = std::abs((v1 - v0).dot(edge));
+        }
+    }
+    return edge_err;
+}
+
 
 // Deserialize Eigen matrix from a binary file
 bool deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath) {
@@ -249,6 +300,8 @@ void load() {
         Eigen::Matrix<double, 3, 2> B = surf.data().Bs[i];
         Eigen::Vector2d newvec = (B.transpose()*B).inverse() * B.transpose() * v;
         poly_vecs.row(npoly * i + j) = newvec.transpose();
+
+        //poly_vecs.row(npoly * i + j) << A(i, npoly * j + 0), A(i, npoly * j + 1);
       }
     }
     std::cout << "load finished" << std::endl;
@@ -326,6 +379,32 @@ void myCallback() {
     }
   }
 
+  if (ImGui::Button("Check Integrability")) {
+      int nvecs = vector_fields.rows() / mesh_faces.rows();
+      auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+      for (int i = 0; i < nvecs; i++) {
+          Eigen::MatrixXd vec(mesh_faces.rows(), 2);
+          for (int j = 0; j < mesh_faces.rows(); j++) {
+              vec.row(j) << vector_fields(nvecs * j + i, 0), vector_fields(nvecs * j + i, 1);
+          }
+         
+          Eigen::VectorXd edge_err = checkLocalIntegrability(surf, vec);
+          std::cout << "vector fields: " << i << ", min: " << edge_err.minCoeff() << ", max: " << edge_err.maxCoeff();
+
+          Eigen::VectorXd vert_err;
+          vert_err.setZero(mesh_pts.rows());
+          for (int eid = 0; eid < surf.nEdges(); eid++) {
+              for (int j = 0; j < 2; j++) {
+                  int vid = surf.data().edgeVerts(eid, j);
+                  vert_err[vid] += edge_err[eid] / 2;
+              }
+          }
+          surf_mesh->addVertexScalarQuantity("vec " + std::to_string(i) + " local integrability err", vert_err);
+      }
+  }
+
+  ImGui::Combo("Integration Method", (int*)&int_type, "Bomme\0Knoppel\0");
+
   if (ImGui::Button("Integrate Vector Fields")) {
     scalar_fields.clear();
     edge_one_forms.clear();
@@ -338,13 +417,52 @@ void myCallback() {
       }
       vec *= rescale_ratio;
 
-      std::unique_ptr<SurfaceFields::StripePatternsGlobalIntegration> ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+
+      std::unique_ptr<SurfaceFields::GlobalFieldIntegration> int_ptr;
+      switch (int_type) {
+      case kBomme:
+      {
+          int_ptr = std::make_unique<SurfaceFields::MIGlobalIntegration>(10, 10);
+          break;
+      }
+      case kKnoppel:
+      {
+          int_ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+          break;
+      }
+      default:
+      {
+          int_ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+          break;
+      }
+      }
       Eigen::VectorXd theta, edge_omega;
-      ptr->globallyIntegrateOneComponent(surf, vec, theta, &edge_omega);
+      int_ptr->globallyIntegrateOneComponent(surf, vec, theta, &edge_omega);
       scalar_fields.emplace_back(theta);
       edge_one_forms.emplace_back(edge_omega);
     }
     renderScalarFields();
+  }
+
+  if (ImGui::Button("Integrate Uncombed Vector Fields")) {
+      scalar_fields.clear();
+      edge_one_forms.clear();
+
+      int nvecs = poly_vecs.rows() / mesh_faces.rows();
+      for (int i = 0; i < nvecs; i++) {
+          Eigen::MatrixXd vec(mesh_faces.rows(), 2);
+          for (int j = 0; j < mesh_faces.rows(); j++) {
+              vec.row(j) << poly_vecs(nvecs * j + i, 0), poly_vecs(nvecs * j + i, 1);
+          }
+          vec *= rescale_ratio;
+
+          std::unique_ptr<SurfaceFields::StripePatternsGlobalIntegration> ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+          Eigen::VectorXd theta, edge_omega;
+          ptr->globallyIntegrateOneComponent(surf, vec, theta, &edge_omega);
+          scalar_fields.emplace_back(theta);
+          edge_one_forms.emplace_back(edge_omega);
+      }
+      renderScalarFields();
   }
 
   if (ImGui::Button("Show Error")) {
@@ -352,55 +470,44 @@ void myCallback() {
   }
 
   if (ImGui::Button("Round Vector Fields")) {
-      int nfields = poly_vecs.rows() / mesh_faces.rows();
-      int nfaces = mesh_faces.rows();
-      // step 1: build weave
-      std::unique_ptr<Weave> weave = std::make_unique<Weave>(mesh_pts, mesh_faces, nfields);
-      for (int i = 0; i < nfaces; i++) {
-          for (int j = 0; j < nfields; j++) {
-              int vidx = weave->fs->vidx(i, j);
-              weave->fs->vectorFields.segment<2>(vidx) = poly_vecs.row(nfields * i + j).transpose();
-          }
-      }
-      // step 2: comb the vector fields
-      weave->combFieldsOnFieldSurface();
-      //reassignAllPermutations(*weave);
-
-      // step 3: get the singularities
-      std::vector<std::pair<int, int> > topsingularities;
-      std::vector<std::pair<int, int> > geosingularities;
-      findSingularVertices(*weave, topsingularities, geosingularities);
-
-      std::vector<std::pair<int, int> > todelete = topsingularities;
-      for (int i = 0; i < geosingularities.size(); i++)
-          todelete.push_back(geosingularities[i]);
-
-      // step 4: cover mesh
-      CoverMesh* cover_mesh = weave->createCover(todelete);
-
-      // step 5: integration
-      std::unique_ptr<SurfaceFields::StripePatternsGlobalIntegration> ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
-      cover_mesh->integrateField(ptr.get(), rescale_ratio);
-
-      // step 7: render cover surface
-      Eigen::MatrixXd renderQCover;
-      Eigen::MatrixXi renderFCover;
+      Eigen::MatrixXd render_QCover;
+      Eigen::MatrixXi render_FCover;
+      Eigen::VectorXd render_theta, err;
 
       std::vector<Eigen::Vector3d> face_vectors;
 
       std::vector<Eigen::Vector3d> cut_pts;
       std::vector<std::vector<int>> cut_edges;
 
-      cover_mesh->createVisualization(renderQCover, renderFCover, face_vectors, cut_pts, cut_edges);
+      std::unique_ptr<SurfaceFields::GlobalFieldIntegration> int_ptr;
+      switch (int_type) {
+      case kBomme:
+      {
+          int_ptr = std::make_unique<SurfaceFields::MIGlobalIntegration>(1.0, 1e-4);
+          break;
+      } 
+      case kKnoppel:
+      {
+          int_ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+          break;
+      }
+      default:
+      {
+          int_ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+          break;
+      }
+      }
 
-      // step 8: rendering
-      auto cover_surf = polyscope::registerSurfaceMesh("cover mesh", renderQCover, renderFCover);
-      Eigen::MatrixXd cover_phi = paintPhi(cover_mesh->theta);
-      cover_surf->addVertexColorQuantity("phi", cover_phi);
-      cover_surf->addFaceVectorQuantity("vecs", face_vectors);
-      polyscope::registerCurveNetwork("cuts", cut_pts, cut_edges);
+      roundVectorFields(mesh_pts, mesh_faces, poly_vecs, render_QCover, render_FCover, render_theta, int_ptr.get(), rescale_ratio, &face_vectors, &cut_pts, &cut_edges, &err);
 
-      delete cover_mesh;
+      std::cout << "err bound: " << err.minCoeff() << ", " << err.maxCoeff() << ", average: " << err.sum() / err.rows() << std::endl;
+
+      auto cover_surface = polyscope::registerSurfaceMesh("splitted cover mesh", render_QCover, render_FCover);
+      cover_surface->addVertexColorQuantity("phi", paintPhi(render_theta));
+      cover_surface->addFaceVectorQuantity("vecs", face_vectors);
+      cover_surface->addFaceScalarQuantity("grad theta error", err);
+
+      auto cut_poly = polyscope::registerCurveNetwork("cuts", cut_pts, cut_edges);
 
   }
 
