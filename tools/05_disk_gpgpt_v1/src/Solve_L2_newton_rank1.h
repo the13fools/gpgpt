@@ -142,18 +142,31 @@ public:
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < nelem; i++)
       {
-        appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
+        // appState->frames.row(i) = Eigen::VectorXd::Random(2) * 1e-1;
 
-        // Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
-        //                                     appState->V.row(appState->F(i, 1)) +
-        //                                     appState->V.row(appState->F(i, 2))) / 3.0;
+        // -4 r Cos[(\[Theta] - Pi)/2], r Sin[(\[Theta] - Pi)/2]
 
-        // double r = centroid.norm() + 1e-10;
+        Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
+                                            appState->V.row(appState->F(i, 1)) +
+                                            appState->V.row(appState->F(i, 2))) / 3.0;
+
+        double r = centroid.norm() + 1e-10;
+        double theta = atan2(centroid(1),centroid(0)); // acos(vec(1)) * .5;
+
         // Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
-        // appState->frames.row(i) = frame_cur;
+        Eigen::Vector2d frame_cur = r * Eigen::Vector2d( -4 * ( cos( (theta - 3.1415)  / 2. ) ), r * sin( (theta - 3.1415) / 2. ) ).normalized();
+
+        appState->frames.row(i) = frame_cur;
+
+  
+
 
 
         // appState->frames.row(i)
+
+      // appState->problemFileTag = "_+0_5_";
+      // frame(0) = cos(theta * .5);
+      // frame(1) = sin(theta * .5);
  
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
         x.segment<2>(nvars*i) = appState->frames.row(i);
@@ -190,12 +203,29 @@ public:
                     boundaryFaces(i) = -1; // Mark for special handling or exclusion
                 } else {
                     // Set frame orientation based on the centroid
+
+                    // 
                     Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
 
-                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(4);
-                    double theta = atan2(vec(1),vec(0)) * .5; // acos(vec(1)) * .5;
-                    frame(0) = cos(theta);
-                    frame(1) = sin(theta);
+                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(2);
+                    double theta = atan2(vec(1),vec(0)); // acos(vec(1)) * .5;
+
+
+                    // -4 r Cos[(\[Theta] - Pi)/2], r Sin[(\[Theta] - Pi)/2]
+
+
+                    // appState->problemFileTag = "_radial_";
+                    // frame(0) = cos(theta);
+                    // frame(1) = sin(theta);
+
+                    // appState->problemFileTag = "_+0_5_";
+                    // frame(0) = cos(theta * .5);
+                    // frame(1) = sin(theta * .5);
+
+
+                    appState->problemFileTag = "_-0_5_";
+                    frame(0) = -4 * cos((theta-3.1415) * .5 );
+                    frame(1) = sin((theta-3.1415) * .5 );
                     // frame(2) = -vec(1);
                     // frame(3) = vec(0);
                     appState->frames.row(i) = frame;

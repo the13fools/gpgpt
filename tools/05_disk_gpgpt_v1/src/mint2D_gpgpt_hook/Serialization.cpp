@@ -55,7 +55,7 @@ bool Serialization::deserializeVector(Eigen::VectorXd& vec, const std::string& f
 }
 
 // Serialize Eigen matrix to a binary file
-bool Serialization::serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath) {
+bool Serialization::serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filepath, int vector_per_element) {
     try {
         std::ofstream outFile(filepath, std::ios::binary);
         if (!outFile.is_open()) {
@@ -66,8 +66,13 @@ bool Serialization::serializeMatrix(const Eigen::MatrixXd& mat, const std::strin
         // Write matrix rows and cols
         int rows = static_cast<int>(mat.rows());
         int cols = static_cast<int>(mat.cols());
+        int vpe = static_cast<int>(vector_per_element);
+
+
+        outFile.write("FRA 2", sizeof("FRA 2") );
         outFile.write(reinterpret_cast<char*>(&rows), sizeof(int));
         outFile.write(reinterpret_cast<char*>(&cols), sizeof(int));
+        outFile.write(reinterpret_cast<char*>(&vpe), sizeof(int));
 
         // Write matrix data
         outFile.write(reinterpret_cast<const char*>(mat.data()), rows * cols * sizeof(double));
@@ -88,10 +93,13 @@ bool Serialization::deserializeMatrix(Eigen::MatrixXd& mat, const std::string& f
             return false;
         }
 
+        char* filename = new char[5];
+          inFile.read(reinterpret_cast<char*>(&filename), sizeof("FRA 2") );
         // Read matrix rows and cols
-        int rows, cols;
+        int rows, cols, vpe;
         inFile.read(reinterpret_cast<char*>(&rows), sizeof(int));
         inFile.read(reinterpret_cast<char*>(&cols), sizeof(int));
+        inFile.read(reinterpret_cast<char*>(&vpe), sizeof(int));
 
         // Read matrix data
         mat.resize(rows, cols);

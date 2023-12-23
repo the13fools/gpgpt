@@ -125,6 +125,7 @@ public:
     std::string solveDescription = "SOLVER_DESCRIPTION_NOT_SET";
 
     std::string solveStatus = "STATUS_WAS_NOT_SET";
+    std::string problemFileTag = "";
 
 
 
@@ -167,11 +168,13 @@ public:
     // Output State - gets visualized and serialized.  
     // could maybe also make this shared_ptr?
     OutputState* os; // TODO: make this a pointer to a base class, and then have derived classes for different output states.
-    
+                     // To makke this happen need to change the serialization code to support more generic file IO.  
 
     // GUI state 
     std::unordered_map<Field_View, FieldBounds> fieldBounds;
-    bool fieldViewActive [8] = {true, true, true, true, true, true, true, false};
+    // bool fieldViewActive [8] = {true, true, true, true, true, true, true, false};
+    bool fieldViewActive [8] = {true, true, true, false,false,false, false, false};
+
     bool shouldLogData = true;
     Field_View prev_frame_element = Field_View::Element_COUNT;
     Field_View current_element;

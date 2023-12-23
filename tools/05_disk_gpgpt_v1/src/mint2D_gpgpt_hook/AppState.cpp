@@ -36,10 +36,13 @@ void AppState::refreshFileLists() {
 bool AppState::LogToFile(const std::string suffix)
 {
         
+    int num_vecs = this->os->frames.size();
+
+    std::cout << "num_vecs: " << num_vecs << std::endl;
 
 // TODO add moments here 
-    Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + suffix + ".bfra");
-    Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + suffix + ".bmom");
+    Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + suffix + ".bfra", num_vecs);
+    Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + suffix + ".bmom", num_vecs);
 
     Serialization::serializeConfig(*this->config, this->logFolderPath + "/config" + "_" + suffix + ".json");
 
