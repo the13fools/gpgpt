@@ -4,13 +4,14 @@
 
 #include "Weave.h"
 #include "StripePatternIntegration.h"
+#include "MIGlobalIntegration.h"
 #include "FieldSurface.h"
 #include "Permutations.h"
 #include "CoverMesh.h"
 
 #include "../Surface.h"
 
-void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& mesh_faces, const Eigen::MatrixXd& vecs, Eigen::MatrixXd& splitted_pts, Eigen::MatrixXi& splitted_faces, Eigen::VectorXd& theta, double global_rescaling, std::vector<Eigen::Vector3d>* splitted_vecs, std::vector<Eigen::Vector3d>* cut_pts, std::vector<std::vector<int>>* cut_edges, Eigen::VectorXd* err) {
+void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& mesh_faces, const Eigen::MatrixXd& vecs, Eigen::MatrixXd& splitted_pts, Eigen::MatrixXi& splitted_faces, Eigen::VectorXd& theta, SurfaceFields::GlobalFieldIntegration* round_op, double global_rescaling, std::vector<Eigen::Vector3d>* splitted_vecs, std::vector<Eigen::Vector3d>* cut_pts, std::vector<std::vector<int>>* cut_edges, Eigen::VectorXd* err) {
 	using namespace SurfaceFields;
     int nfields = vecs.rows() / mesh_faces.rows();
     int nfaces = mesh_faces.rows();
@@ -50,8 +51,8 @@ void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& m
     CoverMesh* cover_mesh = weave->createCover(todelete);
 
     // step 5: integration
-    std::unique_ptr<SurfaceFields::StripePatternsGlobalIntegration> ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
-    cover_mesh->integrateField(ptr.get(), global_rescaling);
+    //std::unique_ptr<SurfaceFields::StripePatternsGlobalIntegration> ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
+    cover_mesh->integrateField(round_op, global_rescaling);
 
     // step 6: get the splitted mesh
     std::vector<Eigen::Vector3d> tmp_splitted_vecs;

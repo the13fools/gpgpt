@@ -254,7 +254,7 @@ void CoverMesh::roundAntipodalCovers(int numISOLines)
     }
 }
 
-void CoverMesh::integrateField(SurfaceFields::StripePatternsGlobalIntegration* gmethod, double globalScale)
+void CoverMesh::integrateField(SurfaceFields::GlobalFieldIntegration* gmethod, double globalScale)
 {
     int globalverts = fs->nVerts();
     std::cout << "global verts: " << globalverts << std::endl;

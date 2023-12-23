@@ -5,7 +5,7 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include "StripePatternIntegration.h"
+#include "GlobalFieldIntegration.h"
 
 class FieldSurface;
 class Weave;
@@ -38,7 +38,7 @@ public:
         std::vector<Eigen::Vector3d>& face_vectors,
         std::vector<Eigen::Vector3d>& cutPts, std::vector<std::vector<int>>& cut_edges);
 
-    void integrateField(SurfaceFields::StripePatternsGlobalIntegration* gmethod, double globalScale);
+    void integrateField(SurfaceFields::GlobalFieldIntegration* gmethod, double globalScale);
     void roundAntipodalCovers(int numISOLines);
     const Surface &splitMesh() const;
     void gradThetaDeviation(Eigen::VectorXd &error, double globalScale) const;
