@@ -5,7 +5,7 @@ project(07_mint3d_v1)
 find_package(Eigen3 3.3 REQUIRED)
 # find_package(OpenMP REQUIRED)
 
-file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp ../../src/SurfaceFields/*.h ../../src/SurfaceFields/*.cpp ../../src/SurfaceFields/*.hpp)
+file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp ../../src/CubeCover/*.h ../../src/CubeCover/*.cpp ../../src/CubeCover/*.hpp)
 file(GLOB FRONTENDFILES src/mint3D_hook/*.cpp src/mint3D_hook/*.h src/mint3D_hook/*.hpp )
 # file(GLOB ADWRAPPER ../src/04_adfunc_wrapper/ADWrapper/*.cpp ../src/04_adfunc_wrapper/ADWrapper/*.h )
 

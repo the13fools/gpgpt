@@ -60,12 +60,15 @@ public:
     {
 
 
-        appState->meshName = "circle_1000";
+        // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
       // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
-      
+
+      // appState->meshName = "disk_v210";
+      appState->meshName = "disk_v623";
+
       
 
 
@@ -78,7 +81,10 @@ public:
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
-      func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->F.rows()));
+      func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->T.rows()));
+
+
+      // func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->F.rows()));
 
       /////////////////////////////
       /// Add terms to the objective function here.  
@@ -89,7 +95,7 @@ public:
       ///
       /// convenient auto-diff with sparse hessians is quite new, there's a lot to explore! 
       /////////////////////////////
-      // OptZoo::addConstTestTerm(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
       
       OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
@@ -136,7 +142,7 @@ public:
     void init_opt_state()
     {
       Eigen::VectorXd x = _opt->_cur_x;
-      int nelem = appState->F.rows();
+      int nelem = appState->T.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Eigen::VectorXd x = opt->get_current_x();
@@ -144,9 +150,10 @@ public:
       {
         appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
 
-        // Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
-        //                                     appState->V.row(appState->F(i, 1)) +
-        //                                     appState->V.row(appState->F(i, 2))) / 3.0;
+        // Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
+        //                                     appState->V.row(appState->T(i, 1)) +
+        //                                     appState->V.row(appState->T(i, 2)) +
+        //                                     appState->V.row(appState->T(i, 3))) / 4.0;
 
         // double r = centroid.norm() + 1e-10;
         // Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
@@ -173,21 +180,24 @@ public:
         // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
 
         Eigen::VectorXi boundaryFaces;
-        igl::on_boundary(appState->F,boundaryFaces, K);
+        igl::on_boundary(appState->T,boundaryFaces, K);
 
         appState->bound_face_idx = boundaryFaces;
 
-        appState->frames.resize(appState->F.rows(), DOFS_PER_ELEMENT);
+        appState->frames.resize(appState->T.rows(), DOFS_PER_ELEMENT);
 
         // Initialize boundary conditions
         for (int i = 0; i < boundaryFaces.size(); ++i) {
             if (boundaryFaces(i) == 1) { // If face is on the boundary
-                Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
-                                            appState->V.row(appState->F(i, 1)) +
-                                            appState->V.row(appState->F(i, 2))) / 3.0;
+                Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
+                                            appState->V.row(appState->T(i, 1)) +
+                                            appState->V.row(appState->T(i, 2)) + 
+                                            appState->V.row(appState->T(i, 3))) / 4.0;
 
-                if (centroid.norm() < 0.45) { // Custom condition for boundary faces
-                    boundaryFaces(i) = -1; // Mark for special handling or exclusion
+                // if (centroid.norm() < 0.45) { // Custom condition for boundary faces
+                //     boundaryFaces(i) = -1; // Mark for special handling or exclusion
+                if (centroid.norm() < 40) { // Custom condition for boundary faces
+                    boundaryFaces(i) = 0;
                 } else {
                     // Set frame orientation based on the centroid
                     Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
@@ -204,6 +214,7 @@ public:
             }
         }
 
+        appState->bound_face_idx = boundaryFaces;
         appState->frames_orig = appState->frames;
 
         // 
@@ -245,7 +256,7 @@ public:
 // This is called after each step.  
     virtual void updateAppStateFromOptState()
     {
-      int nelem = appState->F.rows();
+      int nelem = appState->T.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Try to add post projection curl operator here.  
@@ -281,7 +292,7 @@ public:
     virtual void updateOptStateFromAppState()
     {
       Eigen::VectorXd x = _opt->_cur_x;
-      int nelem = appState->F.rows();
+      int nelem = appState->T.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Eigen::VectorXd x = opt->get_current_x();

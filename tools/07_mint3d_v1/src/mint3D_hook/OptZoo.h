@@ -32,7 +32,7 @@ template<int N>
 
         std::cout << "add const obj" << std::endl;
 
-    func.template add_elements<1>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<1>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -65,7 +65,7 @@ template<int N>
 
         Eigen::VectorX<T> curr = e.self_data.dofs_curr_elem;
         
-        return .001*(curr-targ).squaredNorm(); // + w_bound*delta.squaredNorm();
+        return 1000.*(curr-targ).squaredNorm(); // + w_bound*delta.squaredNorm();
       
 
 
@@ -82,7 +82,7 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 
         std::cout << "add unit norm (ginzburg-landau) obj" << std::endl;
 
-    func.template add_elements<1>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<1>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
         using T = TINYAD_SCALAR_TYPE(element);
@@ -141,7 +141,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
 
-    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<4>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -154,7 +154,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
         if ((int)f_idx == 0)
         {
-            // std::cout << "eval boundary obj" << std::endl;
+            std::cout << "eval boundary obj" << std::endl;
         }
 
         // Dirichlet (i.e. pinned) boundary condition
@@ -208,7 +208,7 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
     std::cout << "add L4 smoonthess obj" << std::endl;
 
-    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<4>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -267,7 +267,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
     std::cout << "add L2 smoonthess obj" << std::endl;
 
-    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -365,7 +365,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
     std::cout << "add L2 curl obj" << std::endl;
 
-    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -455,7 +455,7 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
 
     std::cout << "add L4 curl obj" << std::endl;
 
-    func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double

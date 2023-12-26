@@ -13,6 +13,8 @@
 #include "FieldView.h"
 
 #include "Surface.h"
+#include "CubeCover/TetMeshConnectivity.h"
+
 #include <memory>
  
 using Field_View = Views::Field_View;
@@ -105,12 +107,15 @@ public:
     // std::vector<std::string> bfraFiles;
     // std::vector<std::string> bmomFiles;
     std::optional<std::string> objFilePath;
+    std::optional<std::string> meshFilePath;
+
     int currentFileID = -1;
     bool shouldReload = false; // this is a dynamic var which tells updaterendergeometry to reload data from the current directory
     bool updateRenderGeometryNextFrameIfPaused = false;
 
     // Init variables 
     Eigen::MatrixXd V; // Vertex positions
+    Eigen::MatrixXi T; // Tet indices
     Eigen::MatrixXi F; // Face indices
 
     /// @brief config optimization variables and params stored and initialized here.  ///
@@ -131,7 +136,9 @@ public:
 
     // Optimization variables
     std::unique_ptr<Surface> cur_surf; // This initializes some more convenient data structures for building up local energies.
-                      // In 3d need to use mesh data structures instead of surface.   
+    std::unique_ptr<CubeCover::TetMeshConnectivity> cur_tet_mesh;  
+    Eigen::MatrixXd tet_centroids;                 // In 3d need to use mesh data structures instead of surface.   
+    
     bool keepSolving = true;
     int outerLoopIteration = 0;
     double cur_rel_residual = 0;

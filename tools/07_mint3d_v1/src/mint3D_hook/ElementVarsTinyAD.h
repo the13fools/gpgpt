@@ -17,6 +17,11 @@
 // Not going to worry about doing this for now.  
 // There's a non-zero performance gain to be had here though.  Pretty low hanging thing to hack in maybe?
 
+enum class ElementLoadType {
+    L2, L4, Element_COUNT
+};
+
+
 
 template <typename T_active>
 class ElementData {
@@ -98,9 +103,12 @@ public:
 
     int num_neighbors = 0;
 
-    Surface* cur_surf;
+    // Surface* cur_surf;
+    CubeCover::TetMeshConnectivity* cur_mesh;
 
-    Eigen::Index f_idx; // maybe get rid of this it's redundant. 
+    // Eigen::Index f_idx; // maybe get rid of this it's redundant. 
+    Eigen::Index t_idx; // maybe get rid of this it's redundant. 
+
 
     ElementData<T_active> self_data;
 
@@ -114,22 +122,22 @@ public:
     // Eigen::VectorX<T_active> currcurrt;
 
 
-    void setSelfData(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
+    void setSelfData(AppState& appState, const Eigen::Index t_idx, ELEM& element) { 
 
-        setElemState(appState, f_idx);
+        setElemState(appState, t_idx);
 
-        self_data.dofs_curr_elem = element.variables(f_idx);
+        self_data.dofs_curr_elem = element.variables(t_idx);
 
         self_data.set_primals_rank1(appState.primals_layout);
         
-        self_data.curr_idx = f_idx;
+        self_data.curr_idx = t_idx;
 
         
 
 
 
 
-        L2_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
+        L2_primals(appState, self_data.dofs_curr_elem, self_data);
         // L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
 
       
@@ -151,26 +159,28 @@ public:
 
     }
 
-    void setNeighborData(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
+    void setNeighborData(AppState& appState, const Eigen::Index t_idx, ELEM& element) { 
 
         neighbor_data.clear();
-        int max_neighbors = 3;
+        int max_neighbors = 4;
 
         num_neighbors = 0;
 
         for (int i = 0; i < max_neighbors; i++)
         {
             ElementData<T_active> neighbor_data_i;
-            int n_idx = cur_surf->data().faceNeighbors(f_idx, i);
+            // int n_idx = cur_surf->data().faceNeighbors(f_idx, i); // 2d change 
+            int n_idx = cur_mesh->tetOppositeVertex(t_idx, i);
+
             neighbor_data_i.curr_idx = n_idx;
             neighbor_data_i.faceNeighbor_idx = i;
             if (n_idx == -1) continue; // Make sure this is the correct convention.  Do more advance boundary handling later.
             
             num_neighbors += 1;
-            neighbor_data_i.dofs_curr_elem = element.variables(cur_surf->data().faceNeighbors(f_idx, i));
+            neighbor_data_i.dofs_curr_elem = element.variables(cur_mesh->tetOppositeVertex(t_idx, i));
             neighbor_data_i.set_primals_rank1(appState.primals_layout);
 
-            L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+            L2_primals(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             // L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             neighbor_data.push_back(neighbor_data_i);
         }
@@ -179,8 +189,9 @@ public:
 
 
 
-    void setElemState(AppState& appState, const Eigen::Index f_idx) { 
-        cur_surf = appState.cur_surf.get();
+    void setElemState(AppState& appState, const Eigen::Index t_idx) { 
+        // cur_surf = appState.cur_surf.get();
+        cur_mesh = appState.cur_tet_mesh.get();
 
         w_bound = appState.config->w_bound;
         w_smooth_vector = appState.config->w_smooth_vector;
@@ -189,12 +200,12 @@ public:
         w_curl = appState.config->w_curl;
         w_attenuate = appState.config->w_attenuate;
 
-        this->f_idx = f_idx;
+        this->t_idx = t_idx;
     }
 
 
     // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
-    void L2_primals(AppState& appState, const Eigen::Index f_idx, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
+    void L2_primals(AppState& appState, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
         
         // Seperate out the primal dofs into rank-1 components
         // Maybe make this a seperate function. 

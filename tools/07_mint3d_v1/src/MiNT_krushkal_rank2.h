@@ -153,9 +153,10 @@ public:
         // Initialize boundary conditions
         for (int i = 0; i < boundaryFaces.size(); ++i) {
             if (boundaryFaces(i) == 1) { // If face is on the boundary
-                Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
-                                            appState->V.row(appState->F(i, 1)) +
-                                            appState->V.row(appState->F(i, 2))) / 3.0;
+                Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
+                                            appState->V.row(appState->T(i, 1)) +
+                                            appState->V.row(appState->T(i, 2))+
+                                            appState->V.row(appState->T(i, 3))) / 4.0;
 
                 if (centroid.norm() < 0.45) { // Custom condition for boundary faces
                     boundaryFaces(i) = -1; // Mark for special handling or exclusion

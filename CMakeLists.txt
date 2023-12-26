@@ -169,11 +169,12 @@ include(spectra)
 
 file(GLOB SRCFILES src/*.cpp src/*.h src/*.hpp)
 file(GLOB SURFACEFIELDS src/SurfaceFields/*.h src/SurfaceFields/*.cpp src/SurfaceFields/*.hpp)
+file(GLOB CUBECOVER src/CubeCover/*.h src/CubeCover/*.cpp src/CubeCover/*.hpp)
 file(GLOB FRONTENDFILES src/gpgpt_frontend/*.cpp src/gpgpt_frontend/*.h src/gpgpt_frontend/*.hpp)
 file(GLOB ADWRAPPERFILES src/ADWrapper/*.cpp src/ADWrapper/*.h src/ADWrapper/*.hpp)
 
 
-add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES} ${ADWRAPPERFILES} ${SURFACEFIELDS})
+add_library(${PROJECT_NAME} ${SRCFILES} ${FRONTENDFILES} ${ADWRAPPERFILES} ${SURFACEFIELDS} ${CUBECOVER})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ${spectra_SOURCE_DIR}/include/Spectra)

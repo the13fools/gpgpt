@@ -146,7 +146,8 @@ int main(int argc, char **argv) {
   polyscope::state::userCallback = drawGUICallback;
   polyscope::options::programName = "gpgpt - MINT3D";
   polyscope::options::verbosity = 1;
-
+  polyscope::options::transparencyRenderPasses = 32;
+  polyscope::view::resetCameraToHomeView();
   polyscope::show();
 
   return 0;

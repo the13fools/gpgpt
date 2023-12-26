@@ -52,6 +52,7 @@ public:
     */
 
     std::string objFilePath;
+    std::string meshFilePath;
     // int numIDs = 0;
 
     int minID = 0;

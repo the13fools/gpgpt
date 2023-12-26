@@ -19,9 +19,12 @@
 
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
+#include "polyscope/volume_mesh.h"
+#include "polyscope/point_cloud.h"
 
 
-#include <igl/readOBJ.h>
+// #include <igl/readOBJ.h>
+#include "CubeCover/readMesh.h"
 #include <igl/writeOBJ.h>
 #include <igl/on_boundary.h>
 #include "date.h"
@@ -70,6 +73,7 @@ void Mint3DHook::updateRenderGeometry() {
 
     /// 
     appState->os->norms_vec = appState->frames.rowwise().norm();
+    std::cout << "appState->os->norms_vec.rows(): " << appState->os->norms_vec.rows() <<  " maxcoeff: " << appState->os->norms_vec.maxCoeff() << std::endl;
     appState->os->norms_delta = appState->deltas.rowwise().norm();
 
 
@@ -107,18 +111,27 @@ void Mint3DHook::updateRenderGeometry() {
     Eigen::VectorXd tmp = opt->get_current_x();
     std::cout << tmp.rows() << " " << tmp.cols() << std::endl;
 
-    try {
-        double cur_obj = opt->eval_func_at(tmp);
-
-        appState->os->cur_global_objective_val = cur_obj;
-
-        std::cout << "cur_obj " << cur_obj << std::endl;
-    }
-    catch (std::runtime_error& e)
+    if ( tmp.rows() == 0 )
     {
-        std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-        std::cout << "optimization crashing when evaluating the objective " << e.what() << std::endl;
-        std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+        std::cout << "ERROR INITIALIZING OPTIMIZATION PROBLEM - OPT STATE CURRENTLY EMPTY" << std::endl;
+        // tmp = Eigen::VectorXd::Zero(opt->get_num_vars());
+    }
+    else
+    {
+        try {
+            double cur_obj = opt->eval_func_at(tmp);
+
+            appState->os->cur_global_objective_val = cur_obj;
+
+            std::cout << "cur_obj " << cur_obj << std::endl;
+        }
+        catch (std::runtime_error& e)
+        {
+            std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+            std::cout << "optimization crashing when evaluating the objective " << e.what() << std::endl;
+            std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+        }
 
     }
     std::cout << "update render geometry" << std::endl;
@@ -194,6 +207,7 @@ void Mint3DHook::renderRenderGeometry()
     // Depending on the current element view, render different quantities
     const std::string cur_field = fieldViewToFileStub(appState->current_element);
 
+
     Eigen::VectorXd cur_scalar_quantity;
     switch (appState->current_element) {
         case Field_View::vec_norms:
@@ -224,13 +238,15 @@ void Mint3DHook::renderRenderGeometry()
             break;
     }
 
+
+    
     if (appState->current_element == Field_View::gui_free)
     {
         // noop
     }
     else
     {
-        auto cur_scalar_field = polyscope::getSurfaceMesh("c")->addFaceScalarQuantity(cur_field, cur_scalar_quantity);
+        auto cur_scalar_field = polyscope::getVolumeMesh("c")->addCellScalarQuantity(cur_field, cur_scalar_quantity);
         if (appState->prev_frame_element != appState->current_element)
         {
             cur_scalar_field->setEnabled(true);
@@ -266,9 +282,9 @@ void Mint3DHook::renderRenderGeometry()
 
             double color_shift = (v+1.) * 1.0 / num_vecs;
 
-            auto vectorField = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field " + v, cur_vec);
+            auto vectorField = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field " + v, cur_vec);
             vectorField->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
-            auto vectorFieldNeg = polyscope::getSurfaceMesh("c")->addFaceVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
+            auto vectorFieldNeg = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
             vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
 
             if(appState->show_frames && appState->show_frames_as_lines)
@@ -298,6 +314,8 @@ void Mint3DHook::renderRenderGeometry()
 
         }
     }
+
+    
 
     polyscope::requestRedraw();
 
@@ -337,28 +355,31 @@ void Mint3DHook::initSimulation() {
 
 
     Eigen::MatrixXd V; // Temporary storage for vertices
+    Eigen::MatrixXi T; // Temporary storage for tetrahedra
     Eigen::MatrixXi F; // Temporary storage for faces
 
     // Load mesh and config
     if (create_new_dir) {
         // Load default mesh and set default config
-        std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + appState->meshName + ".obj";
+        std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + appState->meshName + ".mesh";
 
         // std::string default_path = "/home/josh/Documents/mint_redux/gpgpt/tools/shared/" + cur_mesh_name + ".obj";
 
         std::cout << default_path << std::endl;
-        if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {
-            std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
+        
+        if (!CubeCover::readMESH(appState->meshFilePath.value_or(default_path), V, T, F)) {
+            std::cerr << "Failed to load mesh from " << appState->meshFilePath.value_or(default_path) << std::endl;
 
             // tricky part for windows
-            default_path = std::string(SOURCE_PATH) + "/tools/shared/" + appState->meshName + ".obj";
-            if (!igl::readOBJ(appState->objFilePath.value_or(default_path), V, F)) {
-                std::cerr << "Failed to load mesh from " << appState->objFilePath.value_or(default_path) << std::endl;
+            default_path = std::string(SOURCE_PATH) + "/tools/shared/" + appState->meshName + ".mesh";
+            if ( !CubeCover::readMESH(appState->meshFilePath.value_or(default_path), V, T, F) ) {
+                std::cerr << "Failed to load mesh from " << appState->meshFilePath.value_or(default_path) << std::endl;
                 return;
             }
 
         }
         appState->cur_surf = std::make_unique<Surface>(V, F);
+        appState->cur_tet_mesh = std::make_unique<CubeCover::TetMeshConnectivity>(T);
 
         // Set default configuration
         appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
@@ -378,22 +399,31 @@ void Mint3DHook::initSimulation() {
         // TODO add parsing for this.
         // appState->config = new MyConfig(); // ADD FILE PARSING NOW! 
 
-        appState->objFilePath = fileParser->objFilePath;
+        // 
+
+        /// TODO: FIX THIS
+        std::string default_path = std::string(SOURCE_PATH) + "/../shared/" + appState->meshName + ".mesh";
+        fileParser->meshFilePath = default_path; // 
+        appState->meshFilePath = fileParser->meshFilePath;
 
         // TODO: Fix this to load from file.
-        std::cout << "fileParser->objFilePath " << fileParser->objFilePath << std::endl;
-        if (!igl::readOBJ(fileParser->objFilePath, V, F)) {
-            std::cerr << "Failed to load mesh from " << fileParser->objFilePath << std::endl;
+        std::cout << "fileParser->meshFilePath " << fileParser->meshFilePath << std::endl;
+        if ( !CubeCover::readMESH(fileParser->meshFilePath, V, T, F) ) {
+            std::cerr << "Failed to load mesh from " << fileParser->meshFilePath << std::endl;
             return;
         }
+        // appState->cur_surf = std::make_unique<Surface>(V, F);
         appState->cur_surf = std::make_unique<Surface>(V, F);
+        appState->cur_tet_mesh = std::make_unique<CubeCover::TetMeshConnectivity>(T);
+
     }
 
-    std::cout << "V.rows() " << V.rows() << " F.rows() " << F.rows() << std::endl;
+    std::cout << "V.rows() " << V.rows() << " T.rows() " << T.rows() << " F.rows() " << F.rows() << std::endl;
 
 
     // Set mesh data to AppState
     appState->V = V;
+    appState->T = T;
     appState->F = F;
 
     if (appState->shouldReload)
@@ -439,17 +469,33 @@ void Mint3DHook::initSimulation() {
 
     }
 
-    // save OBJ file 
-    if (!igl::writeOBJ(appState->directoryPath + "/" + appState->meshName + ".obj", V, F)) {
-        std::cerr << "Failed to save mesh to " << appState->logFolderPath << std::endl;
-        // return;
+    // // save OBJ file 
+    // if (!igl::writeOBJ(appState->directoryPath + "/" + appState->meshName + ".obj", V, F)) {
+    //     std::cerr << "Failed to save mesh to " << appState->logFolderPath << std::endl;
+    //     // return;
+    // }
+
+    // calculate tet centroids 
+    // appState->tet_centroids = CubeCover::computeTetCentroids(appState->V, appState->T);
+    appState->tet_centroids = Eigen::MatrixXd::Zero(appState->T.rows(), 3);
+    for(int i = 0; i < appState->T.rows(); i++)
+    {
+        appState->tet_centroids.row(i) = (appState->V.row(appState->T(i, 0)) +
+                                            appState->V.row(appState->T(i, 1)) +
+                                            appState->V.row(appState->T(i, 2)) +
+                                            appState->V.row(appState->T(i, 3))) / 4.0;
     }
 
-
     // Register mesh with Polyscope
-    polyscope::registerSurfaceMesh("c", appState->V, appState->F);
-    polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
-    polyscope::view::resetCameraToHomeView();
+    polyscope::registerTetMesh("c", appState->V, appState->T);
+    polyscope::getVolumeMesh("c")->setEdgeWidth(0.6)->setTransparency(0.5);
+
+
+
+    polyscope::registerPointCloud("c_vecs", appState->tet_centroids)->setPointRadius(0.0);
+
+
+    // polyscope::view::resetCameraToHomeView();
 }
 
 bool Mint3DHook::loadPrimaryData() {
@@ -540,7 +586,7 @@ bool Mint3DHook::simulateOneStep() {
         std::cout << "DOFS in opt" << opt->_cur_x.rows() << std::endl;
         std::cout << "nvars in opt" << opt->get_num_vars() << std::endl;
 
-
+        // std::cout << "current x: " << opt->get_current_x().transpose() << std::endl;
         opt->take_newton_step(opt->get_current_x());
         double rel_res_correction = 1. / (cur_obj);
         appState->cur_rel_residual = std::max(opt->_dec * rel_res_correction, 1e-13);
@@ -605,21 +651,23 @@ void Mint3DHook::resetAppState() {
 
 
     // Resetting mesh data
-    appState->frames.setZero(appState->F.rows(), 2);
-    appState->deltas.setZero(appState->F.rows(), 4);
-    appState->moments.setZero(appState->F.rows(), 0);
+    appState->frames.setZero(appState->T.rows(), 3); // TODO make this generic 
+    appState->deltas.setZero(appState->T.rows(), 4);
+    appState->moments.setZero(appState->T.rows(), 0);
 
     // Resetting derived quantities
-    appState->os->norms_vec.setZero(appState->F.rows());
-    appState->os->norms_delta.setZero(appState->F.rows());
-    appState->os->curls_primal.setZero(appState->F.rows());
-    appState->os->curls_sym.setZero(appState->F.rows());
-    appState->os->smoothness_primal.setZero(appState->F.rows());
-    appState->os->smoothness_L2.setZero(appState->F.rows());
-    appState->os->smoothness_L4.setZero(appState->F.rows());
-    appState->os->curl_L2.setZero(appState->F.rows());
-    appState->os->curl_L4.setZero(appState->F.rows());
+    appState->os->norms_vec.setZero(appState->T.rows());
+    appState->os->norms_delta.setZero(appState->T.rows());
+    appState->os->curls_primal.setZero(appState->T.rows());
+    appState->os->curls_sym.setZero(appState->T.rows());
+    appState->os->smoothness_primal.setZero(appState->T.rows());
+    appState->os->smoothness_L2.setZero(appState->T.rows());
+    appState->os->smoothness_L4.setZero(appState->T.rows());
+    appState->os->curl_L2.setZero(appState->T.rows());
+    appState->os->curl_L4.setZero(appState->T.rows());
     // appState->os->smoothness_L2x2.setZero(appState->F.rows());
+
+    // std::cout << "appState->os->norms_vec.rows(): " << appState->os->norms_vec.rows() << std::endl;
 
     appState->prev_frame_element = Field_View::Element_COUNT;
 
@@ -631,8 +679,9 @@ void Mint3DHook::resetAppState() {
 
     // Optionally, re-register mesh with Polyscope if visualization needs a reset
     polyscope::removeAllStructures();
-    polyscope::registerSurfaceMesh("c", appState->V, appState->F);
-    polyscope::getSurfaceMesh("c")->setEdgeWidth(0.6);
+    polyscope::registerTetMesh("c", appState->V, appState->T);
+    // polyscope::getVolumeMesh("c")->setEdgeWidth(0.6);
+    polyscope::view::resetCameraToHomeView();
 }
 
 
@@ -712,42 +761,43 @@ void Mint3DHook::initializeOtherParameters() {
 }
 
 
-void Mint3DHook::initBoundaryConditions() {
-    // Assuming boundary faces are identified in AppState
-    Eigen::MatrixXi K;
+void Mint3DHook::initBoundaryConditions() {}
+// void Mint3DHook::initBoundaryConditions() {
+//     // Assuming boundary faces are identified in AppState
+//     Eigen::MatrixXi K;
 
-    // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
+//     // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
 
-    Eigen::VectorXi boundaryFaces;
-    igl::on_boundary(appState->F, boundaryFaces, K);
+//     Eigen::VectorXi boundaryFaces;
+//     igl::on_boundary(appState->F, boundaryFaces, K);
 
-    appState->bound_face_idx = boundaryFaces;
+//     appState->bound_face_idx = boundaryFaces;
 
-    // Initialize boundary conditions
-    for (int i = 0; i < boundaryFaces.size(); ++i) {
-        if (boundaryFaces(i) == 1) { // If face is on the boundary
-            Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
-                appState->V.row(appState->F(i, 1)) +
-                appState->V.row(appState->F(i, 2))) / 3.0;
+//     // Initialize boundary conditions
+//     for (int i = 0; i < boundaryFaces.size(); ++i) {
+//         if (boundaryFaces(i) == 1) { // If face is on the boundary
+//             Eigen::RowVector3d centroid = (appState->V.row(appState->F(i, 0)) +
+//                 appState->V.row(appState->F(i, 1)) +
+//                 appState->V.row(appState->F(i, 2))) / 3.0;
 
-            if (centroid.norm() < 0.45) { // Custom condition for boundary faces
-                boundaryFaces(i) = -1; // Mark for special handling or exclusion
-            }
-            else {
-                // Set frame orientation based on the centroid
-                Eigen::Vector2d frame = Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
-                appState->frames.row(i) = frame;
-            }
-        }
-    }
+//             if (centroid.norm() < 0.45) { // Custom condition for boundary faces
+//                 boundaryFaces(i) = -1; // Mark for special handling or exclusion
+//             }
+//             else {
+//                 // Set frame orientation based on the centroid
+//                 Eigen::Vector2d frame = Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
+//                 appState->frames.row(i) = frame;
+//             }
+//         }
+//     }
 
-    appState->frames_orig = appState->frames;
+//     appState->frames_orig = appState->frames;
 
-    // 
+//     // 
 
-    // 
+//     // 
 
-}
+// }
 
 
 
