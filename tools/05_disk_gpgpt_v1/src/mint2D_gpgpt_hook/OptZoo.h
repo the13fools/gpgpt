@@ -24,7 +24,6 @@ template<int N>
   public:
 
     using ADFunc = TinyAD::ScalarFunction<N, double, Eigen::Index>; 
-    //decltype(TinyAD::scalar_function<N>(TinyAD::range(1)));
 
 
 // the const test term tried to make all the vectors the all ones or somethgn.
@@ -48,10 +47,8 @@ template<int N>
 //             return T(0);
 //         }
 
-        ProcElement<T,VAR> e; 
-        // e.setElementVars(appState, f_idx, s_curr);
+        ProcElement<T,VAR> e(ElementLiftType::primal); 
         e.setSelfData(appState, f_idx, element);
-        // e.setNeighborData(appState, f_idx, element);
 
         if (f_idx == 0)
         {
@@ -97,10 +94,8 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             return T(0);
         }
 
-        ProcElement<T,VAR> e; 
-        // e.setElementVars(appState, f_idx, s_curr);
+        ProcElement<T,VAR> e(ElementLiftType::primal); 
         e.setSelfData(appState, f_idx, element);
-        // e.setNeighborData(appState, f_idx, element);
 
         if (f_idx == 0)
         {
@@ -116,16 +111,6 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
         }
 
         return ret; 
-
-
-        // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-      
-        // Eigen::Vector2<T> targ = Eigen::Vector2<T>::Ones();
-        
-        // return .00001*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
-      
-
-
 
     });
 
@@ -160,7 +145,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
         // Dirichlet (i.e. pinned) boundary condition
         if (bound_face_idx(f_idx) == 1)
         {
-            ProcElement<T,VAR> e; 
+            ProcElement<T,VAR> e(ElementLiftType::primal); 
             e.setSelfData(appState, f_idx, element);
 
             // Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
@@ -173,6 +158,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
 
         // // Free boundary condition
+        // TODO: Move this into the L2 and L4 smoothness terms/ make handling more robust.  
         // if (bound_face_idx(f_idx) == -1)
         // {
         //     T ret = e.w_bound*e.self_data.delta.squaredNorm();
@@ -224,7 +210,7 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
             return T(0);
         }
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::L4_krushkal); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
         e.setNeighborData(appState, f_idx, element);
@@ -234,27 +220,18 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 //// Initlaize elementwise objectives 
 ///////////////////
 
-          // T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, 6.0/2.0);
-        //   T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, appState.L4_alpha);
-
-
           T dirichlet_term = T(0);
           for (int i = 0; i < e.num_neighbors; i++)
           {
-            // dirichlet_term += pow((e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm(), 3.0/8.0 );
-            // dirichlet_term += (e.neighbor_data.at(i).L_4_primals - e.self_data.L_4_primals).squaredNorm() * scale_factor;
-            dirichlet_term += (e.neighbor_data.at(i).L_4_krushkal - e.self_data.L_4_krushkal).squaredNorm(); // * scale_factor;
-
+            dirichlet_term += (e.neighbor_data.at(i).L_4_krushkal - e.self_data.L_4_krushkal).squaredNorm(); 
           }
 
           appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(dirichlet_term);
 
           T ret = T(0);//  delta_norm_term * delta_weight;
           ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
-     
 
           return ret;
-
     });
 
 }
@@ -280,7 +257,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::L2_krushkal); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
 
@@ -296,7 +273,6 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
 
 // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
-        // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
         if (bound_face_idx(f_idx) == 1)
         {
             return T(0);
@@ -313,29 +289,14 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
           // T primal_biharmonic_term = (a + b + c - 3*curr).squaredNorm();
           // T biharmonic_term = (aat+bbt+cct-3*currcurrt).squaredNorm();
 
-          // T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, 2.0/2.0);
-                    // T scale_factor = 1. / pow( e.self_data.frame_norm_euclidian, appState.L4_alpha);
-
-
           T primal_dirichlet_term = T(0);
           T dirichlet_term = T(0);
           for (int i = 0; i < e.num_neighbors; i++)
           {
             
             primal_dirichlet_term += (e.neighbor_data.at(i).primals - e.self_data.primals).squaredNorm();
-            dirichlet_term += (e.neighbor_data.at(i).L_2_krushkal - e.self_data.L_2_krushkal).squaredNorm(); // * scale_factor;
+            dirichlet_term += (e.neighbor_data.at(i).L_2_krushkal - e.self_data.L_2_krushkal).squaredNorm(); 
           }
-
-          // T primal_dirichlet_term = (a - e.self_data.curr).squaredNorm() + (b - e.self_data.curr).squaredNorm() + (c - e.self_data.curr).squaredNorm();
-          // T dirichlet_term = (aat-e.self_data.currcurrt).squaredNorm() + (bbt-e.self_data.currcurrt).squaredNorm() + (cct-e.self_data.currcurrt).squaredNorm();
-
-
-          // T dirichlet_term = (aa + bb + cc - 3*currcurr).norm();
-  // dirichlet_term += 1e-5*abs(dirichlet_term - metadata(0));
-          // T delta_rescale = std::max(frames.row(f_idx).squaredNorm(), 1e-8);
-          // delta_rescale = (.0001 + 1./delta_rescale);
-          T delta_rescale = 1.;
-          // std::cout << delta_rescale << std::endl;
 
         //   appState.os->smoothness_primal(f_idx) = TinyAD::to_passive(primal_dirichlet_term);
           appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(dirichlet_term);
@@ -347,9 +308,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
           T delta_weight = 1.; // std::min(w_curl/100., 1./w_attenuate);
 
           T ret = T(0);//  delta_norm_term * delta_weight;
-          // if (e.w_smooth_vector > 0)
-          //   return e.w_smooth_vector * primal_dirichlet_term + ret;
-          // if (e.w_smooth > 0)
+          if (e.w_smooth > 0)
             ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
      
 
@@ -376,10 +335,8 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
         // Get variable 2D vertex positions
         Eigen::Index f_idx = element.handle;
-        // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e; 
-        // e.setElementVars(appState, f_idx, s_curr);
+        ProcElement<T,VAR> e(ElementLiftType::L2_tensor); 
         e.setSelfData(appState, f_idx, element);
 
 
@@ -418,12 +375,6 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
           curl_term +=  pow(eb.dot(e.neighbor_data.at(1).L_2_primals ) - eb.dot(e.self_data.L_2_primals),2);
           curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_2_primals ) - ec.dot(e.self_data.L_2_primals),2);
 
-        //   curl_term = curl_term * e.self_data.frame_norm_euclidian;
-        // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
-
-        // curl_term = curl_term * norm_passive;
-
-
           appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
 
           T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
@@ -432,11 +383,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
           T ret = T(0);
 
-          // if (e.w_smooth_vector > 0)
-          //   return ret;
 
-    //  if (w_s_perp > 0)
-    //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
           if (w_curl_new > 0)
           {
             // std::cout << w_curl_new;
@@ -468,7 +415,7 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::L4_tensor); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
 
@@ -522,11 +469,6 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
 
           T ret = T(0);
 
-          // if (e.w_smooth_vector > 0)
-          //   return ret;
-
-    //  if (w_s_perp > 0)
-    //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
           if (w_curl_new > 0)
           {
             // std::cout << w_curl_new;
