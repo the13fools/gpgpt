@@ -203,6 +203,7 @@ add_subdirectory(tools/04_adfunc_wrapper)
 add_subdirectory(tools/05_disk_gpgpt_v1)
 add_subdirectory(tools/06_polyvectors_tool)
 add_subdirectory(tools/07_mint3d_v1)
+add_subdirectory(tools/08_surface_mint)
 
 # add_executable(${PROJECT_NAME} ${SRC_FILES})
 # target_compile_definitions(${PROJECT_NAME} PUBLIC SOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
