@@ -228,6 +228,8 @@ public:
 		self_data.SetBasis(appState.cur_surf->data().Bs[f_idx]);
 		
 		switch(curr_lift) {
+			case(ElementLiftType::primal):
+                break;
 			// Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
 			case(ElementLiftType::L2_krushkal):
 			case(ElementLiftType::L2_tensor):
@@ -238,6 +240,10 @@ public:
 			case(ElementLiftType::L4_tensor):
 				self_data.SetL4Primals();
 			break;
+			
+			default:
+                std::cout << "Error: LiftType not implemented" << std::endl;
+
 		}
 	}
 
@@ -273,13 +279,15 @@ public:
 			
 			// convert the vectors into the same basis
 			for (int n = 0; n < nvecs; n++) {
-				neighbor_data_i.dofs_curr_elem.segment<2>(2 * n) = T * neighbor_data_i.dofs_curr_elem.segment<2>(2 * n);
+				neighbor_data_i.dofs_curr_elem.template segment<2>(2 * n) = T * neighbor_data_i.dofs_curr_elem.template segment<2>(2 * n);
 			}
 
 			neighbor_data_i.SetPrimalsRank1(appState.primals_layout);
 			neighbor_data_i.SetBasis(appState.cur_surf->data().Bs[f_idx]);
 
 			switch(curr_lift) {
+				case(ElementLiftType::primal):
+                    break;
 				// Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
 				case(ElementLiftType::L2_krushkal):
 				case(ElementLiftType::L2_tensor):
@@ -290,6 +298,10 @@ public:
 				case(ElementLiftType::L4_tensor):
 					neighbor_data_i.SetL4Primals();
 				break;
+
+				default:
+                    std::cout << "Error: LiftType not implemented" << std::endl;
+      
 			}
 			neighbor_data.push_back(neighbor_data_i);
 			shared_eids.push_back(eid);
