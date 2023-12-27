@@ -48,7 +48,7 @@ template<int N>
 //             return T(0);
 //         }
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::primal); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
         // e.setNeighborData(appState, f_idx, element);
@@ -97,7 +97,7 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             return T(0);
         }
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::primal); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
         // e.setNeighborData(appState, f_idx, element);
@@ -154,13 +154,13 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
         if ((int)f_idx == 0)
         {
-            std::cout << "eval boundary obj" << std::endl;
+            // std::cout << "eval boundary obj" << std::endl;
         }
 
         // Dirichlet (i.e. pinned) boundary condition
         if (bound_face_idx(f_idx) == 1)
         {
-            ProcElement<T,VAR> e; 
+            ProcElement<T,VAR> e(ElementLiftType::primal); 
             e.setSelfData(appState, f_idx, element);
 
             // Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
@@ -208,7 +208,7 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
     std::cout << "add L4 smoonthess obj" << std::endl;
 
-    func.template add_elements<4>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -224,7 +224,7 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
             return T(0);
         }
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::L4_krushkal); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
         e.setNeighborData(appState, f_idx, element);
@@ -280,7 +280,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::L2_krushkal); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
 
@@ -378,7 +378,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::L2_tensor); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
 
@@ -468,7 +468,7 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e; 
+        ProcElement<T,VAR> e(ElementLiftType::L4_tensor); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
 

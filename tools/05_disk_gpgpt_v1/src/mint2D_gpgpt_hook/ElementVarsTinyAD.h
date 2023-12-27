@@ -175,7 +175,7 @@ public:
             neighbor_data_i.dofs_curr_elem = element.variables(cur_surf->data().faceNeighbors(f_idx, i));
             neighbor_data_i.set_primals_rank1(appState.primals_layout);
 
-                    switch(curr_lift)
+            switch(curr_lift)
             {
                 // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
                 case(ElementLiftType::L2_krushkal):

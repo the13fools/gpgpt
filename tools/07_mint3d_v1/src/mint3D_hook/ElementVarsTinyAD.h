@@ -17,8 +17,14 @@
 // Not going to worry about doing this for now.  
 // There's a non-zero performance gain to be had here though.  Pretty low hanging thing to hack in maybe?
 
-enum class ElementLoadType {
-    L2, L4, Element_COUNT
+
+// Borrowing the notation from here: https://www.tensortoolbox.org/tensor_types.html
+// Primal means initilize vector field variables without doing any lifting 
+// Tensor is a multidimensional array, i.e. v*v'.  
+// Krushkal is a normalized represenation which is more suitable for geometric optimization, i.e. |v| \hat{v}\hat{v}'
+// TODO sym_tensor and sym_krushkal, which would both offer a non-trivial performance improvement 
+enum class ElementLiftType {
+    primal, L2_tensor, L2_krushkal, L4_tensor, L4_krushkal, Element_COUNT
 };
 
 
@@ -90,9 +96,11 @@ template <typename T_active, typename ELEM>
 class ProcElement {
 public:
 
-    ProcElement() : w_bound(0) {};
+    ProcElement(ElementLiftType t) : w_bound(0), curr_lift(t) {};
 
     // ElementVars(AppState& appState) {}
+
+    ElementLiftType curr_lift; 
 
     double w_bound;
     double w_smooth_vector;
@@ -134,27 +142,34 @@ public:
 
         
 
+        switch(curr_lift)
+        {
+            // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
+            case(ElementLiftType::L2_krushkal):
+            case(ElementLiftType::L2_tensor):
+                L2_primals(appState, self_data.dofs_curr_elem, self_data);
+            break;
+
+            case(ElementLiftType::L4_krushkal):
+            case(ElementLiftType::L4_tensor):
+                L4_primals(appState, self_data.dofs_curr_elem, self_data);
+            break;
+
+            // default:
+            //     std::cout << "Error: LiftType not implemented" << std::endl;
+        }
 
 
-
-        L2_primals(appState, self_data.dofs_curr_elem, self_data);
+        // L2_primals(appState, self_data.dofs_curr_elem, self_data);
         // L4_primals(appState, f_idx, self_data.dofs_curr_elem, self_data);
 
       
 
-        self_data.frame_norm_euclidian = 1;
+        // self_data.frame_norm_euclidian = 1;
 
-        if (self_data.frame_norm_euclidian < 1e-3) {
-            // std::cout << "Warning: frame_norm_euclidian is small: " << self_data.frame_norm_euclidian << std::endl;
-            
-            // std::cout << L_2_primals.rows() << std::endl;
-            // if (L_2_primals.rows() == 0)
-            // {
-            //     throw std::runtime_error("L_2_primals.rows() == 0");
-            // }
-            // std::cout << L_2_primals(0) << " " << L_2_primals(1) << " " << L_2_primals(2) << " " << L_2_primals(3) << std::endl;
-            // frame_norm_euclidian = 1e-3;
-        }
+        // if (self_data.frame_norm_euclidian < 1e-3) {
+        //     // std::cout << "Warning: frame_norm_euclidian is small: " << self_data.frame_norm_euclidian << std::endl;
+        // }
 
 
     }
@@ -180,7 +195,24 @@ public:
             neighbor_data_i.dofs_curr_elem = element.variables(cur_mesh->tetOppositeVertex(t_idx, i));
             neighbor_data_i.set_primals_rank1(appState.primals_layout);
 
-            L2_primals(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+            switch(curr_lift)
+            {
+                // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
+                case(ElementLiftType::L2_krushkal):
+                case(ElementLiftType::L2_tensor):
+                    L2_primals(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                break;
+
+                case(ElementLiftType::L4_krushkal):
+                case(ElementLiftType::L4_tensor):
+                    L4_primals(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                break;
+
+                // default:
+                //     std::cout << "Error: LiftType not implemented" << std::endl;
+            }
+
+            // L2_primals(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             // L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             neighbor_data.push_back(neighbor_data_i);
         }
@@ -242,7 +274,7 @@ public:
         }
 
         // This sets the squared values which scales in the same way as L_4 to make the energy scale invariant. 
-        L2_to_L2x2(data);
+        // L2_to_L2x2(data);
 
     }
 
@@ -273,7 +305,7 @@ public:
     }
 
         // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
-    void L4_primals(AppState& appState, const Eigen::Index f_idx, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
+    void L4_primals(AppState& appState, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
         
         // Seperate out the primal dofs into rank-1 components
         // Maybe make this a seperate function. 

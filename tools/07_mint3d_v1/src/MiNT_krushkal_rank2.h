@@ -23,7 +23,7 @@
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 4
+#define DOFS_PER_ELEMENT 6
 
 
 class MiNT_krushkal_rank2 : public Mint3DHook
@@ -37,7 +37,7 @@ public:
 
 
 
-      appState->primals_layout = {0, 4, 2}; 
+      appState->primals_layout = {0, 6, 2}; 
       // This says 4 dofs stored starting at 0 divided into 2 vectors 
       
     appState->moments_layout = {0, 0};
@@ -61,13 +61,14 @@ public:
     virtual void initSimulation()
     {
 
-      appState->meshName = "circle_1000";
+      // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
       // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
       
-
+      // appState->meshName = "disk_v210";
+      appState->meshName = "disk_v623"; 
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
@@ -78,7 +79,7 @@ public:
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
-      func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->F.rows()));
+      func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->T.rows()));
 
       /////////////////////////////
       /// Add terms to the objective function here.  
@@ -100,8 +101,8 @@ public:
     OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
     OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-    OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
-    OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
+    // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
+    // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
 
       // Update params specific to this solve here
 
@@ -144,11 +145,11 @@ public:
         // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
 
         Eigen::VectorXi boundaryFaces;
-        igl::on_boundary(appState->F,boundaryFaces, K);
+        igl::on_boundary(appState->T,boundaryFaces, K);
 
         appState->bound_face_idx = boundaryFaces;
 
-        appState->frames.resize(appState->F.rows(), DOFS_PER_ELEMENT);
+        appState->frames.resize(appState->T.rows(), DOFS_PER_ELEMENT);
 
         // Initialize boundary conditions
         for (int i = 0; i < boundaryFaces.size(); ++i) {
@@ -158,31 +159,28 @@ public:
                                             appState->V.row(appState->T(i, 2))+
                                             appState->V.row(appState->T(i, 3))) / 4.0;
 
-                if (centroid.norm() < 0.45) { // Custom condition for boundary faces
-                    boundaryFaces(i) = -1; // Mark for special handling or exclusion
+                if (centroid.norm() < 40) { // Custom condition for boundary faces
+                    boundaryFaces(i) = 0;
                 } else {
                     // Set frame orientation based on the centroid
                     Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
 
-                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(4);
+                    Eigen::VectorXd frame = Eigen::VectorXd::Zero(DOFS_PER_ELEMENT);
 
                     double theta = atan2(vec(1),vec(0)) * .25; // acos(vec(1)) * .5;
                     frame(0) = cos(theta);
                     frame(1) = sin(theta);
-                    frame(2) = -sin(theta);
-                    frame(3) = cos(theta);
+                    frame(2) = 0.;
+                    frame(3) = -sin(theta);
+                    frame(4) = cos(theta);
+                    frame(5) = 0.;
 
-
-
-                    // frame(0) = vec(0);
-                    // frame(1) = vec(1);
-                    // frame(2) = -vec(1);
-                    // frame(3) = vec(0);
                     appState->frames.row(i) = frame;
                 }
             }
         }
 
+        appState->bound_face_idx = boundaryFaces;
         appState->frames_orig = appState->frames;
 
         // 
@@ -201,7 +199,7 @@ public:
     void init_opt_state()
     {
       Eigen::VectorXd x = _opt->_cur_x;
-      int nelem = appState->F.rows();
+      int nelem = appState->T.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Eigen::VectorXd x = opt->get_current_x();
@@ -253,7 +251,7 @@ public:
 // This is called after each step.  
     virtual void updateAppStateFromOptState()
     {
-      int nelem = appState->F.rows();
+      int nelem = appState->T.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Try to add post projection curl operator here.  
@@ -289,7 +287,7 @@ public:
     virtual void updateOptStateFromAppState()
     {
       Eigen::VectorXd x = _opt->_cur_x;
-      int nelem = appState->F.rows();
+      int nelem = appState->T.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Eigen::VectorXd x = opt->get_current_x();
