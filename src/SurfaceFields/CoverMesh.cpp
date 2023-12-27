@@ -370,12 +370,15 @@ void CoverMesh::initializeSplitMesh(const Eigen::VectorXi &oldToNewVertMap)
     int rows = 2;
     int meshesperrow = ncovers_ / rows + (ncovers_ % rows == 0 ? 0 : 1);
     data_.splitOffsets.clear();
+
+    double ratio = (originalSurf_->data().V.colwise().maxCoeff() - originalSurf_->data().V.colwise().minCoeff()).norm();
+
     for (int i = 0; i < ncovers_; i++)
     {
         int row = i / meshesperrow;
         int col = i%meshesperrow;
-        double dy = (-1.2 * row + (1.2) * (rows - row - 1)) / double(rows);
-        double dx = (1.2 * col + (-1.2) * (meshesperrow - col - 1)) / double(meshesperrow);
+        double dy = (-ratio * row + ratio * (rows - row - 1)) / double(rows);
+        double dx = (ratio * col + (-ratio) * (meshesperrow - col - 1)) / double(meshesperrow);
         data_.splitOffsets.push_back(Eigen::Vector3d(dx, dy, 0.0));
     }
 

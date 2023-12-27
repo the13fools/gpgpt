@@ -50,6 +50,37 @@ static bool serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filep
     }
 }
 
+static bool serializeMatrixNew(const Eigen::MatrixXd& mat, const std::string& filepath, int vector_per_element) {
+    try {
+        std::ofstream outFile(filepath, std::ios::binary);
+        if (!outFile.is_open()) {
+            std::cerr << "Error: Unable to open file for writing: " << filepath << std::endl;
+            return false;
+        }
+
+        // Write matrix rows and cols
+        int rows = static_cast<int>(mat.rows());
+        int cols = static_cast<int>(mat.cols());
+        int vpe = static_cast<int>(vector_per_element);
+
+
+        outFile.write("FRA 2", sizeof("FRA 2"));
+        outFile.write(reinterpret_cast<char*>(&rows), sizeof(int));
+        outFile.write(reinterpret_cast<char*>(&cols), sizeof(int));
+        outFile.write(reinterpret_cast<char*>(&vpe), sizeof(int));
+
+        // Write matrix data
+        outFile.write(reinterpret_cast<const char*>(mat.data()), rows * cols * sizeof(double));
+        outFile.close();
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: Unable to serialize matrix: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+
 enum IntegrationType {
     kBomme = 0,
     kKnoppel = 1,
@@ -118,6 +149,35 @@ bool deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath) {
     std::cerr << "Error: Unable to deserialize matrix: " << e.what() << std::endl;
     return false;
   }
+}
+
+// Deserialize Eigen matrix from a binary file
+bool deserializeMatrixNew(Eigen::MatrixXd& mat, const std::string& filepath) {
+    try {
+        std::ifstream inFile(filepath, std::ios::binary);
+        if (!inFile.is_open()) {
+            std::cerr << "Error: Unable to open file for reading: " << filepath << std::endl;
+            return false;
+        }
+
+        char* filename = new char[5];
+        inFile.read(reinterpret_cast<char*>(&filename), sizeof("FRA 2"));
+        // Read matrix rows and cols
+        int rows, cols, vpe;
+        inFile.read(reinterpret_cast<char*>(&rows), sizeof(int));
+        inFile.read(reinterpret_cast<char*>(&cols), sizeof(int));
+        inFile.read(reinterpret_cast<char*>(&vpe), sizeof(int));
+
+        // Read matrix data
+        mat.resize(rows, cols);
+        inFile.read(reinterpret_cast<char*>(mat.data()), rows * cols * sizeof(double));
+        inFile.close();
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: Unable to deserialize matrix: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 void renderVectorFields()
@@ -280,7 +340,9 @@ void load() {
 
   Eigen::MatrixXd A;
   std::string load_vec_name = igl::file_dialog_open();
-  deserializeMatrix(A, load_vec_name);
+  deserializeMatrixNew(A, load_vec_name);
+
+  std::cout << A << std::endl;
 
   std::cout << "start to register mesh" << std::endl;
   auto surf_mesh = polyscope::registerSurfaceMesh("mesh", mesh_pts, mesh_faces);
