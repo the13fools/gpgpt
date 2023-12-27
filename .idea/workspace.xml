@@ -44,13 +44,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d658c1ca-042c-4a39-97ea-082baac63a6e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/SurfaceFields/MIGlobalIntegration.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/SurfaceFields/MIGlobalIntegration.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="d658c1ca-042c-4a39-97ea-082baac63a6e" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
