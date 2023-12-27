@@ -227,17 +227,23 @@ public:
 		self_data.SetPrimalsRank1(appState.primals_layout);
 		self_data.SetBasis(appState.cur_surf->data().Bs[f_idx]);
 		
-		switch(curr_lift) {
+		switch(curr_lift)
+		{
+			case(ElementLiftType::primal):
+				break;
 			// Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
 			case(ElementLiftType::L2_krushkal):
 			case(ElementLiftType::L2_tensor):
-				self_data.SetL2Primals();
+				L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
 			break;
 
 			case(ElementLiftType::L4_krushkal):
 			case(ElementLiftType::L4_tensor):
-				self_data.SetL4Primals();
+				L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
 			break;
+
+			default:
+				std::cout << "Error: LiftType not implemented" << std::endl;
 		}
 	}
 
@@ -279,18 +285,24 @@ public:
 			neighbor_data_i.SetPrimalsRank1(appState.primals_layout);
 			neighbor_data_i.SetBasis(appState.cur_surf->data().Bs[f_idx]);
 
-			switch(curr_lift) {
-				// Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
-				case(ElementLiftType::L2_krushkal):
-				case(ElementLiftType::L2_tensor):
-					neighbor_data_i.SetL2Primals();
-				break;
+            switch(curr_lift)
+            {
+                case(ElementLiftType::primal):
+                    break;
+                // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
+                case(ElementLiftType::L2_krushkal):
+                case(ElementLiftType::L2_tensor):
+                    L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                break;
 
-				case(ElementLiftType::L4_krushkal):
-				case(ElementLiftType::L4_tensor):
-					neighbor_data_i.SetL4Primals();
-				break;
-			}
+                case(ElementLiftType::L4_krushkal):
+                case(ElementLiftType::L4_tensor):
+                    L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                break;
+
+                default:
+                    std::cout << "Error: LiftType not implemented" << std::endl;
+            }
 			neighbor_data.push_back(neighbor_data_i);
 			shared_eids.push_back(eid);
 		}
