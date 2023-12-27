@@ -160,6 +160,7 @@ public:
     Eigen::MatrixXd C_primal;
     Eigen::MatrixXd C_sym_2;
     Eigen::MatrixXd C_sym_4; // TODO 
+    std::vector<std::vector<Eigen::MatrixXd>> R_facet_to_template;
 
     // Per element selection indicies 
     // This is a much more generic way to create optzoo entries.  

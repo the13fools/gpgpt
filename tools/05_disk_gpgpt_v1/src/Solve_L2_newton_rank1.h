@@ -62,10 +62,10 @@ public:
 
         // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
-      appState->meshName = "circle";
+      // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
-      
+      appState->meshName = "disk_irreg";
       
 
 
@@ -266,9 +266,9 @@ public:
     virtual void initConfigValues()
     {
       appState->config->w_attenuate = 1.;
-      appState->config->w_smooth = 1e5;
-      appState->config->w_bound = 1e8;
-      appState->config->w_curl = 1e1;
+      appState->config->w_smooth = 1e0;
+      appState->config->w_bound = 1e5;
+      appState->config->w_curl = 1e-3;
     }
 
 // This is called after each step.  
@@ -293,7 +293,7 @@ public:
       
 
       // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
+      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-14)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 2.;
         appState->keepSolving = true;  

@@ -687,6 +687,28 @@ void Mint3DHook::resetAppState() {
 
 void Mint3DHook::initCurlOperators()
 {
+    // int ntets = appState->cur_tet_mesh->nTets();
+    // R_facet_to_template.resize(ntets);
+
+    // for (int tetidx = 0; tetidx < ntets; tetidx++)
+    // {
+    //     for (int idx = 0; idx < 4; idx++)
+    //     {
+    //         int face_idx = appState->cur_tet_mesh->faceTet(tetidx, idx);
+    //         Eigen::VectorXi cur_face = 
+    //     }
+    //     Eigen::Matrix4d R = appState->cur_tet_mesh->getR(i);
+    //     Eigen::Matrix4d Rstar = appState->cur_tet_mesh->getRstar(i);
+    //     Eigen::Matrix4d Rstar_xcomp = appState->cur_tet_mesh->getRstar_xcomp(i);
+
+    //     R_facet_to_template[i] = Rstar_xcomp * R;
+    // }
+
+
+
+
+    /* 
+
     int nedges = appState->cur_surf->nEdges();
     appState->C_primal.resize(nedges, 2);
     appState->C_sym_2.resize(nedges, 4);
@@ -725,6 +747,8 @@ void Mint3DHook::initCurlOperators()
         // e_projs2.row(i) = e_proj;
 
     }
+
+    */
 
 }
 

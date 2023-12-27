@@ -229,7 +229,9 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
           appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(dirichlet_term);
 
           T ret = T(0);//  delta_norm_term * delta_weight;
-          ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+        //   ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+          ret = ret + e.w_smooth * dirichlet_term;
+
 
           return ret;
     });
@@ -309,7 +311,9 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
           T ret = T(0);//  delta_norm_term * delta_weight;
           if (e.w_smooth > 0)
-            ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+            ret = ret + e.w_smooth * dirichlet_term;
+
+            // ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
      
 
           return ret;
@@ -387,7 +391,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
           if (w_curl_new > 0)
           {
             // std::cout << w_curl_new;
-            ret = ret + w_curl_new * curl_term;
+            ret = ret + w_curl_new * curl_term * 1./e.w_attenuate ;
             // std::cout << curl_term << " ";
           }
           
@@ -472,7 +476,7 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
           if (w_curl_new > 0)
           {
             // std::cout << w_curl_new;
-            ret = ret + w_curl_new * curl_term;
+            ret = ret + w_curl_new * curl_term * 1./e.w_attenuate;
             // std::cout << curl_term << " ";
           }
           

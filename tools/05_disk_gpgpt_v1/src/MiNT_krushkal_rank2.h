@@ -271,7 +271,7 @@ public:
       
 
       // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
+      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-14)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 2.;
         appState->keepSolving = true;  
