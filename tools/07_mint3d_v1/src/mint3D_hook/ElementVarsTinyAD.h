@@ -96,7 +96,7 @@ template <typename T_active, typename ELEM>
 class ProcElement {
 public:
 
-    ProcElement(ElementLiftType t) : w_bound(0), curr_lift(t) {};
+    ProcElement(ElementLiftType t) : curr_lift(t), w_bound(0) {};
 
     // ElementVars(AppState& appState) {}
 
@@ -145,6 +145,9 @@ public:
         switch(curr_lift)
         {
             // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
+            case(ElementLiftType::primal):
+                break;
+
             case(ElementLiftType::L2_krushkal):
             case(ElementLiftType::L2_tensor):
                 L2_primals(appState, self_data.dofs_curr_elem, self_data);
@@ -155,8 +158,8 @@ public:
                 L4_primals(appState, self_data.dofs_curr_elem, self_data);
             break;
 
-            // default:
-            //     std::cout << "Error: LiftType not implemented" << std::endl;
+            default:
+                std::cout << "Error: LiftType not implemented" << std::endl;
         }
 
 
@@ -197,6 +200,8 @@ public:
 
             switch(curr_lift)
             {
+                case(ElementLiftType::primal):
+                    break;
                 // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
                 case(ElementLiftType::L2_krushkal):
                 case(ElementLiftType::L2_tensor):
@@ -208,14 +213,15 @@ public:
                     L4_primals(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
                 break;
 
-                // default:
-                //     std::cout << "Error: LiftType not implemented" << std::endl;
+                default:
+                    std::cout << "Error: LiftType not implemented" << std::endl;
             }
 
             // L2_primals(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             // L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
             neighbor_data.push_back(neighbor_data_i);
         }
+
 
     }
 
