@@ -32,5 +32,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
 target_link_libraries(${PROJECT_NAME} gpgpt polyscope TinyAD igl::core args) # OpenMP::OpenMP_CXX)
 
 # add_dependencies(${PROJECT_NAME}  ${FRONTENDFILES})
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DEIGEN_STACK_ALLOCATION_LIMIT=8388608)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17 )

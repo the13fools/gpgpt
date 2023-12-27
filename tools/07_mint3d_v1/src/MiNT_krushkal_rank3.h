@@ -1,5 +1,5 @@
-#ifndef MINT_KRUSHKAL_RANK2_H
-#define MINT_KRUSHKAL_RANK2_H
+#ifndef MINT_KRUSHKAL_RANK3_H
+#define MINT_KRUSHKAL_RANK3_H
 
 
 
@@ -23,21 +23,21 @@
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 6
+#define DOFS_PER_ELEMENT 9
 
 
-class MiNT_krushkal_rank2 : public Mint3DHook
+class MiNT_krushkal_rank3 : public Mint3DHook
 {
 public:
-    MiNT_krushkal_rank2() : Mint3DHook(new AppState()) {
+    MiNT_krushkal_rank3() : Mint3DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
-      appState->solveType = "MiNT_krushkal_rank2";
-      appState->solveDescription = "This solver optimizes for an integrable rank 2 vector field on a disk";
+      appState->solveType = "MiNT_krushkal_rank3";
+      appState->solveDescription = "This solver optimizes for an integrable rank 3 vector field on a disk";
 
 
 
 
-      appState->primals_layout = {0, 6, 2}; 
+      appState->primals_layout = {0, 9, 3}; 
       // This says 4 dofs stored starting at 0 divided into 2 vectors 
       
     appState->moments_layout = {0, 0};
@@ -48,7 +48,7 @@ public:
 
     }
 
-    ~MiNT_krushkal_rank2(){
+    ~MiNT_krushkal_rank3(){
       // delete _opt;
     }
 
@@ -174,6 +174,9 @@ public:
                     frame(3) = -sin(theta);
                     frame(4) = cos(theta);
                     frame(5) = 0.;
+                    frame(6) = 0.;
+                    frame(7) = 0.;
+                    frame(8) = 1.;
 
                     appState->frames.row(i) = frame;
                 }
@@ -322,5 +325,5 @@ protected:
 
 
 
-#endif // MINT_KRUSHKAL_RANK2_H
+#endif // MINT_KRUSHKAL_RANK3_H
 
