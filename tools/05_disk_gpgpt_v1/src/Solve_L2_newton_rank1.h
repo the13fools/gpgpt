@@ -60,9 +60,9 @@ public:
     {
 
 
-        appState->meshName = "circle_1000";
+        // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
-      // appState->meshName = "circle";
+      appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
       
@@ -218,14 +218,14 @@ public:
                     // frame(0) = cos(theta);
                     // frame(1) = sin(theta);
 
-                    // appState->problemFileTag = "_+0_5_";
-                    // frame(0) = cos(theta * .5);
-                    // frame(1) = sin(theta * .5);
+                    appState->problemFileTag = "_+0_5_";
+                    frame(0) = cos(theta * .5);
+                    frame(1) = sin(theta * .5);
 
 
-                    appState->problemFileTag = "_-0_5_";
-                    frame(0) = -4 * cos((theta-3.1415) * .5 );
-                    frame(1) = sin((theta-3.1415) * .5 );
+                    // appState->problemFileTag = "_-0_5_";
+                    // frame(0) = -4 * cos((theta-3.1415) * .5 );
+                    // frame(1) = sin((theta-3.1415) * .5 );
                     // frame(2) = -vec(1);
                     // frame(3) = vec(0);
                     appState->frames.row(i) = frame;
