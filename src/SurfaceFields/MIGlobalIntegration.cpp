@@ -639,8 +639,7 @@ namespace SurfaceFields {
     }
 
 
-    void MIGlobalIntegration::globallyIntegrateOneComponent(const Surface& surf, const Eigen::MatrixXd& v, Eigen::VectorXd& theta, Eigen::VectorXd* edge_omega)
-    {
+    void MIGlobalIntegration::globallyIntegrateOneComponent(const Surface& surf, const Eigen::MatrixXd& v, Eigen::VectorXd& theta, Eigen::VectorXd* edge_omega) {
         int nverts = surf.nVerts();
         theta.resize(nverts);
         theta.setZero();
@@ -668,7 +667,7 @@ namespace SurfaceFields {
         Surface s(newV, newF);
         int newverts = s.nVerts();
         //int intdofs = cuts.size();
-        int intdofs = 0;
+        int intdofs=0;
 
         std::vector<Eigen::Triplet<double> > Ccoeffs;
         int row = 0;
@@ -717,6 +716,7 @@ namespace SurfaceFields {
         }
         Eigen::SparseMatrix<double> C(row, newverts + intdofs + 1);
         C.setFromTriplets(Ccoeffs.begin(), Ccoeffs.end());
+        //igl::writeOBJ("test.obj", newV, newF);
 
         std::vector<Eigen::Triplet<double> > Acoeffs;
         int nfaces = s.nFaces();
@@ -731,19 +731,19 @@ namespace SurfaceFields {
         A.setFromTriplets(Acoeffs.begin(), Acoeffs.end());
 
         std::vector<Eigen::Triplet<double> > Minvcoeffs;
-        for (int i = 0; i < nfaces; i++)
+        for(int i=0; i<nfaces; i++)
         {
             double area = s.faceArea(i);
             Eigen::Matrix<double, 3, 2> B = s.data().Bs[i];
-            Eigen::Matrix2d BTB = B.transpose() * B;
+            Eigen::Matrix2d BTB = area * B.transpose()*B;
             Eigen::Matrix2d BTBinv = BTB.inverse();
             for (int j = 0; j < 2; j++)
                 for (int k = 0; k < 2; k++)
                 {
-                    Minvcoeffs.push_back(Eigen::Triplet<double>(2 * i + j, 2 * i + k, area * BTBinv(j, k)));
+                    Minvcoeffs.push_back(Eigen::Triplet<double>(2 * i + j, 2 * i + k, BTBinv(j, k)));
                 }
         }
-        Eigen::SparseMatrix<double> Minv(2 * nfaces, 2 * nfaces);
+        Eigen::SparseMatrix<double> Minv(2*nfaces, 2*nfaces);
         Minv.setFromTriplets(Minvcoeffs.begin(), Minvcoeffs.end());
 
         std::vector<Eigen::Triplet<double> > Dcoeffs;
@@ -759,17 +759,24 @@ namespace SurfaceFields {
 
         std::vector<Eigen::Triplet<double> > Mcoeffs;
         double totarea = 0;
+        std::vector<double> scales;
         for (int i = 0; i < nfaces; i++)
         {
             Eigen::Matrix<double, 3, 2> B = s.data().Bs[i];
-            Eigen::Matrix2d BTB = B.transpose() * B;
-           /* Eigen::Vector3d vec = B * v.row(i).transpose();
+            Eigen::Vector3d vec = B*v.row(i).transpose();
+            if(i == 0) {
+                std::cout << "first face vec: " << vec.transpose() << std::endl;
+            }
+            scales.push_back(1);
+            vec.normalize();
             Eigen::Vector3d n = s.faceNormal(i);
             double area = s.faceArea(i);
+            area = 1;
             totarea += area;
             Eigen::Vector3d vecperp = n.cross(vec);
-            Eigen::Matrix3d metric = vec * vec.transpose() + aniso_ * vecperp * vecperp.transpose();
-            Eigen::Matrix2d BTB = area * B.transpose() * metric * B;*/
+            Eigen::Matrix3d metric = vec * vec.transpose() + aniso_*vecperp * vecperp.transpose();
+//            Eigen::Matrix2d BTB = area * B.transpose()*metric *B;
+            Eigen::Matrix2d BTB = area * B.transpose()*B;
             for (int j = 0; j < 2; j++)
                 for (int k = 0; k < 2; k++)
                 {
@@ -781,14 +788,33 @@ namespace SurfaceFields {
         Eigen::VectorXd projvf(2 * nfaces);
         for (int i = 0; i < nfaces; i++)
         {
-            Eigen::Matrix<double, 3, 2> B = s.data().Bs[i];
-            Eigen::Matrix2d BTB = B.transpose() * B;
-            projvf.segment<2>(2 * i) = BTB.inverse() * v.row(i).transpose() / 2.0 / M_PI;
+            double fac = scales[i];
+//            projvf.segment<2>(2 * i) = fac * surf.data().Js.block<2,2>(2*i,0) * v.row(i).transpose();
+            projvf.segment<2>(2 * i) = fac * v.row(i).transpose();
         }
 
-        Eigen::VectorXd rhs = A.transpose() * D.transpose() * Minv * projvf;
-        Eigen::SparseMatrix<double> Mat = A.transpose() * D.transpose() * Minv * D * A;
+        Eigen::VectorXd rhs = A.transpose() * D.transpose() * Minv.transpose() * M * projvf;
+        Eigen::SparseMatrix<double> Mat = A.transpose()  * D.transpose() * Minv.transpose() * M * Minv * D * A;
 
+//        Eigen::SparseMatrix<double> L;
+//        igl::cotmatrix(s.data().V, s.data().F, L);
+//        std::vector<Eigen::Triplet<double> > Laugcoeffs;
+//        for (int k = 0; k < L.outerSize(); ++k)
+//        {
+//            for (Eigen::SparseMatrix<double>::InnerIterator it(L, k); it; ++it)
+//            {
+//                Laugcoeffs.push_back(Eigen::Triplet<double>(it.row(), it.col(), -smoothreg_ * totarea * it.value()));
+//            }
+//        }
+//
+//        for (int i = 0; i < intdofs; i++)
+//        {
+//            Laugcoeffs.push_back(Eigen::Triplet<double>(newverts + i, newverts + i, 1e-6));
+//        }
+//
+//        Eigen::SparseMatrix<double> Laug(newverts + intdofs, newverts + intdofs);
+//        Laug.setFromTriplets(Laugcoeffs.begin(), Laugcoeffs.end());
+//        Mat += Laug;
 
         Eigen::VectorXd result;
         Eigen::VectorXi toRound(intdofs);
@@ -797,18 +823,21 @@ namespace SurfaceFields {
             toRound[i] = newverts + i;
         }
         ComisoWrapper(C, Mat, result, rhs, toRound, 1e-6);
-        std::cout << "residual: " << (Mat * result - rhs).norm() << std::endl;
-        std::cout << "Reconstruction residual: " << (D * A * result - projvf).transpose() * Minv * (D * A * result - projvf) << std::endl;
+        std::cout << "residual: " << (Mat*result - rhs).norm() << std::endl;
 
+        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver(Mat);
+        Eigen::VectorXd unconstr = solver.solve(rhs);
+        std::cout << "unconstr residual: " << (Mat*unconstr-rhs).norm() << std::endl;
+        //result = unconstr;
         for (int i = 0; i < nfaces; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                //double intpart;
-                //double fracpart = std::modf(result[newF(i, j)], &intpart);
-                //if (fracpart < 0)
-                //    fracpart = 1 + fracpart;
-                //fracpart -= 0.5;
+//                double intpart;
+//                double fracpart = std::modf(result[newF(i, j)], &intpart);
+//                if (fracpart < 0)
+//                    fracpart = 1 + fracpart;
+//                fracpart -= 0.5;
                 theta[surf.data().F(i, j)] = 2.0 * M_PI * result[newF(i, j)];
             }
         }

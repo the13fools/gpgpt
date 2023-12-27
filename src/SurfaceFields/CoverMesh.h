@@ -41,6 +41,8 @@ public:
     void integrateField(SurfaceFields::GlobalFieldIntegration* gmethod, double globalScale);
     void roundAntipodalCovers(int numISOLines);
     const Surface &splitMesh() const;
+
+    void gradTheta(std::vector<Eigen::Vector3d>& face_grad, double globalScale);
     void gradThetaDeviation(Eigen::VectorXd &error, double globalScale) const;
     
     // maps indices of vertices on the visualization mesh to corresponding "parent" vertices on the cover mesh

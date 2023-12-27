@@ -3,32 +3,36 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
-  <component name="CMakePresetLoader"><![CDATA[{
-  "useNewFormat": true
-}]]></component>
+  <component name="CMakePresetLoader">{
+  &quot;useNewFormat&quot;: true
+}</component>
   <component name="CMakeReloadState">
     <option name="reloaded" value="true" />
   </component>
   <component name="CMakeRunConfigurationManager">
     <generated>
-      <config projectName="gpgpt" targetName="stb" />
-      <config projectName="gpgpt" targetName="completion" />
       <config projectName="gpgpt" targetName="igl_core" />
+      <config projectName="gpgpt" targetName="07_mint3d_v1" />
+      <config projectName="gpgpt" targetName="08_surfacemint_v1" />
       <config projectName="gpgpt" targetName="gitlike" />
       <config projectName="gpgpt" targetName="argstest-multiple-inclusion" />
-      <config projectName="gpgpt" targetName="glad" />
+      <config projectName="gpgpt" targetName="igl_copyleft_comiso" />
       <config projectName="gpgpt" targetName="argstest" />
+      <config projectName="gpgpt" targetName="04_adfunc_wrapper" />
+      <config projectName="gpgpt" targetName="01_basic_test" />
+      <config projectName="gpgpt" targetName="glfw" />
+      <config projectName="gpgpt" targetName="stb" />
+      <config projectName="gpgpt" targetName="completion" />
+      <config projectName="gpgpt" targetName="glad" />
       <config projectName="gpgpt" targetName="polyscope" />
       <config projectName="gpgpt" targetName="03_disk_bvp_v1" />
       <config projectName="gpgpt" targetName="imgui" />
       <config projectName="gpgpt" targetName="TinyAD-Headers" />
       <config projectName="gpgpt" targetName="02_tiny_ad_test" />
-      <config projectName="gpgpt" targetName="04_adfunc_wrapper" />
-      <config projectName="gpgpt" targetName="01_basic_test" />
       <config projectName="gpgpt" targetName="06_polyvectors" />
+      <config projectName="gpgpt" targetName="CoMISo" />
       <config projectName="gpgpt" targetName="igl_copyleft_core" />
       <config projectName="gpgpt" targetName="05_disk_gpgpt_v1" />
-      <config projectName="gpgpt" targetName="glfw" />
       <config projectName="gpgpt" targetName="update_mappings" />
       <config projectName="gpgpt" targetName="gpgpt" />
       <config projectName="gpgpt" targetName="argstest-windows-h" />
@@ -41,6 +45,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d658c1ca-042c-4a39-97ea-082baac63a6e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/SurfaceFields/CoverMesh.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SurfaceFields/MIGlobalIntegration.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/SurfaceFields/MIGlobalIntegration.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -69,7 +77,7 @@
     "cf.advertisement.text.overridden": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "last_opened_file_path": "/home/zchen96/Projects/gpgpt",
+    "last_opened_file_path": "/home/zchen96/Projects/zhenvf",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -110,6 +118,21 @@
       </method>
     </configuration>
     <configuration name="06_polyvectors" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gpgpt" TARGET_NAME="06_polyvectors" CONFIG_NAME="RelWithDebInfo" RUN_TARGET_PROJECT_NAME="gpgpt" RUN_TARGET_NAME="06_polyvectors">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="07_mint3d_v1" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gpgpt" TARGET_NAME="07_mint3d_v1" CONFIG_NAME="RelWithDebInfo" RUN_TARGET_PROJECT_NAME="gpgpt" RUN_TARGET_NAME="07_mint3d_v1">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="08_surfacemint_v1" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gpgpt" TARGET_NAME="08_surfacemint_v1" CONFIG_NAME="RelWithDebInfo" RUN_TARGET_PROJECT_NAME="gpgpt" RUN_TARGET_NAME="08_surfacemint_v1">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CoMISo" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gpgpt" TARGET_NAME="CoMISo" CONFIG_NAME="RelWithDebInfo">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -159,6 +182,11 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
+    <configuration name="igl_copyleft_comiso" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gpgpt" TARGET_NAME="igl_copyleft_comiso" CONFIG_NAME="RelWithDebInfo">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="igl_copyleft_core" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gpgpt" TARGET_NAME="igl_copyleft_core" CONFIG_NAME="RelWithDebInfo">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -196,6 +224,8 @@
       <item itemvalue="CMake Application.argstest-windows-h" />
       <item itemvalue="CMake Application.completion" />
       <item itemvalue="CMake Application.gitlike" />
+      <item itemvalue="CMake Application.CoMISo" />
+      <item itemvalue="CMake Application.igl_copyleft_comiso" />
       <item itemvalue="CMake Application.igl_copyleft_core" />
       <item itemvalue="CMake Application.igl_core" />
       <item itemvalue="CMake Application.glad" />
@@ -211,6 +241,8 @@
       <item itemvalue="CMake Application.04_adfunc_wrapper" />
       <item itemvalue="CMake Application.05_disk_gpgpt_v1" />
       <item itemvalue="CMake Application.06_polyvectors" />
+      <item itemvalue="CMake Application.07_mint3d_v1" />
+      <item itemvalue="CMake Application.08_surfacemint_v1" />
     </list>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -233,23 +265,28 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp</url>
-          <line>206</line>
+          <line>314</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp</url>
-          <line>198</line>
+          <line>306</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp</url>
-          <line>130</line>
+          <line>238</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp</url>
-          <line>142</line>
+          <line>250</line>
           <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/tools/06_polyvectors_tool/src/main.cpp</url>
+          <line>131</line>
+          <option name="timeStamp" value="7" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

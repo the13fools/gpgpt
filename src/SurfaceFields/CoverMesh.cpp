@@ -473,10 +473,9 @@ void CoverMesh::gradThetaDeviation(Eigen::VectorXd &error, double globalScale) c
                 Eigen::Vector2d grad = BTBinv * diffs;
                 Eigen::Vector3d grademb = B * grad;
                 Eigen::Vector3d vemb = B*fs->data().Js.block<2,2>(2*i,0)*fs->v(i,0) * globalScale;
-                error[i] = (grademb - vemb).norm();
-                //Eigen::Vector3d n = fs->faceNormal(i);
-                //double theta = asin(grademb.cross(vemb).dot(n) / grademb.norm() / vemb.norm());
-                //error[i] = fabs( theta ) / (0.5 * M_PI);
+                Eigen::Vector3d n = fs->faceNormal(i);
+                double theta = asin(grademb.cross(vemb).dot(n) / grademb.norm() / vemb.norm());
+                error[i] = fabs( theta ) / (0.5 * M_PI);
             }
         }
     }
