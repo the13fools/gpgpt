@@ -227,24 +227,24 @@ public:
 		self_data.SetPrimalsRank1(appState.primals_layout);
 		self_data.SetBasis(appState.cur_surf->data().Bs[f_idx]);
 		
-		switch(curr_lift)
-		{
-			case(ElementLiftType::primal):
-				break;
-			// Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
-			case(ElementLiftType::L2_krushkal):
-			case(ElementLiftType::L2_tensor):
-				L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
-			break;
+            switch(curr_lift)
+            {
+                case(ElementLiftType::primal):
+                    break;
+                // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
+                case(ElementLiftType::L2_krushkal):
+                case(ElementLiftType::L2_tensor):
+                   	self_data.SetL2Primals();
+                break;
 
-			case(ElementLiftType::L4_krushkal):
-			case(ElementLiftType::L4_tensor):
-				L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
-			break;
+                case(ElementLiftType::L4_krushkal):
+                case(ElementLiftType::L4_tensor):
+                    self_data.SetL2Primals();
+                break;
 
-			default:
-				std::cout << "Error: LiftType not implemented" << std::endl;
-		}
+                default:
+                    std::cout << "Error: LiftType not implemented" << std::endl;
+            }
 	}
 
 	void SetNeighborData(AppState& appState, const Eigen::Index f_idx, ELEM& element) { 
@@ -292,12 +292,12 @@ public:
                 // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
                 case(ElementLiftType::L2_krushkal):
                 case(ElementLiftType::L2_tensor):
-                    L2_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                    neighbor_data_i.SetL4Primals();
                 break;
 
                 case(ElementLiftType::L4_krushkal):
                 case(ElementLiftType::L4_tensor):
-                    L4_primals(appState, f_idx, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                    neighbor_data_i.SetL4Primals();
                 break;
 
                 default:
