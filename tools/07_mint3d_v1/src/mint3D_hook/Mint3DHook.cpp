@@ -599,7 +599,7 @@ bool Mint3DHook::simulateOneStep() {
         // Three conditions for convergence:
         // 1. Relative residual is small
         // 2. Absolute residual is small
-        // 3. Gradient norm is small or step progress is negative (converged)
+        // 3. Gradient norm is small or step progress is vanishing/negative (line search failing to make progress)
         if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->_prev_step_progress < 1e-10)) 
         {
             std::cout << "**** Converged current step ****" << std::endl;

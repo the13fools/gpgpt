@@ -66,8 +66,8 @@ public:
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
 
-      // appState->meshName = "disk_v210";
-      appState->meshName = "disk_v623";
+      appState->meshName = "disk_v210";
+      // appState->meshName = "disk_v623";
 
       
 

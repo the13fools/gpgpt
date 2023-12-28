@@ -413,21 +413,21 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
 
 
-          Eigen::Vector4d ea = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 0));
-          Eigen::Vector4d eb = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 1));
-          Eigen::Vector4d ec = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 2));
+        //   Eigen::Vector4d ea = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 0));
+        //   Eigen::Vector4d eb = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 1));
+        //   Eigen::Vector4d ec = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 2));
 
-          T curl_term = pow(ea.dot(e.neighbor_data.at(0).L_2_primals ) - ea.dot(e.self_data.L_2_primals),2);
-          curl_term +=  pow(eb.dot(e.neighbor_data.at(1).L_2_primals ) - eb.dot(e.self_data.L_2_primals),2);
-          curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_2_primals ) - ec.dot(e.self_data.L_2_primals),2);
+        //   T curl_term = pow(ea.dot(e.neighbor_data.at(0).L_2_primals ) - ea.dot(e.self_data.L_2_primals),2);
+        //   curl_term +=  pow(eb.dot(e.neighbor_data.at(1).L_2_primals ) - eb.dot(e.self_data.L_2_primals),2);
+        //   curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_2_primals ) - ec.dot(e.self_data.L_2_primals),2);
 
-        //   curl_term = curl_term * e.self_data.frame_norm_euclidian;
-        // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
+        // //   curl_term = curl_term * e.self_data.frame_norm_euclidian;
+        // // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
 
-        // curl_term = curl_term * norm_passive;
+        // // curl_term = curl_term * norm_passive;
 
 
-          appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
+        //   appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
 
           T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
 
@@ -442,9 +442,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
     //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
           if (w_curl_new > 0)
           {
-            // std::cout << w_curl_new;
-            ret = ret + w_curl_new * curl_term;
-            // std::cout << curl_term << " ";
+            // ret = ret + e.w_attenuate * w_curl_new * curl_term;
           }
           
 

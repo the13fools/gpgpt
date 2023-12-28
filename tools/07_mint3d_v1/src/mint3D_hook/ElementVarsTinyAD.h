@@ -155,12 +155,16 @@ public:
             case(ElementLiftType::L2_krushkal):
                 L2_krushkal(appState, self_data);
                 break;
+            case(ElementLiftType::L2_facets):        
+                break;       
             // case(ElementLiftType::L2_tensor):
             // break;
 
             case(ElementLiftType::L4_krushkal):
                 L4_krushkal(appState, self_data);
                 break;
+            case(ElementLiftType::L4_facets):        
+                break;    
 
             // case(ElementLiftType::L4_tensor):
             // break;
@@ -288,7 +292,7 @@ public:
         // Seperate out the primal dofs into rank-1 components
         // Maybe make this a seperate function. 
         int nprimals = data.primals_rank1.size();
-        int primals_size = data.primals_rank1[0].size()-1;
+        int primals_size = data.primals_rank1[0].size();
         data.L_2_facet_diff.resize(primals_size*primals_size);
         data.L_2_facet_diff.setZero();
         Eigen::Matrix3d R_to_template = appState.R_facet_to_template.at(t_idx).at(n_idx);
@@ -300,7 +304,10 @@ public:
         // Eigen::VectorX<T_active> cur = data.primals_rank1[v_i]; 
         for (int v_i = 0; v_i < nprimals; v_i++)
         {
-            Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+            Eigen::VectorX<T_active> cur_neighbor_vec = data.primals_rank1[v_i];
+            Eigen::VectorX<T_active> cur_self_vec = self_data.primals_rank1[v_i];
+
+            // std::cout << R_to_template * cur_neighbor_vec << std::endl;
 
 
             // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
