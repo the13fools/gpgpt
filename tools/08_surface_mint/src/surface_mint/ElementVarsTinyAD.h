@@ -325,16 +325,32 @@ public:
 	T_active GetL2DirichletTerm() {
 		T_active dirichlet_term = T_active(0);
 		T_active face_area = cur_surf->faceArea(f_idx);
+
+		auto get_face_centroid = [](Surface* surf, int face_id) {
+			Eigen::VectorX<T_active> face_centroid = surf->data().V.row(surf->data().F(face_id, 0));
+			face_centroid += surf->data().V.row(surf->data().F(face_id, 1));
+			face_centroid += surf->data().V.row(surf->data().F(face_id, 2));
+			face_centroid /= 3;
+			return face_centroid;
+			};
+
+		Eigen::VectorX<T_active> c = get_face_centroid(cur_surf, f_idx);
+
 		for (int nid = 0; nid < neighbor_data.size(); nid++) {
 			int eid = shared_eids[nid];
 			int nfid = neighbor_data[nid].curr_idx;
 			int vid0 = cur_surf->data().edgeVerts(eid, 0);
 			int vid1 = cur_surf->data().edgeVerts(eid, 1);
-			T_active edge_len = (cur_surf->data().V.row(vid0) - cur_surf->data().V.row(vid1)).norm();
+
+			Eigen::VectorX<T_active> nc = get_face_centroid(cur_surf, nfid);
+			Eigen::VectorX<T_active> edge_midpt = (cur_surf->data().V.row(vid0) + cur_surf->data().V.row(vid1)) / 2;
+
+			T_active barycentric_len = (c - edge_midpt).norm() + (nc - edge_midpt).norm();
+
 			T_active nei_face_area = cur_surf->faceArea(nfid);
 			T_active edge_area = (face_area + nei_face_area) / 2;
 
-			Eigen::VectorX<T_active> L_2_krushkal_fd = (self_data.L_2_krushkal - neighbor_data[nid].L_2_krushkal) / edge_len;
+			Eigen::VectorX<T_active> L_2_krushkal_fd = (self_data.L_2_krushkal - neighbor_data[nid].L_2_krushkal) / barycentric_len;
 
 			assert(L_2_krushkal_fd.rows() == 4);
 			// ||T||^2 := FN(T)^2 = Tij * Tkl * Tr(B_{ij}^T B_{kl}) = Tij * Tkl * (bi^T bk) * (bj^T bl)
@@ -363,16 +379,32 @@ public:
 	T_active GetL4DirichletTerm() {
 		T_active dirichlet_term = T_active(0);
 		T_active face_area = cur_surf->faceArea(f_idx);
+
+		auto get_face_centroid = [](Surface* surf, int face_id) {
+			Eigen::VectorX<T_active> face_centroid = surf->data().V.row(surf->data().F(face_id, 0));
+			face_centroid += surf->data().V.row(surf->data().F(face_id, 1));
+			face_centroid += surf->data().V.row(surf->data().F(face_id, 2));
+			face_centroid /= 3;
+			return face_centroid;
+			};
+
+		Eigen::VectorX<T_active> c = get_face_centroid(cur_surf, f_idx);
+
 		for (int nid = 0; nid < neighbor_data.size(); nid++) {
 			int eid = shared_eids[nid];
 			int nfid = neighbor_data[nid].curr_idx;
 			int vid0 = cur_surf->data().edgeVerts(eid, 0);
 			int vid1 = cur_surf->data().edgeVerts(eid, 1);
-			T_active edge_len = (cur_surf->data().V.row(vid0) - cur_surf->data().V.row(vid1)).norm();
+
+			Eigen::VectorX<T_active> nc = get_face_centroid(cur_surf, nfid);
+			Eigen::VectorX<T_active> edge_midpt = (cur_surf->data().V.row(vid0) + cur_surf->data().V.row(vid1)) / 2;
+
+			T_active barycentric_len = (c - edge_midpt).norm() + (nc - edge_midpt).norm();
+
 			T_active nei_face_area = cur_surf->faceArea(nfid);
 			T_active edge_area = (face_area + nei_face_area) / 2;
 
-			Eigen::VectorX<T_active> L_4_krushkal_fd = (self_data.L_4_krushkal - neighbor_data[nid].L_4_krushkal) / edge_len;
+			Eigen::VectorX<T_active> L_4_krushkal_fd = (self_data.L_4_krushkal - neighbor_data[nid].L_4_krushkal) / barycentric_len;
 
 			assert(L_4_krushkal_fd.rows() == 16);
 
