@@ -66,8 +66,10 @@ public:
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
 
-      appState->meshName = "disk_v210";
+      // appState->meshName = "disk_v210";
       // appState->meshName = "disk_v623";
+      appState->meshName = "disk_v1000";
+      
 
       
 
@@ -209,7 +211,7 @@ public:
                     Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
 
                     Eigen::VectorXd frame = Eigen::VectorXd::Zero(DOFS_PER_ELEMENT);
-                    double theta = atan2(vec(1),vec(0)) * .5; // acos(vec(1)) * .5;
+                    double theta = atan2(vec(1),vec(0)); // acos(vec(1)) * .5;
                     frame(0) = cos(theta);
                     frame(1) = sin(theta);
                     frame(2) = 0.;
