@@ -451,7 +451,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
     //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
           if (w_curl_new > 0)
           {
-            ret = ret + e.w_attenuate * w_curl_new * curl_term;
+            ret = ret + 1./e.w_attenuate * w_curl_new * curl_term;
           }
           
 
