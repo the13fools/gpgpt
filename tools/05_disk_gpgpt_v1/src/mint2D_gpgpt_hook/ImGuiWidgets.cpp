@@ -373,13 +373,13 @@ namespace ImGuiWidgets {
         ImGui::SameLine();
         // std::cout << fieldName << std::endl;
         ImGui::Checkbox(checkbox.c_str(), ovr_active);
-        ImGui::InputFloat( override_lower.c_str(), ovr_minVal, 0.001f, .10f, "%.8f");
+        ImGui::InputFloat( override_lower.c_str(), ovr_minVal, 0.001f, .10f, "%.2e");
         ImGui::SameLine();
-        ImGui::InputFloat( overide_upper.c_str(), ovr_maxVal, 0.001f, .10f, "%.8f");
+        ImGui::InputFloat( overide_upper.c_str(), ovr_maxVal, 0.001f, .10f, "%.2e");
         ImGui::PopItemWidth();
 
         ImGui::PushItemWidth(300);
-        ImGui::SliderFloat("override max (log slider)", ovr_maxVal, 1e-16f, 1e-3f, "%.16f", ImGuiSliderFlags_Logarithmic);
+        ImGui::SliderFloat("override max (log slider)", ovr_maxVal, 1e-24f, 1e-3f, "%.24f", ImGuiSliderFlags_Logarithmic);
         ImGui::PopItemWidth();
 
     // //  const char* element_names[Field_View::Element_COUNT] = { "Vector Norms", "Delta Norms", "Vector Dirichlet", "Symmetric Dirichlet", "Vector Curl", "Symmetric Curl", "free" };

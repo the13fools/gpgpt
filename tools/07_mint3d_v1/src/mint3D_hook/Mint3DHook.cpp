@@ -687,22 +687,54 @@ void Mint3DHook::resetAppState() {
 
 void Mint3DHook::initCurlOperators()
 {
-    // int ntets = appState->cur_tet_mesh->nTets();
-    // R_facet_to_template.resize(ntets);
+    
+    int ntets = appState->cur_tet_mesh->nTets();
+    appState->R_facet_to_template.resize(ntets);
 
-    // for (int tetidx = 0; tetidx < ntets; tetidx++)
-    // {
-    //     for (int idx = 0; idx < 4; idx++)
-    //     {
-    //         int face_idx = appState->cur_tet_mesh->faceTet(tetidx, idx);
-    //         Eigen::VectorXi cur_face = 
-    //     }
-    //     Eigen::Matrix4d R = appState->cur_tet_mesh->getR(i);
-    //     Eigen::Matrix4d Rstar = appState->cur_tet_mesh->getRstar(i);
-    //     Eigen::Matrix4d Rstar_xcomp = appState->cur_tet_mesh->getRstar_xcomp(i);
+    for (int tetidx = 0; tetidx < ntets; tetidx++)
+    {
+        std::vector<Eigen::MatrixXd> rot_facets_to_template;
+        rot_facets_to_template.resize(4);
+        for (int idx = 0; idx < 4; idx++)
+        {
+            // std::cout << "ntets " << appState->cur_tet_mesh->nTets() << "nfaces" << appState->cur_tet_mesh->nFaces() << std::endl;
+            int face_idx = appState->cur_tet_mesh->tetFace(tetidx, idx);
 
-    //     R_facet_to_template[i] = Rstar_xcomp * R;
-    // }
+            Eigen::Matrix3d rot_facet_to_template;
+
+            if (face_idx == -1)
+            {
+                rot_facet_to_template.setIdentity();
+                rot_facets_to_template.at(idx) = rot_facet_to_template;
+                continue;
+            }
+
+            Eigen::VectorXd a = appState->V.row(appState->cur_tet_mesh->faceVertex(face_idx, 0));
+            Eigen::VectorXd b = appState->V.row(appState->cur_tet_mesh->faceVertex(face_idx, 1));
+            Eigen::VectorXd c = appState->V.row(appState->cur_tet_mesh->faceVertex(face_idx, 2));
+
+            Eigen::Vector3d b1 = (b - a).normalized();
+            Eigen::Vector3d b2 = (c - a).normalized();
+            Eigen::Vector3d n = b1.cross(b2).normalized();
+
+
+            if (std::abs(n[2]) > .999)
+            {
+                rot_facet_to_template.setIdentity();
+            }
+            else
+            {
+                Eigen::Vector3d c1 = n.cross(b1).normalized();
+                rot_facet_to_template.col(0) = n;
+                rot_facet_to_template.col(1) = c1;
+                rot_facet_to_template.col(2) = n.cross(c1).normalized();
+
+            }
+
+            rot_facets_to_template.at(idx) = (rot_facet_to_template.transpose());
+        }
+        appState->R_facet_to_template.at(tetidx) = rot_facets_to_template;
+    }
 
 
 

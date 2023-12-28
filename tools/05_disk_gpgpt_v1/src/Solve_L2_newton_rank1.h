@@ -169,6 +169,9 @@ public:
       // frame(1) = sin(theta * .5);
  
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
+        if (appState->bound_face_idx(i) == 1) {
+          appState->frames.row(i) = appState->frames_orig.row(i);
+        }
         x.segment<2>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
         

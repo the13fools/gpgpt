@@ -120,6 +120,8 @@ bool Serialization::serializeConfig(const MyConfig& config, const std::string& f
         j["w_smooth"] = config.w_smooth;
         j["w_smooth_vector"] = config.w_smooth_vector;
         j["w_curl"] = config.w_curl;
+        j["w_curl_L2"] = config.w_curl_L2;
+        j["w_curl_L4"] = config.w_curl_L4;
         j["w_s_perp"] = config.w_s_perp;
         j["w_attenuate"] = config.w_attenuate;
         j["convergence_eps"] = config.convergence_eps;
@@ -157,7 +159,25 @@ bool Serialization::deserializeConfig(MyConfig& config, const std::string& filep
         config.w_bound = j.at("w_bound");
         config.w_smooth = j.at("w_smooth");
         config.w_smooth_vector = j.at("w_smooth_vector");
-        config.w_curl = j.at("w_curl");
+
+        // Can save either a single curl weight or a more granular.  
+        // If the more granular weights are saved the override the single weight
+        try{
+            config.w_curl = j.at("w_curl");
+        }
+        catch(...){
+            config.w_curl = 1e-6;
+        }
+        try{
+            config.w_curl_L2 = j.at("w_curl_L2");
+            config.w_curl_L4 = j.at("w_curl_L4");
+        }
+        catch(...){
+            config.w_curl_L2 = config.w_curl;
+            config.w_curl_L4 = config.w_curl;
+        }
+
+
         config.w_s_perp = j.at("w_s_perp");
         config.w_attenuate = j.at("w_attenuate");
         config.convergence_eps = j.at("convergence_eps");

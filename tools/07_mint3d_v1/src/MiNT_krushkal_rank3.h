@@ -211,6 +211,10 @@ public:
       {
         appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
+
+        if (appState->bound_face_idx(i) == 1) {
+          appState->frames.row(i) = appState->frames_orig.row(i);
+        }
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
         
@@ -270,16 +274,20 @@ public:
       }
 
 
-      
-
-      // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
+      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-17)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 2.;
         appState->keepSolving = true;  
         appState->outerLoopIteration += 1;
         std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
 
+      }
+      else if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-23)
+      {
+        appState->config->w_attenuate = appState->config->w_attenuate / 10.;
+        appState->keepSolving = true;  
+        appState->outerLoopIteration += 1;
+        std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
       }
 
 

@@ -250,7 +250,9 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
           appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(dirichlet_term);
 
           T ret = T(0);//  delta_norm_term * delta_weight;
-          ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+        //   ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+          ret = ret + e.w_smooth * dirichlet_term;
+
      
 
           return ret;
@@ -350,8 +352,9 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
           // if (e.w_smooth_vector > 0)
           //   return e.w_smooth_vector * primal_dirichlet_term + ret;
           // if (e.w_smooth > 0)
-            ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
-     
+            // ret = ret + e.w_attenuate * e.w_smooth * dirichlet_term;
+          ret = ret + e.w_smooth * dirichlet_term;
+
 
           return ret;
 

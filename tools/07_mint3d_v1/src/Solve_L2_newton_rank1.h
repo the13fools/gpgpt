@@ -150,6 +150,10 @@ public:
       {
         appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
 
+        if (appState->bound_face_idx(i) == 1) {
+          appState->frames.row(i) = appState->frames_orig.row(i);
+        }
+
         // Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
         //                                     appState->V.row(appState->T(i, 1)) +
         //                                     appState->V.row(appState->T(i, 2)) +
@@ -248,9 +252,9 @@ public:
     virtual void initConfigValues()
     {
       appState->config->w_attenuate = 1.;
-      appState->config->w_smooth = 1e5;
-      appState->config->w_bound = 1e8;
-      appState->config->w_curl = 1e1;
+      appState->config->w_smooth = 1e0;
+      appState->config->w_bound = 1e5;
+      appState->config->w_curl = 1e-3;
     }
 
 // This is called after each step.  
@@ -274,8 +278,7 @@ public:
 
       
 
-      // Make this more generic like first write a set of configs to the outdirectory and make this advance to the next one when keepSolving is false.
-      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-12)
+      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-17)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 2.;
         appState->keepSolving = true;  
@@ -283,6 +286,14 @@ public:
         std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
 
       }
+      else if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-23)
+      {
+        appState->config->w_attenuate = appState->config->w_attenuate / 10.;
+        appState->keepSolving = true;  
+        appState->outerLoopIteration += 1;
+        std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
+      }
+
 
 
 
