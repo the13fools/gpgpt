@@ -171,65 +171,56 @@ public:
 
         func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&](auto& element)->TINYAD_SCALAR_TYPE(element)
         {
-
             // Evaluate element using either double or TinyAD::Double
             using T = TINYAD_SCALAR_TYPE(element);
             using VAR = std::decay_t<decltype(element)>;
 
-
-
-            // Get variable 2D vertex positions
             Eigen::Index f_idx = element.handle;
 
-            ProcElement<T, VAR> e(ElementLiftType::L2_tensor);
-            e.SetSelfData(appState, f_idx, element);
-
-
-
-            Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+            Eigen::VectorXi& bound_face_idx = appState.bound_face_idx;
 
             // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
-                    // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
             if (bound_face_idx(f_idx) == 1)
             {
                 return T(0);
             }
 
-            e.SetNeighborData(appState, f_idx, element);
+            auto& V = appState.cur_surf->data().V;
+            auto& E = appState.cur_surf->data().E;
 
+            Eigen::VectorX<T> cur_face_dofs = element.variables(f_idx);    // the vector fields on the current face
 
+            T curl_term = T(0);
 
-            ///////////////////
-            //// Curl Term 
-            ///////////////////
+            for (int i = 0; i < 3; i++) {
+                int eid = appState.cur_surf->data().faceEdges(f_idx, i);
+                assert(E(eid, 0) != -1 || E(eid, 1) != -1); // should not be the boundary edge
 
+                int efid = E(eid, 0) == f_idx ? 0 : 1;
+                int n_idx = E(eid, 1 - efid);       // neighboring face id
 
+                Eigen::VectorX<T> nei_face_dofs = element.variables(n_idx);
 
-            Eigen::Vector4d ea = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 0));
-            Eigen::Vector4d eb = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 1));
-            Eigen::Vector4d ec = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 2));
+                Eigen::Vector<T, 3> edge = V.row(appState.cur_surf->data().edgeVerts(eid, 0)) - V.row(appState.cur_surf->data().edgeVerts(eid, 1));
 
-            T curl_term = pow(ea.dot(e.neighbor_data.at(0).L_2_primals) - ea.dot(e.self_data.L_2_primals), 2);
-            curl_term += pow(eb.dot(e.neighbor_data.at(1).L_2_primals) - eb.dot(e.self_data.L_2_primals), 2);
-            curl_term += pow(ec.dot(e.neighbor_data.at(2).L_2_primals) - ec.dot(e.self_data.L_2_primals), 2);
+                assert(cur_face_dofs.size() == nei_face_dofs.size() && cur_face_dofs.rows() % 2 == 0);
 
-            appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
+                int nvecs = cur_face_dofs.rows() / 2;
+                T diff = T(0);
+                for (int vi = 0; vi < nvecs; vi++) {
+                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.segment<2>(2 * vi);
+                    diff += pow(ext_v.dot(edge), 2) - pow(ext_nv.dot(edge), 2);
+                }
 
-            T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
-
-
-
-            T ret = T(0);
-
-
-            if (w_curl_new > 0)
-            {
-                // std::cout << w_curl_new;
-                ret = ret + w_curl_new * curl_term;
-                // std::cout << curl_term << " ";
+                curl_term += pow(diff, 2);
             }
 
-
+            T ret = T(0);
+            if (appState.config->w_curl > 0)
+            {
+                ret = ret + appState.config->w_curl * curl_term;
+            }
             return ret;
 
         });
@@ -242,81 +233,57 @@ public:
 
         func.template add_elements<4>(TinyAD::range(appState.F.rows()), [&](auto& element)->TINYAD_SCALAR_TYPE(element)
         {
-
             // Evaluate element using either double or TinyAD::Double
             using T = TINYAD_SCALAR_TYPE(element);
             using VAR = std::decay_t<decltype(element)>;
 
-
-
-            // Get variable 2D vertex positions
             Eigen::Index f_idx = element.handle;
-            // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-            ProcElement<T, VAR> e(ElementLiftType::L4_tensor);
-            // e.setElementVars(appState, f_idx, s_curr);
-            e.SetSelfData(appState, f_idx, element);
-
-
-
-            Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-
-            if ((int)f_idx == 0)
-            {
-                // std::cout << "eval smoothness obj" << std::endl;
-                // std::cout << w_bound << " " << w_smooth_vector << " " << w_smooth << " " << w_curl << " " << w_attenuate << std::endl;
-            }
-
+            Eigen::VectorXi& bound_face_idx = appState.bound_face_idx;
 
             // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
-                    // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
             if (bound_face_idx(f_idx) == 1)
             {
                 return T(0);
             }
 
-            e.SetNeighborData(appState, f_idx, element);
+            auto& V = appState.cur_surf->data().V;
+            auto& E = appState.cur_surf->data().E;
 
+            Eigen::VectorX<T> cur_face_dofs = element.variables(f_idx);    // the vector fields on the current face
 
+            T curl_term = T(0);
 
-            ///////////////////
-            //// Curl Term 
-            ///////////////////
+            for (int i = 0; i < 3; i++) {
+                int eid = appState.cur_surf->data().faceEdges(f_idx, i);
+                assert(E(eid, 0) != -1 || E(eid, 1) != -1); // should not be the boundary edge
 
+                int efid = E(eid, 0) == f_idx ? 0 : 1;
+                int n_idx = E(eid, 1 - efid);       // neighboring face id
 
+                Eigen::VectorX<T> nei_face_dofs = element.variables(n_idx);
 
-            Eigen::VectorXd ea = appState.C_sym_4.row(appState.cur_surf->data().faceEdges(f_idx, 0));
-            Eigen::VectorXd eb = appState.C_sym_4.row(appState.cur_surf->data().faceEdges(f_idx, 1));
-            Eigen::VectorXd ec = appState.C_sym_4.row(appState.cur_surf->data().faceEdges(f_idx, 2));
+                Eigen::Vector<T, 3> edge = V.row(appState.cur_surf->data().edgeVerts(eid, 0)) - V.row(appState.cur_surf->data().edgeVerts(eid, 1));
 
-            T curl_term = pow(ea.dot(e.neighbor_data.at(0).L_4_primals) - ea.dot(e.self_data.L_4_primals), 2);
-            curl_term += pow(eb.dot(e.neighbor_data.at(1).L_4_primals) - eb.dot(e.self_data.L_4_primals), 2);
-            curl_term += pow(ec.dot(e.neighbor_data.at(2).L_4_primals) - ec.dot(e.self_data.L_4_primals), 2);
+                assert(cur_face_dofs.size() == nei_face_dofs.size() && cur_face_dofs.rows() % 2 == 0);
 
-            //   curl_term = curl_term / e.self_data.frame_norm_euclidian;
-            // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
+                int nvecs = cur_face_dofs.rows() / 2;
+                T diff = T(0);
+                for (int vi = 0; vi < nvecs; vi++) {
+                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.segment<2>(2 * vi);
+                    diff += pow(ext_v.dot(edge), 4) - pow(ext_nv.dot(edge), 4);
+                }
 
-            //   curl_term = curl_term / norm_passive;
-
-
-            appState.os->curl_L4(f_idx) = TinyAD::to_passive(curl_term);
-
-            T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
-
-
-
-            T ret = T(0);
-
-            if (w_curl_new > 0)
-            {
-                // std::cout << w_curl_new;
-                ret = ret + w_curl_new * curl_term;
-                // std::cout << curl_term << " ";
+                curl_term += pow(diff, 2);
             }
 
-
+            T ret = T(0);
+            if (appState.config->w_curl > 0)
+            {
+                ret = ret + appState.config->w_curl * curl_term;
+            }
             return ret;
-
 
         });
     }
