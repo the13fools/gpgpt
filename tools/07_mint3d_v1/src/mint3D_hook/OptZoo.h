@@ -427,9 +427,18 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
         // // curl_term = curl_term * norm_passive;
 
 
-        //   appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
 
           T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
+
+          int num_neighbors = e.num_neighbors;
+          T curl_term = T(0);
+          for (int i = 0; i < num_neighbors; i++)
+          {
+                curl_term += (e.neighbor_data.at(i).L_2_facet_diff).squaredNorm();
+          }
+
+          appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
+
 
           
 
@@ -442,7 +451,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
     //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
           if (w_curl_new > 0)
           {
-            // ret = ret + e.w_attenuate * w_curl_new * curl_term;
+            ret = ret + e.w_attenuate * w_curl_new * curl_term;
           }
           
 

@@ -206,7 +206,7 @@ public:
                     L2_krushkal(appState, neighbor_data_i);
                     break;
                 case(ElementLiftType::L2_facets):
-                    L2_facet_diff(appState, n_idx, neighbor_data_i);
+                    L2_facet_diff(appState, i, neighbor_data_i);
 
                     
                 break;
@@ -292,22 +292,26 @@ public:
         // Seperate out the primal dofs into rank-1 components
         // Maybe make this a seperate function. 
         int nprimals = data.primals_rank1.size();
-        int primals_size = data.primals_rank1[0].size();
-        data.L_2_facet_diff.resize(primals_size*primals_size);
+        int facet_dim = data.primals_rank1[0].size() - 1;
+        data.L_2_facet_diff.resize(facet_dim*facet_dim);
         data.L_2_facet_diff.setZero();
+        
         Eigen::Matrix3d R_to_template = appState.R_facet_to_template.at(t_idx).at(n_idx);
 
-        // Eigen::
+        Eigen::VectorX<T_active> neighbor_L2_facet = Eigen::VectorX<T_active>::Zero(facet_dim*facet_dim);
+        Eigen::VectorX<T_active> self_L2_facet = Eigen::VectorX<T_active>::Zero(facet_dim*facet_dim);
+       
+        
 
-        // update for n vectors per frame. 
-
-        // Eigen::VectorX<T_active> cur = data.primals_rank1[v_i]; 
         for (int v_i = 0; v_i < nprimals; v_i++)
         {
             Eigen::VectorX<T_active> cur_neighbor_vec = data.primals_rank1[v_i];
             Eigen::VectorX<T_active> cur_self_vec = self_data.primals_rank1[v_i];
 
-            // std::cout << R_to_template * cur_neighbor_vec << std::endl;
+            Eigen::VectorX<T_active> rot_neighbor = R_to_template * cur_neighbor_vec;
+            Eigen::VectorX<T_active> rot_self = R_to_template * cur_self_vec;
+
+            // std::cout << rot_neighbor.transpose() << " | " << rot_self.transpose() << std::endl;
 
 
             // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
@@ -315,19 +319,18 @@ public:
             // curcurt_normalized_flattened.resize(cur.rows()*cur.rows());// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
             // Eigen::VectorX<T_active> curcurt_normalized_flattened = curcurt_flattened;
             // TODO fix this later
-            for (int i = 0; i < primals_size; i++)
+            for (int i = 0; i < facet_dim; i++)
             {
-                for (int j = 0; j < primals_size; j++)
+                for (int j = 0; j < facet_dim; j++)
                 {
-                    // curcurt_flattened(i*primals_size + j) = cur(i)*cur(j);
-                    // curcurt_normalized_flattened(i*primals_size + j) = cur_normalized(i)*cur_normalized(j);
+                    neighbor_L2_facet(i*facet_dim + j) += rot_neighbor(i)*rot_neighbor(j);
+                    self_L2_facet(i*facet_dim + j) += rot_self(i)*rot_self(j);
                 }
             }
-
-            // data.L_2_primals = data.L_2_primals + curcurt_flattened;
-            // data.L_2_krushkal = data.L_2_krushkal + curcurt_normalized_flattened * cur_norm;
         
         }
+
+        data.L_2_facet_diff = neighbor_L2_facet - self_L2_facet;
 
     }
 

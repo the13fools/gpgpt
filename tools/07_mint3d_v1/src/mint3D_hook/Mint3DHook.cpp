@@ -725,9 +725,10 @@ void Mint3DHook::initCurlOperators()
             else
             {
                 Eigen::Vector3d c1 = n.cross(b1).normalized();
-                rot_facet_to_template.col(0) = n;
-                rot_facet_to_template.col(1) = c1;
-                rot_facet_to_template.col(2) = n.cross(c1).normalized();
+                
+                rot_facet_to_template.col(0) = c1;
+                rot_facet_to_template.col(1) = n.cross(c1).normalized();
+                rot_facet_to_template.col(2) = n;
 
             }
 
@@ -781,7 +782,14 @@ void Mint3DHook::initCurlOperators()
     }
 
     */
-
+//    for(int i = 0; i < appState->R_facet_to_template.size(); i++)
+//    {
+//         for(int j = 0; j < 4; j++)
+//         {
+//             std::cout << "R_facet_to_template " << i << " " << j << std::endl;
+//             std::cout << appState->R_facet_to_template.at(i).at(j) << std::endl;
+//         }
+//    }
 }
 
 void Mint3DHook::initializeLogFolder() {
