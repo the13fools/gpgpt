@@ -24,7 +24,7 @@
 // Krushkal is a normalized represenation which is more suitable for geometric optimization, i.e. |v| \hat{v}\hat{v}'
 // TODO sym_tensor and sym_krushkal, which would both offer a non-trivial performance improvement 
 enum class ElementLiftType {
-    primal, L2_tensor, L2_krushkal, L4_tensor, L4_krushkal, Element_COUNT
+    primal, L2_facets, L2_krushkal, L4_facets, L4_krushkal, Element_COUNT
 };
 
 
@@ -53,9 +53,13 @@ public:
 
     // For now we don't do the extra optimization of removing the symmetry from these 
     // entries, just as a base line, will add this in momentarily.  
-    Eigen::VectorX<T_active> L_2_primals;
-    Eigen::VectorX<T_active> L_2x2_primals;
-    Eigen::VectorX<T_active> L_4_primals;
+    // Eigen::VectorX<T_active> L_2_primals;
+    // Eigen::VectorX<T_active> L_2x2_primals;
+    // Eigen::VectorX<T_active> L_4_primals;
+    Eigen::VectorX<T_active> L_2_facet_diff;
+    Eigen::VectorX<T_active> L_4_facet_diff;
+    // Eigen::VectorX<T_active> L_2x2_primals;
+    // Eigen::VectorX<T_active> L_4_primals;
 
     Eigen::VectorX<T_active> L_2_krushkal;
     Eigen::VectorX<T_active> L_4_krushkal;
@@ -149,17 +153,17 @@ public:
                 break;
 
             case(ElementLiftType::L2_krushkal):
-                L2_krushkal(appState, self_data.dofs_curr_elem, self_data);
+                L2_krushkal(appState, self_data);
                 break;
-            case(ElementLiftType::L2_tensor):
-            break;
+            // case(ElementLiftType::L2_tensor):
+            // break;
 
             case(ElementLiftType::L4_krushkal):
-                L4_krushkal(appState, self_data.dofs_curr_elem, self_data);
+                L4_krushkal(appState, self_data);
                 break;
 
-            case(ElementLiftType::L4_tensor):
-            break;
+            // case(ElementLiftType::L4_tensor):
+            // break;
 
             default:
                 std::cout << "Error: LiftType not implemented" << std::endl;
@@ -195,16 +199,18 @@ public:
                     break;
                 // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
                 case(ElementLiftType::L2_krushkal):
-                    L2_krushkal(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                    L2_krushkal(appState, neighbor_data_i);
                     break;
-                case(ElementLiftType::L2_tensor):
+                case(ElementLiftType::L2_facets):
+                    L2_facet_diff(appState, n_idx, neighbor_data_i);
+
                     
                 break;
 
                 case(ElementLiftType::L4_krushkal):
-                    L4_krushkal(appState, neighbor_data_i.dofs_curr_elem, neighbor_data_i);
+                    L4_krushkal(appState, neighbor_data_i);
                     break;
-                case(ElementLiftType::L4_tensor):
+                case(ElementLiftType::L4_facets):
                     
                 break;
 
@@ -238,7 +244,7 @@ public:
 
 
     // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
-    void L2_krushkal(AppState& appState, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
+    void L2_krushkal(AppState& appState, ElementData<T_active>& data) { 
         
         // Seperate out the primal dofs into rank-1 components
         // Maybe make this a seperate function. 
@@ -275,8 +281,54 @@ public:
 
     }
 
+// This function rotates a given neighbor and element l2 tensors to their shared facet 
+// using a precomputed rotation and saves their difference.  
+    void L2_facet_diff(AppState& appState, const int n_idx, ElementData<T_active>& data) { 
+        
+        // Seperate out the primal dofs into rank-1 components
+        // Maybe make this a seperate function. 
+        int nprimals = data.primals_rank1.size();
+        int primals_size = data.primals_rank1[0].size()-1;
+        data.L_2_facet_diff.resize(primals_size*primals_size);
+        data.L_2_facet_diff.setZero();
+        Eigen::Matrix3d R_to_template = appState.R_facet_to_template.at(t_idx).at(n_idx);
+
+        // Eigen::
+
+        // update for n vectors per frame. 
+
+        // Eigen::VectorX<T_active> cur = data.primals_rank1[v_i]; 
+        for (int v_i = 0; v_i < nprimals; v_i++)
+        {
+            Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+
+
+            // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
+            // Eigen::VectorX<T_active> curcurt_normalized_flattened;
+            // curcurt_normalized_flattened.resize(cur.rows()*cur.rows());// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
+            // Eigen::VectorX<T_active> curcurt_normalized_flattened = curcurt_flattened;
+            // TODO fix this later
+            for (int i = 0; i < primals_size; i++)
+            {
+                for (int j = 0; j < primals_size; j++)
+                {
+                    // curcurt_flattened(i*primals_size + j) = cur(i)*cur(j);
+                    // curcurt_normalized_flattened(i*primals_size + j) = cur_normalized(i)*cur_normalized(j);
+                }
+            }
+
+            // data.L_2_primals = data.L_2_primals + curcurt_flattened;
+            // data.L_2_krushkal = data.L_2_krushkal + curcurt_normalized_flattened * cur_norm;
+        
+        }
+
+    }
+
+    // L_2_facet_diff
+    // self_data
+
         // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
-    void L4_krushkal(AppState& appState, const Eigen::VectorX<T_active>& s_curr, ElementData<T_active>& data) { 
+    void L4_krushkal(AppState& appState, ElementData<T_active>& data) { 
         
         // Seperate out the primal dofs into rank-1 components
         // Maybe make this a seperate function. 

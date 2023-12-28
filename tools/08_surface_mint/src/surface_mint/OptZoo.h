@@ -208,8 +208,8 @@ public:
                 int nvecs = cur_face_dofs.rows() / 2;
                 T diff = T(0);
                 for (int vi = 0; vi < nvecs; vi++) {
-                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.segment<2>(2 * vi);
-                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.template segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.template segment<2>(2 * vi);
                     diff += pow(ext_v.dot(edge), 2) - pow(ext_nv.dot(edge), 2);
                 }
 
@@ -270,8 +270,8 @@ public:
                 int nvecs = cur_face_dofs.rows() / 2;
                 T diff = T(0);
                 for (int vi = 0; vi < nvecs; vi++) {
-                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.segment<2>(2 * vi);
-                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.template segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.template segment<2>(2 * vi);
                     diff += pow(ext_v.dot(edge), 4) - pow(ext_nv.dot(edge), 4);
                 }
 

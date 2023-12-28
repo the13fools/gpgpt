@@ -381,7 +381,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e(ElementLiftType::L2_tensor); 
+        ProcElement<T,VAR> e(ElementLiftType::L2_facets); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
 
@@ -471,7 +471,7 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         // Eigen::VectorX<T> s_curr = element.variables(f_idx);
 
-        ProcElement<T,VAR> e(ElementLiftType::L4_tensor); 
+        ProcElement<T,VAR> e(ElementLiftType::L4_facets); 
         // e.setElementVars(appState, f_idx, s_curr);
         e.setSelfData(appState, f_idx, element);
 
