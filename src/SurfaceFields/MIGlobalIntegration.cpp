@@ -733,9 +733,9 @@ namespace SurfaceFields {
         std::vector<Eigen::Triplet<double> > Minvcoeffs;
         for(int i=0; i<nfaces; i++)
         {
-            double area = s.faceArea(i);
+//            double area = s.faceArea(i);
             Eigen::Matrix<double, 3, 2> B = s.data().Bs[i];
-            Eigen::Matrix2d BTB = area * B.transpose()*B;
+            Eigen::Matrix2d BTB = B.transpose()*B;
             Eigen::Matrix2d BTBinv = BTB.inverse();
             for (int j = 0; j < 2; j++)
                 for (int k = 0; k < 2; k++)
@@ -764,18 +764,12 @@ namespace SurfaceFields {
         {
             Eigen::Matrix<double, 3, 2> B = s.data().Bs[i];
             Eigen::Vector3d vec = B*v.row(i).transpose();
-            if(i == 0) {
-                std::cout << "first face vec: " << vec.transpose() << std::endl;
-            }
             scales.push_back(1);
             vec.normalize();
             Eigen::Vector3d n = s.faceNormal(i);
             double area = s.faceArea(i);
             area = 1;
             totarea += area;
-            Eigen::Vector3d vecperp = n.cross(vec);
-            Eigen::Matrix3d metric = vec * vec.transpose() + aniso_*vecperp * vecperp.transpose();
-//            Eigen::Matrix2d BTB = area * B.transpose()*metric *B;
             Eigen::Matrix2d BTB = area * B.transpose()*B;
             for (int j = 0; j < 2; j++)
                 for (int k = 0; k < 2; k++)
@@ -789,32 +783,11 @@ namespace SurfaceFields {
         for (int i = 0; i < nfaces; i++)
         {
             double fac = scales[i];
-//            projvf.segment<2>(2 * i) = fac * surf.data().Js.block<2,2>(2*i,0) * v.row(i).transpose();
-            projvf.segment<2>(2 * i) = fac * v.row(i).transpose();
+            projvf.segment<2>(2 * i) = fac * v.row(i).transpose() / (2.0 * M_PI);
         }
 
         Eigen::VectorXd rhs = A.transpose() * D.transpose() * Minv.transpose() * M * projvf;
         Eigen::SparseMatrix<double> Mat = A.transpose()  * D.transpose() * Minv.transpose() * M * Minv * D * A;
-
-//        Eigen::SparseMatrix<double> L;
-//        igl::cotmatrix(s.data().V, s.data().F, L);
-//        std::vector<Eigen::Triplet<double> > Laugcoeffs;
-//        for (int k = 0; k < L.outerSize(); ++k)
-//        {
-//            for (Eigen::SparseMatrix<double>::InnerIterator it(L, k); it; ++it)
-//            {
-//                Laugcoeffs.push_back(Eigen::Triplet<double>(it.row(), it.col(), -smoothreg_ * totarea * it.value()));
-//            }
-//        }
-//
-//        for (int i = 0; i < intdofs; i++)
-//        {
-//            Laugcoeffs.push_back(Eigen::Triplet<double>(newverts + i, newverts + i, 1e-6));
-//        }
-//
-//        Eigen::SparseMatrix<double> Laug(newverts + intdofs, newverts + intdofs);
-//        Laug.setFromTriplets(Laugcoeffs.begin(), Laugcoeffs.end());
-//        Mat += Laug;
 
         Eigen::VectorXd result;
         Eigen::VectorXi toRound(intdofs);
@@ -825,22 +798,14 @@ namespace SurfaceFields {
         ComisoWrapper(C, Mat, result, rhs, toRound, 1e-6);
         std::cout << "residual: " << (Mat*result - rhs).norm() << std::endl;
 
-        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver(Mat);
-        Eigen::VectorXd unconstr = solver.solve(rhs);
-        std::cout << "unconstr residual: " << (Mat*unconstr-rhs).norm() << std::endl;
-        //result = unconstr;
         for (int i = 0; i < nfaces; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-//                double intpart;
-//                double fracpart = std::modf(result[newF(i, j)], &intpart);
-//                if (fracpart < 0)
-//                    fracpart = 1 + fracpart;
-//                fracpart -= 0.5;
                 theta[surf.data().F(i, j)] = 2.0 * M_PI * result[newF(i, j)];
             }
         }
+
         std::cout << "Integer vars: ";
         std::cout << result.segment(newverts, intdofs).transpose() << std::endl;
     }

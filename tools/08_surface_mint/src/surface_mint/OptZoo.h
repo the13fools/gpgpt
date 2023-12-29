@@ -191,6 +191,7 @@ public:
             Eigen::VectorX<T> cur_face_dofs = element.variables(f_idx);    // the vector fields on the current face
 
             T curl_term = T(0);
+            Eigen::Matrix<T, 3, 2> B = appState.cur_surf->data().Bs[f_idx];
 
             for (int i = 0; i < 3; i++) {
                 int eid = appState.cur_surf->data().faceEdges(f_idx, i);
@@ -207,9 +208,12 @@ public:
 
                 int nvecs = cur_face_dofs.rows() / 2;
                 T diff = T(0);
+
+                Eigen::Matrix<T, 3, 2> B_nei = appState.cur_surf->data().Bs[n_idx];
+
                 for (int vi = 0; vi < nvecs; vi++) {
-                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.template segment<2>(2 * vi);
-                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.template segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_v = B * cur_face_dofs.segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_nv = B_nei * nei_face_dofs.segment<2>(2 * vi);
                     diff += pow(ext_v.dot(edge), 2) - pow(ext_nv.dot(edge), 2);
                 }
 
@@ -254,6 +258,8 @@ public:
 
             T curl_term = T(0);
 
+            Eigen::Matrix<T, 3, 2> B = appState.cur_surf->data().Bs[f_idx];
+
             for (int i = 0; i < 3; i++) {
                 int eid = appState.cur_surf->data().faceEdges(f_idx, i);
                 assert(E(eid, 0) != -1 || E(eid, 1) != -1); // should not be the boundary edge
@@ -267,11 +273,13 @@ public:
 
                 assert(cur_face_dofs.size() == nei_face_dofs.size() && cur_face_dofs.rows() % 2 == 0);
 
+                Eigen::Matrix<T, 3, 2> B_nei = appState.cur_surf->data().Bs[n_idx];
+
                 int nvecs = cur_face_dofs.rows() / 2;
                 T diff = T(0);
                 for (int vi = 0; vi < nvecs; vi++) {
-                    Eigen::Vector<T, 3> ext_v = appState.cur_surf->data().Bs[f_idx] * cur_face_dofs.template segment<2>(2 * vi);
-                    Eigen::Vector<T, 3> ext_nv = appState.cur_surf->data().Bs[n_idx] * nei_face_dofs.template segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_v = B * cur_face_dofs.segment<2>(2 * vi);
+                    Eigen::Vector<T, 3> ext_nv = B_nei * nei_face_dofs.segment<2>(2 * vi);
                     diff += pow(ext_v.dot(edge), 4) - pow(ext_nv.dot(edge), 4);
                 }
 

@@ -35,10 +35,12 @@ public:
     Eigen::VectorXd theta;
     
     void createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F, Eigen::VectorXd& splitted_theta,
-        std::vector<Eigen::Vector3d>& face_vectors,
+        Eigen::MatrixXd& face_vectors,
         std::vector<Eigen::Vector3d>& cutPts, std::vector<std::vector<int>>& cut_edges);
 
     void integrateField(SurfaceFields::GlobalFieldIntegration* gmethod, double globalScale);
+    Eigen::MatrixXd getGradTheta(double globalScale);   // return \nabla theta / globalScale
+
     void roundAntipodalCovers(int numISOLines);
     const Surface &splitMesh() const;
 

@@ -12,7 +12,7 @@
 
 #include "../Surface.h"
 
-void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& mesh_faces, const Eigen::MatrixXd& vecs, Eigen::MatrixXd& splitted_pts, Eigen::MatrixXi& splitted_faces, Eigen::VectorXd& theta, SurfaceFields::GlobalFieldIntegration* round_op, double global_rescaling, std::vector<Eigen::Vector3d>* splitted_vecs, std::vector<Eigen::Vector3d>* cut_pts, std::vector<std::vector<int>>* cut_edges, Eigen::VectorXd* err) {
+void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& mesh_faces, const Eigen::MatrixXd& vecs, Eigen::MatrixXd& splitted_pts, Eigen::MatrixXi& splitted_faces, Eigen::VectorXd& theta, SurfaceFields::GlobalFieldIntegration* round_op, Eigen::MatrixXd* grad_theta, double global_rescaling, Eigen::MatrixXd* splitted_vecs, std::vector<Eigen::Vector3d>* cut_pts, std::vector<std::vector<int>>* cut_edges) {
 	using namespace SurfaceFields;
     int nfields = vecs.rows() / mesh_faces.rows();
     int nfaces = mesh_faces.rows();
@@ -28,6 +28,7 @@ void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& m
     // step 2: comb the vector fields
     weave->combFieldsOnFieldSurface();
     reassignAllPermutations(*weave);
+    std::cout << "comb fields done" << std::endl;
 
 
     // step 3: get the singularities
@@ -40,6 +41,8 @@ void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& m
             return std::hash<int>()(v.first) ^ std::hash<int>()(v.second);
         }
     };
+
+    std::cout << "Found singularity done: " << topsingularities.size() << " are topological singularities, " << geosingularities.size() << " are geometrical ones" << std::endl;
 
     std::unordered_set<std::pair<int, int>, pair_hash> todelete_set;
     todelete_set.insert(topsingularities.begin(), topsingularities.end());
@@ -55,29 +58,34 @@ void roundVectorFields(const Eigen::MatrixXd& mesh_pts, const Eigen::MatrixXi& m
     //std::unique_ptr<SurfaceFields::StripePatternsGlobalIntegration> ptr = std::make_unique<SurfaceFields::StripePatternsGlobalIntegration>();
     cover_mesh->integrateField(round_op, global_rescaling);
 
+    std::cout << "Integration done" << std::endl;
+
     // step 6: get the splitted mesh
-    std::vector<Eigen::Vector3d> tmp_splitted_vecs;
+    Eigen::MatrixXd tmp_splitted_vecs;
     std::vector<Eigen::Vector3d> tmp_cut_pts;
     std::vector<std::vector<int>> tmp_cut_edges;
     cover_mesh->createVisualization(splitted_pts, splitted_faces, theta, tmp_splitted_vecs, tmp_cut_pts, tmp_cut_edges);
 
-    
+    std::cout << "create visualization done" << std::endl;
 
-
-    if (splitted_vecs) {
-        *splitted_vecs = std::move(tmp_splitted_vecs);
-    }
     if (cut_edges) {
         *cut_edges = std::move(tmp_cut_edges);
     }
     if (cut_pts) {
         *cut_pts = std::move(tmp_cut_pts);
     }
+    if(grad_theta) {
+        *grad_theta = cover_mesh->getGradTheta(global_rescaling);
 
-    if (err) {
-        Eigen::VectorXd cover_err;
-        cover_mesh->gradThetaDeviation(cover_err, global_rescaling);
-        *err = std::move(cover_err);
+        for(int i = 0; i < grad_theta->rows(); i++) {
+            if(cover_mesh->fs->isFaceDeleted(i)) {
+              grad_theta->row(i) = tmp_splitted_vecs.row(i);
+            }
+        }
+        std::cout << "Compute grad theta done" << std::endl;
+    }
+    if (splitted_vecs) {
+        *splitted_vecs = std::move(tmp_splitted_vecs);
     }
 
     delete cover_mesh;

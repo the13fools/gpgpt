@@ -73,9 +73,39 @@ CoverMesh::~CoverMesh()
     delete originalSurf_;
 }
 
+Eigen::MatrixXd CoverMesh::getGradTheta(double globalScale) {
+    int nfaces = fs->nFaces();
+    Eigen::MatrixXd grad(nfaces, 3);
+
+    for(int i = 0; i < nfaces; i++) {
+        if(fs->isFaceDeleted(i)) {
+            grad.row(i).setZero();
+            continue;
+        }
+
+        int v0 = fs->data().F(i, 0);
+        int v1 = fs->data().F(i, 1);
+        int v2 = fs->data().F(i, 2);
+
+        Eigen::Vector2d dphi = {theta[v1] - theta[v0], theta[v2] - theta[v0]};
+        Eigen::Matrix2d BTB = fs->data().Bs[i].transpose() * fs->data().Bs[i];
+
+        Eigen::Vector2d int_dphi = BTB * fs->v(i, 0);
+        Eigen::Vector2i jumps;
+        for(int k = 0; k < 2; k++) {
+            jumps[k] = std::round((int_dphi[k] - dphi[k]) / (2 * M_PI));
+            dphi[k] = jumps[k] * 2 * M_PI + dphi[k];
+        }
+
+        dphi = BTB.inverse() * dphi;
+        grad.row(i) = (fs->data().Bs[i] * dphi / globalScale).transpose();
+    }
+
+    return grad;
+}
 
 void CoverMesh::createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F, Eigen::VectorXd& splitted_theta,
-    std::vector<Eigen::Vector3d>& face_vectors,
+    Eigen::MatrixXd& face_vectors,
     std::vector<Eigen::Vector3d>& cut_pts, std::vector<std::vector<int>>& cut_edges)
 {
     int splitFace = data_.splitMesh->nFaces();
@@ -85,13 +115,13 @@ void CoverMesh::createVisualization(Eigen::MatrixXd& V, Eigen::MatrixXi& F, Eige
     F = data_.splitMesh->data().F;
     splitted_theta.setZero(V.rows());
 
-    face_vectors.resize(ncovers_ * origfaces);
+    face_vectors.resize(ncovers_ * origfaces, 3);
 
     for (int c = 0; c < ncovers_; c++)
     {
         for (int i = 0; i < origfaces; i++)
         {
-            face_vectors[c * origfaces + i] = originalSurf_->data().Bs[i] * fs->v(c * origfaces + i, 0);
+            face_vectors.row(c * origfaces + i) = (originalSurf_->data().Bs[i] * fs->v(c * origfaces + i, 0)).transpose();
         }
     }
 

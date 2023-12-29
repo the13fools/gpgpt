@@ -50,6 +50,7 @@ static bool serializeMatrix(const Eigen::MatrixXd& mat, const std::string& filep
     }
 }
 
+
 static bool serializeMatrixNew(const Eigen::MatrixXd& mat, const std::string& filepath, int vector_per_element) {
     try {
         std::ofstream outFile(filepath, std::ios::binary);
@@ -80,127 +81,33 @@ static bool serializeMatrixNew(const Eigen::MatrixXd& mat, const std::string& fi
     }
 }
 
-
-enum IntegrationType {
-    kBomme = 0,
-    kKnoppel = 1,
-};
-
-enum IntegrabilityErrType {
-  kStandard = 0,
-  kL2 = 1,
-  kL4 = 2,
-};
-
-IntegrationType int_type = kKnoppel;
-IntegrabilityErrType int_err_type = kStandard;
-
-Eigen::MatrixXd mesh_pts;
-Eigen::MatrixXi mesh_faces;
-Surface surf;
-Eigen::MatrixXd poly_vecs;
-Eigen::MatrixXd vector_fields;
-
-std::vector<Eigen::VectorXd> edge_one_forms;
-std::vector<Eigen::VectorXd> scalar_fields;
-
-double rescale_ratio = 1;
-int up_level = 0;
-
-void loadMesh(const std::string& mesh_path, Eigen::MatrixXd& V, Eigen::MatrixXi& F) {
-  if(!igl::readOBJ(mesh_path, V, F)) {
-    std::string new_path = igl::file_dialog_open();
-    igl::readOBJ(new_path, V, F);
-  }
-}
-
-static Eigen::VectorXd checkLocalIntegrability(Surface& surf, const Eigen::MatrixXd& vec, IntegrabilityErrType err_type) {
-    int nedges = surf.nEdges();
-    std::vector<Eigen::Vector3d> pts;
-    Eigen::VectorXd edge_err = Eigen::VectorXd::Zero(nedges);
-    for (int i = 0; i < nedges; i++) {
-        int f0 = surf.data().E(i, 0);
-        int f1 = surf.data().E(i, 1);
-
-        pts.push_back((surf.data().V.row(surf.data().edgeVerts(i, 1)) + surf.data().V.row(surf.data().edgeVerts(i, 0))) / 2.0);
-
-        if (f0 != -1 && f1 != -1) {
-            Eigen::Vector3d edge = (surf.data().V.row(surf.data().edgeVerts(i, 1)) - surf.data().V.row(surf.data().edgeVerts(i, 0))).transpose();
-            Eigen::Vector3d v0 = surf.data().Bs[f0] * (vec.row(f0).transpose());
-            Eigen::Vector3d v1 = surf.data().Bs[f1] * (vec.row(f1).transpose());
-
-            switch(err_type) {
-            case kStandard: {
-              edge_err[i] = std::min(std::abs(v1.dot(edge) - v0.dot(edge)), std::abs(v1.dot(edge) + v0.dot(edge)));
-              double max = std::abs(v1.dot(edge) - v0.dot(edge));
-              edge_err[i] = max;
-//              if(edge_err[i] != max) {
-//                std::cout << "eid: " << i << ", f0: " << f0 << ", f1: " << f1 << ", " << edge_err[i] << ", " << max << std::endl;
-//                pts.push_back((surf.data().V.row(surf.data().edgeVerts(i, 1)) + surf.data().V.row(surf.data().edgeVerts(i, 0))) / 2.0);
-//              }
-              break;
-            }
-            case kL2:{
-              edge_err[i] = std::abs( std::pow(v1.dot(edge), 2.0) - std::pow(v0.dot(edge), 2.0));
-              break;
-            }
-            case kL4:{
-              edge_err[i] = std::pow( std::pow(v1.dot(edge), 4.0) - std::pow(v0.dot(edge), 4.0), 2.0);
-              break;
-            }
-            }
+// Deserialize Eigen matrix from a binary file
+static bool deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath) {
+    try {
+        std::ifstream inFile(filepath, std::ios::binary);
+        if (!inFile.is_open()) {
+            std::cerr << "Error: Unable to open file for reading: " << filepath << std::endl;
+            return false;
         }
+
+        // Read matrix rows and cols
+        int rows, cols;
+        inFile.read(reinterpret_cast<char*>(&rows), sizeof(int));
+        inFile.read(reinterpret_cast<char*>(&cols), sizeof(int));
+
+        // Read matrix data
+        mat.resize(rows, cols);
+        inFile.read(reinterpret_cast<char*>(mat.data()), rows * cols * sizeof(double));
+        inFile.close();
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: Unable to deserialize matrix: " << e.what() << std::endl;
+        return false;
     }
-    auto pt_surf = polyscope::registerPointCloud("err pts", pts);
-    pt_surf->addScalarQuantity("edge err type" + int(kStandard), edge_err);
-    return edge_err;
-}
-
-
-static Eigen::VectorXd checkLocalIntegrabilityEuclidean(Surface& surf, const std::vector<Eigen::Vector3d>& face_vec) {
-    int nedges = surf.nEdges();
-    Eigen::VectorXd edge_err = Eigen::VectorXd::Zero(nedges);
-    for (int i = 0; i < nedges; i++) {
-        int f0 = surf.data().E(i, 0);
-        int f1 = surf.data().E(i, 1);
-
-        if (f0 != -1 && f1 != -1) {
-            Eigen::Vector3d edge = (surf.data().V.row(surf.data().edgeVerts(i, 1)) - surf.data().V.row(surf.data().edgeVerts(i, 0))).transpose();
-            Eigen::Vector3d v0 = face_vec[f0];
-            Eigen::Vector3d v1 = face_vec[f1];
-            edge_err[i] = std::abs((v1 - v0).dot(edge));
-        }
-    }
-    return edge_err;
 }
 
 // Deserialize Eigen matrix from a binary file
-bool deserializeMatrix(Eigen::MatrixXd& mat, const std::string& filepath) {
-  try {
-    std::ifstream inFile(filepath, std::ios::binary);
-    if (!inFile.is_open()) {
-      std::cerr << "Error: Unable to open file for reading: " << filepath << std::endl;
-      return false;
-    }
-
-    // Read matrix rows and cols
-    int rows, cols;
-    inFile.read(reinterpret_cast<char*>(&rows), sizeof(int));
-    inFile.read(reinterpret_cast<char*>(&cols), sizeof(int));
-
-    // Read matrix data
-    mat.resize(rows, cols);
-    inFile.read(reinterpret_cast<char*>(mat.data()), rows * cols * sizeof(double));
-    inFile.close();
-    return true;
-  } catch (const std::exception& e) {
-    std::cerr << "Error: Unable to deserialize matrix: " << e.what() << std::endl;
-    return false;
-  }
-}
-
-// Deserialize Eigen matrix from a binary file
-bool deserializeMatrixNew(Eigen::MatrixXd& mat, const std::string& filepath) {
+static bool deserializeMatrixNew(Eigen::MatrixXd& mat, const std::string& filepath) {
     try {
         std::ifstream inFile(filepath, std::ios::binary);
         if (!inFile.is_open()) {
@@ -228,98 +135,320 @@ bool deserializeMatrixNew(Eigen::MatrixXd& mat, const std::string& filepath) {
     }
 }
 
-void renderVectorFields()
-{
-  int nfaces = mesh_faces.rows();
-  int nvecs = vector_fields.rows() / nfaces;
-  auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+enum IntegrationType {
+  kBomme = 0,
+  kKnoppel = 1,
+};
 
-  for(int i = 0; i < nvecs; i++) {
-    std::vector<Eigen::Vector3d> face_vecs;
-    for(int fid = 0; fid < nfaces; fid++) {
-      Eigen::Vector2d v;
-      v << vector_fields(nvecs * fid + i, 0), vector_fields(nvecs * fid + i, 1);
-      Eigen::Vector3d v_ext = surf.data().Bs[fid] * v;
-      face_vecs.push_back(v_ext);
+enum IntegrabilityErrType {
+  kStandard = 0,
+  kL2 = 1,
+  kL4 = 2,
+};
+
+
+static std::vector<Eigen::VectorXd> checkLocalIntegrability(Surface& surf, const Eigen::MatrixXd& vec, IntegrabilityErrType err_type) {
+    int nedges = surf.nEdges();
+    std::vector<Eigen::Vector3d> pts;
+    int nfaces = surf.nFaces();
+    int nvecs = vec.rows() / nfaces;
+
+    std::vector<Eigen::VectorXd> edge_errs;
+
+    if(err_type == kStandard) {
+        edge_errs.resize(nvecs, Eigen::VectorXd::Zero(nedges));
+    } else {
+        edge_errs.resize(1, Eigen::VectorXd::Zero(nedges));
     }
-    surf_mesh->addFaceVectorQuantity("vec " + std::to_string(i), face_vecs);
-  }
+
+    for (int i = 0; i < nedges; i++) {
+        int f0 = surf.data().E(i, 0);
+        int f1 = surf.data().E(i, 1);
+
+        pts.push_back((surf.data().V.row(surf.data().edgeVerts(i, 1)) + surf.data().V.row(surf.data().edgeVerts(i, 0))) / 2.0);
+
+        if (f0 != -1 && f1 != -1) {
+            Eigen::Vector3d edge = (surf.data().V.row(surf.data().edgeVerts(i, 1)) - surf.data().V.row(surf.data().edgeVerts(i, 0))).transpose();
+            std::vector<Eigen::Vector3d> v0_list(nvecs), v1_list(nvecs);
+            for(int vi= 0; vi < nvecs; vi++) {
+              v0_list[vi] = surf.data().Bs[f0] * (vec.row(nvecs * f0 + vi).transpose());
+              v1_list[vi] = surf.data().Bs[f1] * (vec.row(nvecs * f1 + vi).transpose());
+            }
+
+            switch(err_type) {
+            case kStandard: {
+              for(int vi = 0; vi < nvecs; vi++) {
+                auto& v0 = v0_list[vi];
+                auto& v1 = v1_list[vi];
+                edge_errs[vi][i] = std::abs(v1.dot(edge) - v0.dot(edge));
+
+                if(i == 4630) {
+                  std::cout << "v0: " << v0.transpose() << ", v1" << v1.transpose() << std::endl;
+                  std::cout << "edge err:  " << edge_errs[vi][i] << std::endl;
+                }
+              }
+              break;
+            }
+            case kL2:{
+              for(int vi = 0; vi < nvecs; vi++) {
+                auto& v0 = v0_list[vi];
+                auto& v1 = v1_list[vi];
+                edge_errs[0][i] += std::pow(v1.dot(edge), 2.0) - std::pow(v0.dot(edge), 2.0);
+              }
+              edge_errs[0][i] = std::abs(edge_errs[0][i]);
+              break;
+            }
+            case kL4:{
+              for(int vi = 0; vi < nvecs; vi++) {
+                auto& v0 = v0_list[vi];
+                auto& v1 = v1_list[vi];
+                edge_errs[0][i] += std::pow(v1.dot(edge), 4.0) - std::pow(v0.dot(edge), 4.0);
+              }
+              edge_errs[0][i] = std::abs(edge_errs[0][i]);
+              break;
+            }
+            }
+        }
+    }
+    auto pt_surf = polyscope::registerPointCloud("err pts", pts);
+
+    switch(err_type) {
+    case kStandard: {
+        for(int vi = 0; vi < nvecs; vi++) {
+            auto err_plot = pt_surf->addScalarQuantity("Standard curl err vec " + std::to_string(vi), edge_errs[vi]);
+            err_plot->setMapRange({edge_errs[vi].minCoeff(), edge_errs[vi].maxCoeff()});
+        }
+        break;
+    }
+    case kL2:{
+        auto err_plot = pt_surf->addScalarQuantity("L2 curl err", edge_errs[0]);
+        err_plot->setMapRange({edge_errs[0].minCoeff(), edge_errs[0].maxCoeff()});
+        break;
+    }
+    case kL4:{
+        auto err_plot = pt_surf->addScalarQuantity("L4 curl err", edge_errs[0]);
+        err_plot->setMapRange({edge_errs[0].minCoeff(), edge_errs[0].maxCoeff()});
+        break;
+    }
+    }
+
+    return edge_errs;
 }
 
-void renderPolyFields() {
-  int nfaces = mesh_faces.rows();
-  int nvecs = poly_vecs.rows() / nfaces;
-  auto surf_mesh = polyscope::getSurfaceMesh("mesh");
 
-  for(int i = 0; i < nvecs; i++) {
-    std::vector<Eigen::Vector3d> face_vecs_1, face_vecs_2;
-    for(int fid = 0; fid < nfaces; fid++) {
-      Eigen::Vector2d v;
-      v << poly_vecs(nvecs * fid + i, 0), poly_vecs(nvecs * fid + i, 1);
-      Eigen::Vector3d v_ext = surf.data().Bs[fid] * v;
-      face_vecs_1.push_back(v_ext);
-      face_vecs_2.push_back(-v_ext);
+static Eigen::VectorXd checkLocalIntegrabilityEuclidean(Surface& surf, const std::vector<Eigen::Vector3d>& face_vec) {
+    int nedges = surf.nEdges();
+    Eigen::VectorXd edge_err = Eigen::VectorXd::Zero(nedges);
+    for (int i = 0; i < nedges; i++) {
+        int f0 = surf.data().E(i, 0);
+        int f1 = surf.data().E(i, 1);
+
+        if (f0 != -1 && f1 != -1) {
+            Eigen::Vector3d edge = (surf.data().V.row(surf.data().edgeVerts(i, 1)) - surf.data().V.row(surf.data().edgeVerts(i, 0))).transpose();
+            Eigen::Vector3d v0 = face_vec[f0];
+            Eigen::Vector3d v1 = face_vec[f1];
+            edge_err[i] = std::abs((v1 - v0).dot(edge));
+        }
     }
-    surf_mesh->addFaceVectorQuantity("poly vec " + std::to_string(i) + " part 1", face_vecs_1);
-    surf_mesh->addFaceVectorQuantity("poly vec " + std::to_string(i) + " part 2", face_vecs_2);
-  }
+    return edge_err;
+}
+
+static Eigen::MatrixXd getExtVecs(const Surface& surf, const Eigen::MatrixXd& vec) {
+    Eigen::MatrixXd face_vecs(surf.data().F.rows(), 3);
+    for(int fid = 0; fid < surf.data().F.rows(); fid++) {
+        Eigen::Vector3d v_ext = surf.data().Bs[fid] * (vec.row(fid).transpose());
+        face_vecs.row(fid) = v_ext.transpose();
+    }
+    return face_vecs;
+}
+
+static void renderSingleVectorFields(polyscope::SurfaceMesh* ps_surf_mesh, const Surface& surf, const Eigen::MatrixXd& vec, std::string name, double plot_rescaling) {
+    Eigen::MatrixXd face_vecs = getExtVecs(surf, vec) * plot_rescaling;
+    ps_surf_mesh->addFaceVectorQuantity(name, face_vecs, polyscope::VectorType::AMBIENT);
+}
+
+Eigen::MatrixXd getGradient(const Surface& surf, const Eigen::MatrixXd& init_vec, const Eigen::VectorXd& scalars, double scaling) {
+    int nfaces = surf.data().F.rows();
+    Eigen::MatrixXd grad(nfaces, 2);
+
+    for(int i = 0; i < nfaces; i++) {
+        int v0 = surf.data().F(i, 0);
+        int v1 = surf.data().F(i, 1);
+        int v2 = surf.data().F(i, 2);
+
+        Eigen::Vector2d dphi = {scalars[v1] - scalars[v0], scalars[v2] - scalars[v0]};
+        Eigen::Matrix2d BTB = surf.data().Bs[i].transpose() * surf.data().Bs[i];
+
+        Eigen::Vector2d int_dphi = BTB * init_vec.row(i).transpose();
+        Eigen::Vector2i jumps;
+        for(int k = 0; k < 2; k++) {
+            jumps[k] = std::round((int_dphi[k] - dphi[k]) / (2 * M_PI));
+            dphi[k] = jumps[k] * 2 * M_PI + dphi[k];
+        }
+
+        dphi = BTB.inverse() * dphi;
+        grad.row(i) = dphi.transpose() / scaling;
+    }
+
+    std::cout << "gradient computation done" << std::endl;
+
+    return grad;
+}
+
+Eigen::MatrixXd calculateErr(const Surface& surf, const Eigen::MatrixXd& vec, const Eigen::VectorXd& scalars, double scaling) {
+    Eigen::MatrixXd err = getGradient(surf, vec, scalars, scaling);
+    return err - vec;
+}
+
+static void renderErrFields(polyscope::SurfaceMesh* ps_surf_mesh, const Surface& surf, const std::vector<Eigen::MatrixXd>& vecs, const std::vector<Eigen::VectorXd>& scalars, double vec_rescaling_ratio, std::string name) {
+    int nscalar = scalars.size();
+
+    int nfaces = surf.nFaces();
+    int nvecs = vecs.size();
+
+    if(nscalar != nvecs) {
+        return;
+    }
+
+    for(int i = 0; i < nvecs; i++) {
+        Eigen::MatrixXd err = calculateErr(surf, vecs[i], scalars[i], vec_rescaling_ratio);
+        Eigen::MatrixXd ext_err = getExtVecs(surf, err);
+        Eigen::VectorXd err_norm(nfaces);
+        for(int fid = 0; fid < nfaces; fid++) {
+            err_norm[fid] = ext_err.row(fid).norm();
+        }
+        ps_surf_mesh->addFaceVectorQuantity(name + " err vec " + std::to_string(i), ext_err);
+        ps_surf_mesh->addFaceScalarQuantity(name + " err " + std::to_string(i), err_norm);
+    }
+}
+
+void renderIntegrabilityErr(const Eigen::MatrixXd& face_vecs, Surface& cur_surf, const IntegrabilityErrType& err_type, const std::string vec_name, const std::string mesh_name) {
+    int nvecs = face_vecs.rows() / cur_surf.nFaces();
+    auto surf_mesh = polyscope::getSurfaceMesh(mesh_name);
+
+    std::vector<Eigen::VectorXd> edge_errs = checkLocalIntegrability(cur_surf, face_vecs, err_type);
+    std::cout << "start to render integrability" << std::endl;
+    std::cout << "edge err size: " << edge_errs.size() << std::endl;
+
+    for(int i = 0; i < edge_errs.size(); i++) {
+        auto& edge_err = edge_errs[i];
+        std::cout << vec_name;
+        if(err_type == kStandard) {
+            std::cout << ": " << i;
+        }
+        std::cout << ", min: " << edge_err.minCoeff() << ", max: " << edge_err.maxCoeff();
+    }
+
+    // rendering
+    for (int i = 0; i < edge_errs.size(); i++) {
+        auto& edge_err = edge_errs[i];
+        Eigen::VectorXd vert_err;
+        vert_err.setZero(cur_surf.nVerts());
+        for (int eid = 0; eid < cur_surf.nEdges(); eid++) {
+            for (int j = 0; j < 2; j++) {
+              int vid = cur_surf.data().edgeVerts(eid, j);
+              vert_err[vid] += edge_err[eid] / 2;
+            }
+        }
+
+        std::string name = "";
+        switch(err_type) {
+        case kStandard: {
+            for (int vi = 0; vi < nvecs; vi++) {
+              auto err_plot = surf_mesh->addVertexScalarQuantity(vec_name + " " + std::to_string(vi) +
+                                                                     " local integrability err",
+                                                                 vert_err);
+              err_plot->setMapRange({vert_err.minCoeff(), vert_err.maxCoeff()});
+            }
+            break;
+        }
+        case kL2: {
+            auto err_plot = surf_mesh->addVertexScalarQuantity(vec_name + " L2 local integrability err",
+                                                               vert_err);
+            err_plot->setMapRange({vert_err.minCoeff(), vert_err.maxCoeff()});
+            break;
+        }
+        case kL4: {
+            auto err_plot = surf_mesh->addVertexScalarQuantity(vec_name + " L4 local integrability err",
+                                                               vert_err);
+            err_plot->setMapRange({vert_err.minCoeff(), vert_err.maxCoeff()});
+            break;
+        }
+        }
+    }
 }
 
 Eigen::MatrixXd paintPhi(const Eigen::VectorXd& phi, Eigen::VectorXd* brightness = nullptr)      // brightness should between 0 and 1
 {
-  int nverts = phi.size();
-  Eigen::MatrixXd color(nverts, 3);
-  for (int i = 0; i < nverts; i++)
-  {
-    double r, g, b;
-    //            double h = 360.0 * phi[i] / 2.0 / M_PI + 120;
-    double h = 360.0 * phi[i] / 2.0 / M_PI;
-    h = 360 + ((int)h % 360); // fix for libigl bug
-    double s = 1.0;
-    double v = 0.5;
-    if(brightness)
+    int nverts = phi.size();
+    Eigen::MatrixXd color(nverts, 3);
+    for (int i = 0; i < nverts; i++)
     {
-      double r = (*brightness)(i);
-      v = r * r / (r * r + 1);
+        double r, g, b;
+        //            double h = 360.0 * phi[i] / 2.0 / M_PI + 120;
+        double h = 360.0 * phi[i] / 2.0 / M_PI;
+        h = 360 + ((int)h % 360); // fix for libigl bug
+        double s = 1.0;
+        double v = 0.5;
+        if(brightness)
+        {
+            double r = (*brightness)(i);
+            v = r * r / (r * r + 1);
+        }
+        //                v = (*brightness)(i);
+        igl::hsv_to_rgb(h, s, v, r, g, b);
+        color(i, 0) = r;
+        color(i, 1) = g;
+        color(i, 2) = b;
     }
-    //                v = (*brightness)(i);
-    igl::hsv_to_rgb(h, s, v, r, g, b);
-    color(i, 0) = r;
-    color(i, 1) = g;
-    color(i, 2) = b;
-  }
-  return color;
+    return color;
 }
 
-Eigen::MatrixXd calculateErr(const Surface& surf, const Eigen::MatrixXd& vec, const Eigen::VectorXd& scalars) {
-  int nfaces = surf.data().F.rows();
-  Eigen::MatrixXd err(nfaces, 2);
 
-  for(int i = 0; i < nfaces; i++) {
-    int v0 = surf.data().F(i, 0);
-    int v1 = surf.data().F(i, 1);
-    int v2 = surf.data().F(i, 2);
+IntegrationType int_type = kKnoppel;
+IntegrabilityErrType int_err_type = kStandard;
 
-    Eigen::Vector2d tmp_v = {scalars[v1] - scalars[v0], scalars[v2] - scalars[v0]};
-    Eigen::Matrix2d BTB = surf.data().Bs[i].transpose() * surf.data().Bs[i];
-    tmp_v = BTB.inverse() * tmp_v;
+Eigen::MatrixXd mesh_pts;
+Eigen::MatrixXi mesh_faces;
+Surface surf;
+Eigen::MatrixXd poly_vecs;
+Eigen::MatrixXd vector_fields;
 
-    Eigen::Vector2d diff = tmp_v - (vec.row(i).segment<2>(0)).transpose();
-    err.row(i) = diff.transpose();
+std::vector<Eigen::MatrixXd> poly_vecs_list;
+std::vector<Eigen::MatrixXd> vector_field_list;
+
+std::vector<Eigen::VectorXd> edge_one_forms;
+std::vector<Eigen::VectorXd> scalar_fields;
+
+double rescale_ratio = 1;
+int up_level = 0;
+
+double vec_plot_scaling = 1;
+
+void loadMesh(const std::string& mesh_path, Eigen::MatrixXd& V, Eigen::MatrixXi& F) {
+  if(!igl::readOBJ(mesh_path, V, F)) {
+    std::string new_path = igl::file_dialog_open();
+    igl::readOBJ(new_path, V, F);
   }
-
-  return err;
 }
 
-Eigen::MatrixXd getExtVecs(const Surface& surf, const Eigen::MatrixXd& vec) {
-  Eigen::MatrixXd face_vecs(surf.data().F.rows(), 3);
-  for(int fid = 0; fid < surf.data().F.rows(); fid++) {
-    Eigen::Vector2d v;
-    v << vector_fields(fid, 0), vector_fields(fid, 1);
-    Eigen::Vector3d v_ext = surf.data().Bs[fid] * v;
-    face_vecs.row(fid) = v_ext.transpose();
-  }
-  return face_vecs;
+void renderVectorFields() {
+    int nvecs = vector_field_list.size();
+    auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+
+    for (int i = 0; i < nvecs; i++) {
+        renderSingleVectorFields(surf_mesh, surf, vector_field_list[i], "vec" + std::to_string(i), vec_plot_scaling);
+    }
+}
+
+void renderPolyFields() {
+    int nvecs = poly_vecs_list.size();
+    auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+
+    for (int i = 0; i < nvecs; i++) {
+        renderSingleVectorFields(surf_mesh, surf, poly_vecs_list[i], "poly vec " + std::to_string(i) + " part 1", vec_plot_scaling);
+        renderSingleVectorFields(surf_mesh, surf, -poly_vecs_list[i], "poly vec " + std::to_string(i) + " part 2", vec_plot_scaling);
+    }
 }
 
 void renderScalarFields() {
@@ -350,31 +479,58 @@ void renderScalarFields() {
 }
 
 
-void renderErrFields() {
-  int nscalar = scalar_fields.size();
-
-  int nfaces = mesh_faces.rows();
-  int nvecs = vector_fields.rows() / nfaces;
-
-  if(nscalar != nvecs) {
-    return;
+void loadVectorFields() {
+  Eigen::MatrixXd A;
+  std::string load_vec_name = igl::file_dialog_open();
+  if (!deserializeMatrixNew(A, load_vec_name)) {
+    deserializeMatrix(A, load_vec_name);
   }
 
-  auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+  std::cout << "start to register mesh" << std::endl;
+  auto surf_mesh = polyscope::registerSurfaceMesh("mesh", mesh_pts, mesh_faces);
+  surf_mesh->setEnabled(true);
+  std::cout << "register finished" << std::endl;
 
-  for(int i = 0; i < nvecs; i++) {
-    Eigen::MatrixXd vecs(nfaces, 2);
-    for(int fid = 0; fid < nfaces; fid++) {
-      vecs.row(fid) = vector_fields.row(nvecs * fid + i);
+  double ave_edge_len = surf.data().averageEdgeLength;
+
+  // we need to turn this into intrinsic surface poly fields
+  if (mesh_faces.rows() != A.rows()) {
+    std::cout << "vector field size and nfaces do not match" << std::endl;
+  } else {
+    int npoly = A.cols() / 2;
+    poly_vecs_list.resize(npoly, Eigen::MatrixXd::Zero(mesh_faces.rows(), 2));
+    poly_vecs.resize(npoly * mesh_faces.rows(), 2);
+    double max_vec_len = 0;
+    for (int i = 0; i < mesh_faces.rows(); i++) {
+      for (int j = 0; j < npoly; j++) {
+              Eigen::Vector3d v;
+              v << A(i, npoly * j + 0), A(i, npoly * j + 1), 0;
+              max_vec_len = std::max(max_vec_len, v.norm());
+              Eigen::Matrix<double, 3, 2> B = surf.data().Bs[i];
+              Eigen::Vector2d newvec =
+                  (B.transpose() * B).inverse() * B.transpose() * v;
+              poly_vecs.row(npoly * i + j) = newvec.transpose();
+              poly_vecs_list[j].row(i) = newvec.transpose();
+      }
     }
-    Eigen::MatrixXd err = calculateErr(surf, vecs, scalar_fields[i]);
-    Eigen::MatrixXd ext_err = getExtVecs(surf, err);
-    Eigen::VectorXd err_norm(nfaces);
-    for(int fid = 0; fid < nfaces; fid++) {
-      err_norm[fid] = ext_err.row(fid).norm();
+    std::cout << "load finished" << std::endl;
+    vec_plot_scaling = ave_edge_len / max_vec_len;
+
+    vector_fields = SurfaceFields::CombPolyVectors(surf, poly_vecs);
+
+    int nvecs = vector_fields.rows() / mesh_faces.rows();
+
+    for (int i = 0; i < nvecs; i++) {
+      Eigen::MatrixXd face_vecs(mesh_faces.rows(), 2);
+      for (int fid = 0; fid < mesh_faces.rows(); fid++) {
+              face_vecs.row(fid) << vector_fields(nvecs * fid + i, 0),
+                  vector_fields(nvecs * fid + i, 1);
+      }
+      vector_field_list.push_back(face_vecs);
     }
-    surf_mesh->addFaceVectorQuantity("err vec " + std::to_string(i), ext_err);
-    surf_mesh->addFaceScalarQuantity("err " + std::to_string(i), err_norm);
+
+    renderPolyFields();
+    renderVectorFields();
   }
 }
 
@@ -385,51 +541,16 @@ void load() {
   loadMesh(load_file_name, mesh_pts, mesh_faces);
   surf = Surface(mesh_pts, mesh_faces);
   std::cout << "loading finished, #V: " << mesh_pts.rows() << ", #F: " << mesh_faces.rows() << std::endl;
-
-  Eigen::MatrixXd A;
-  std::string load_vec_name = igl::file_dialog_open();
-  if(!deserializeMatrixNew(A, load_vec_name)) {
-    deserializeMatrix(A, load_vec_name);
-  }
-
-  std::cout << "start to register mesh" << std::endl;
-//  A.col(0).setConstant(1);
-//  A.col(1).setZero();
-//  A.col(2).setZero();
-  auto surf_mesh = polyscope::registerSurfaceMesh("mesh", mesh_pts, mesh_faces);
-  surf_mesh->setEnabled(true);
-  std::cout << "register finished" << std::endl;
-
-  // we need to turn this into intrinsic surface poly fields
-  if(mesh_faces.rows() != A.rows()) {
-    std::cout << "vector field size and nfaces do not match" << std::endl;
-  } else {
-    int npoly = A.cols() / 2;
-    poly_vecs.resize(npoly * mesh_faces.rows(), 2);
-    for(int i = 0; i < mesh_faces.rows(); i++) {
-      for(int j = 0; j < npoly; j++) {
-        Eigen::Vector3d v;
-        v << A(i, npoly * j + 0), A(i, npoly * j + 1), 0;
-        Eigen::Matrix<double, 3, 2> B = surf.data().Bs[i];
-        Eigen::Vector2d newvec = (B.transpose()*B).inverse() * B.transpose() * v;
-        poly_vecs.row(npoly * i + j) = newvec.transpose();
-
-        //poly_vecs.row(npoly * i + j) << A(i, npoly * j + 0), A(i, npoly * j + 1);
-      }
-    }
-    std::cout << "load finished" << std::endl;
-
-    vector_fields = SurfaceFields::CombPolyVectors(surf, poly_vecs);
-    renderPolyFields();
-    renderVectorFields();
-  }
+  loadVectorFields();
 }
-
-
 
 void myCallback() {
   if (ImGui::Button("Load")) {
     load();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Load vector fields")) {
+    loadVectorFields();
   }
 
   if (ImGui::Button("Get Simple PolyVectors"))
@@ -495,51 +616,11 @@ void myCallback() {
   ImGui::Combo("Integrability Error Type", (int*)&int_err_type, "Standard\0L2\0L4\0");
 
   if (ImGui::Button("Check Integrability Before Comb")) {
-    int nvecs = poly_vecs.rows() / mesh_faces.rows();
-    auto surf_mesh = polyscope::getSurfaceMesh("mesh");
-    for (int i = 0; i < nvecs; i++) {
-      Eigen::MatrixXd vec(mesh_faces.rows(), 2);
-      for (int j = 0; j < mesh_faces.rows(); j++) {
-        vec.row(j) << poly_vecs(nvecs * j + i, 0), poly_vecs(nvecs * j + i, 1);
-      }
-
-      Eigen::VectorXd edge_err = checkLocalIntegrability(surf, vec, int_err_type);
-      std::cout << "input vector fields: " << i << ", min: " << edge_err.minCoeff() << ", max: " << edge_err.maxCoeff();
-
-      Eigen::VectorXd vert_err;
-      vert_err.setZero(mesh_pts.rows());
-      for (int eid = 0; eid < surf.nEdges(); eid++) {
-        for (int j = 0; j < 2; j++) {
-          int vid = surf.data().edgeVerts(eid, j);
-          vert_err[vid] += edge_err[eid] / 2;
-        }
-      }
-      surf_mesh->addVertexScalarQuantity("input vec " + std::to_string(i) + " local integrability err", vert_err);
-    }
+    renderIntegrabilityErr(poly_vecs, surf, int_err_type, "input vec", "mesh");
   }
 
   if (ImGui::Button("Check Integrability")) {
-      int nvecs = vector_fields.rows() / mesh_faces.rows();
-      auto surf_mesh = polyscope::getSurfaceMesh("mesh");
-      for (int i = 0; i < nvecs; i++) {
-          Eigen::MatrixXd vec(mesh_faces.rows(), 2);
-          for (int j = 0; j < mesh_faces.rows(); j++) {
-              vec.row(j) << vector_fields(nvecs * j + i, 0), vector_fields(nvecs * j + i, 1);
-          }
-         
-          Eigen::VectorXd edge_err = checkLocalIntegrability(surf, vec, int_err_type);
-          std::cout << "vector fields: " << i << ", min: " << edge_err.minCoeff() << ", max: " << edge_err.maxCoeff();
-
-          Eigen::VectorXd vert_err;
-          vert_err.setZero(mesh_pts.rows());
-          for (int eid = 0; eid < surf.nEdges(); eid++) {
-              for (int j = 0; j < 2; j++) {
-                  int vid = surf.data().edgeVerts(eid, j);
-                  vert_err[vid] += edge_err[eid] / 2;
-              }
-          }
-          surf_mesh->addVertexScalarQuantity("vec " + std::to_string(i) + " local integrability err", vert_err);
-      }
+    renderIntegrabilityErr(vector_fields, surf, int_err_type, "combed vec", "mesh");
   }
 
   ImGui::Combo("Integration Method", (int*)&int_type, "Bomme\0Knoppel\0");
@@ -583,6 +664,22 @@ void myCallback() {
     renderScalarFields();
   }
 
+  if(ImGui::Button("Get grad phi")) {
+    int nvecs = vector_fields.rows() / surf.nFaces();
+    for(int i = 0; i < scalar_fields.size(); i++) {
+      Eigen::MatrixXd face_vec(surf.nFaces(), 2);
+      for(int fid = 0; fid < surf.nFaces(); fid++) {
+          face_vec.row(fid) = vector_fields.row(nvecs * fid + i);
+      }
+
+      Eigen::MatrixXd dphi = getGradient(surf, face_vec, scalar_fields[i], rescale_ratio);
+
+      auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+
+      renderSingleVectorFields(surf_mesh, surf, dphi, "dphi " + std::to_string(i), vec_plot_scaling);
+    }
+  }
+
   if (ImGui::Button("Integrate Uncombed Vector Fields")) {
       scalar_fields.clear();
       edge_one_forms.clear();
@@ -604,16 +701,25 @@ void myCallback() {
       renderScalarFields();
   }
 
-  if (ImGui::Button("Show Error")) {
-    renderErrFields();
+  if(ImGui::Button("Get grad uncombed phi")) {
+      int nvecs = poly_vecs.rows() / surf.nFaces();
+      for(int i = 0; i < scalar_fields.size(); i++) {
+          Eigen::MatrixXd face_vec(surf.nFaces(), 2);
+          for(int fid = 0; fid < surf.nFaces(); fid++) {
+            face_vec.row(fid) = poly_vecs.row(nvecs * fid + i);
+          }
+
+          Eigen::MatrixXd dphi = getGradient(surf, face_vec, scalar_fields[i], rescale_ratio);
+
+          auto surf_mesh = polyscope::getSurfaceMesh("mesh");
+          renderSingleVectorFields(surf_mesh, surf, dphi, "d_uncombed_phi " + std::to_string(i), vec_plot_scaling);
+      }
   }
 
   if (ImGui::Button("Round Vector Fields")) {
-      Eigen::MatrixXd render_QCover;
+      Eigen::MatrixXd render_QCover, grad_theta, face_vectors;
       Eigen::MatrixXi render_FCover;
       Eigen::VectorXd render_theta, err;
-
-      std::vector<Eigen::Vector3d> face_vectors;
 
       std::vector<Eigen::Vector3d> cut_pts;
       std::vector<std::vector<int>> cut_edges;
@@ -637,41 +743,23 @@ void myCallback() {
       }
       }
 
-      roundVectorFields(mesh_pts, mesh_faces, poly_vecs, render_QCover, render_FCover, render_theta, int_ptr.get(), rescale_ratio, &face_vectors, &cut_pts, &cut_edges, &err);
-
-      std::cout << "err bound: " << err.minCoeff() << ", " << err.maxCoeff() << ", average: " << err.sum() / err.rows() << std::endl;
+      roundVectorFields(mesh_pts, mesh_faces, poly_vecs, render_QCover, render_FCover, render_theta, int_ptr.get(), &grad_theta, rescale_ratio, &face_vectors, &cut_pts, &cut_edges);
+      err.setZero(face_vectors.rows());
+      Eigen::MatrixXd err_vec = face_vectors - grad_theta;
+      for(int i = 0; i < face_vectors.rows(); i++) {
+          err[i] = err_vec.row(i).norm();
+      }
 
       auto cover_surface = polyscope::registerSurfaceMesh("splitted cover mesh", render_QCover, render_FCover);
       cover_surface->addVertexColorQuantity("phi", paintPhi(render_theta));
-      cover_surface->addFaceVectorQuantity("vecs", face_vectors);
-      cover_surface->addFaceScalarQuantity("grad theta error", err);
+      cover_surface->addFaceVectorQuantity("vecs", face_vectors * vec_plot_scaling, polyscope::VectorType::AMBIENT);
+      cover_surface->addFaceVectorQuantity("grad phi", grad_theta * vec_plot_scaling, polyscope::VectorType::AMBIENT);
+      cover_surface->addFaceVectorQuantity("err vec", err_vec * vec_plot_scaling, polyscope::VectorType::AMBIENT);
+      cover_surface->addFaceScalarQuantity("grad phi error", err);
+
+      std::cout << "global rescaling ratio: " << vec_plot_scaling << std::endl;
 
       auto cut_poly = polyscope::registerCurveNetwork("cuts", cut_pts, cut_edges);
-
-      Surface cover_surf = Surface(render_QCover, render_FCover);
-
-
-      Eigen::VectorXd edge_err = checkLocalIntegrabilityEuclidean(cover_surf, face_vectors);
-      std::cout << "vector fields: min: " << edge_err.minCoeff() << ", max: " << edge_err.maxCoeff();
-
-      Eigen::VectorXd vert_err;
-      vert_err.setZero(render_QCover.rows());
-      for (int eid = 0; eid < cover_surf.nEdges(); eid++) {
-          for (int j = 0; j < 2; j++) {
-              int vid = cover_surf.data().edgeVerts(eid, j);
-              vert_err[vid] += edge_err[eid] / 2;
-          }
-      }
-
-      for(int vid = 0; vid < cover_surf.nVerts(); vid++) {
-          for(int c = 0; c < cut_pts.size(); c++) {
-              if((cover_surf.data().V.row(vid) - cut_pts[c].transpose()).norm() < 1e-6) {
-                  vert_err[vid] = 0;
-              }
-          }
-      }
-
-      cover_surface->addVertexScalarQuantity("vec local integrability err", vert_err);
 
   }
 
@@ -679,6 +767,37 @@ void myCallback() {
 
 int main(int argc, char** argv)
 {
+  Eigen::MatrixXd test_V(4, 3);
+  Eigen::MatrixXi test_F(2, 3);
+
+  test_V << 0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0;
+  test_F << 0, 1, 2,
+            0, 2, 3;
+
+  Eigen::MatrixXd test_vec(2, 3);
+  test_vec << M_PI, 0, 0,
+              M_PI, 0, 0;
+  Eigen::VectorXd test_theta(4);
+
+  test_theta << 0, M_PI, M_PI, 0;
+
+  Surface test_surf(test_V, test_F);
+
+  Eigen::MatrixXd test_vec_bary(2, 2);
+  for(int i = 0; i < 2; i++) {
+      Eigen::Matrix<double, 3, 2> B = test_surf.data().Bs[i];
+      test_vec_bary.row(i) = ((B.transpose() * B).inverse() * B.transpose() * (test_vec.row(i)).transpose()).transpose();
+  }
+
+  std::unique_ptr<SurfaceFields::MIGlobalIntegration> ptr = std::make_unique<SurfaceFields::MIGlobalIntegration>(0 ,0);
+  ptr->globallyIntegrateOneComponent(test_surf, test_vec_bary, test_theta, nullptr);
+
+
+
+
   // Initialize polyscope
   polyscope::init();
 
