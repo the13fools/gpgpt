@@ -67,8 +67,8 @@ public:
       // appState->meshName = "circle_irreg_20000";
 
       // appState->meshName = "disk_v210";
-      // appState->meshName = "disk_v623";
-      appState->meshName = "disk_v1000";
+      appState->meshName = "disk_v623";
+      // appState->meshName = "disk_v1000";
       
 
       
@@ -105,8 +105,8 @@ public:
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
-      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
 
 
       // Update params specific to this solve here
@@ -212,8 +212,13 @@ public:
 
                     Eigen::VectorXd frame = Eigen::VectorXd::Zero(DOFS_PER_ELEMENT);
                     double theta = atan2(vec(1),vec(0)); // acos(vec(1)) * .5;
-                    frame(0) = cos(theta);
-                    frame(1) = sin(theta);
+                    // frame(0) = cos(theta);
+                    // frame(1) = sin(theta);
+                    // frame(2) = 0.;
+
+
+                    frame(0) = -sin(theta);
+                    frame(1) = cos(theta);
                     frame(2) = 0.;
                     // frame(2) = -vec(1);
                     // frame(3) = vec(0);

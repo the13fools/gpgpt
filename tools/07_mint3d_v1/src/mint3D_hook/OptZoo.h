@@ -413,19 +413,6 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
 
 
-        //   Eigen::Vector4d ea = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 0));
-        //   Eigen::Vector4d eb = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 1));
-        //   Eigen::Vector4d ec = appState.C_sym_2.row(appState.cur_surf->data().faceEdges(f_idx, 2));
-
-        //   T curl_term = pow(ea.dot(e.neighbor_data.at(0).L_2_primals ) - ea.dot(e.self_data.L_2_primals),2);
-        //   curl_term +=  pow(eb.dot(e.neighbor_data.at(1).L_2_primals ) - eb.dot(e.self_data.L_2_primals),2);
-        //   curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_2_primals ) - ec.dot(e.self_data.L_2_primals),2);
-
-        // //   curl_term = curl_term * e.self_data.frame_norm_euclidian;
-        // // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
-
-        // // curl_term = curl_term * norm_passive;
-
 
 
           T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
@@ -444,17 +431,11 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
           T ret = T(0);
 
-          // if (e.w_smooth_vector > 0)
-          //   return ret;
-
-    //  if (w_s_perp > 0)
-    //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
           if (w_curl_new > 0)
           {
             ret = ret + 1./e.w_attenuate * w_curl_new * curl_term;
           }
           
-
           return ret;
 
     });
@@ -508,43 +489,25 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
 //// Curl Term 
 ///////////////////
 
+          T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
 
-
-          Eigen::VectorXd ea = appState.C_sym_4.row(appState.cur_surf->data().faceEdges(f_idx, 0));
-          Eigen::VectorXd eb = appState.C_sym_4.row(appState.cur_surf->data().faceEdges(f_idx, 1));
-          Eigen::VectorXd ec = appState.C_sym_4.row(appState.cur_surf->data().faceEdges(f_idx, 2));
-
-          T curl_term = pow(ea.dot(e.neighbor_data.at(0).L_4_primals ) - ea.dot(e.self_data.L_4_primals),2);
-          curl_term +=  pow(eb.dot(e.neighbor_data.at(1).L_4_primals ) - eb.dot(e.self_data.L_4_primals),2);
-          curl_term +=  pow(ec.dot(e.neighbor_data.at(2).L_4_primals ) - ec.dot(e.self_data.L_4_primals),2);
-
-        //   curl_term = curl_term / e.self_data.frame_norm_euclidian;
-        // double norm_passive = TinyAD::to_passive(e.self_data.frame_norm_euclidian);
-
-        //   curl_term = curl_term / norm_passive;
-
+          int num_neighbors = e.num_neighbors;
+          T curl_term = T(0);
+          for (int i = 0; i < num_neighbors; i++)
+          {
+                curl_term += (e.neighbor_data.at(i).L_4_facet_diff).squaredNorm();
+          }
 
           appState.os->curl_L4(f_idx) = TinyAD::to_passive(curl_term);
 
-          T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
-
-          
 
           T ret = T(0);
 
-          // if (e.w_smooth_vector > 0)
-          //   return ret;
-
-    //  if (w_s_perp > 0)
-    //         ret = ret + w_attenuate * w_s_perp * s_perp_term;
           if (w_curl_new > 0)
           {
-            // std::cout << w_curl_new;
-            ret = ret + w_curl_new * curl_term;
-            // std::cout << curl_term << " ";
+            ret = ret + 1./e.w_attenuate * w_curl_new * curl_term;
           }
           
-
           return ret;
 
 

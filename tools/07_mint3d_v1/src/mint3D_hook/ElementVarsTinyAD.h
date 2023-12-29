@@ -215,6 +215,7 @@ public:
                     L4_krushkal(appState, neighbor_data_i);
                     break;
                 case(ElementLiftType::L4_facets):
+                    L4_facet_diff(appState, i, neighbor_data_i);
                     
                 break;
 
@@ -391,6 +392,61 @@ public:
 
         // This sets the squared values which scales in the same way as L_4 to make the energy scale invariant. 
         // L2_to_L2x2(data);
+
+    }
+
+
+    // This function rotates a given neighbor and element l2 tensors to their shared facet 
+// using a precomputed rotation and saves their difference.  
+    void L4_facet_diff(AppState& appState, const int n_idx, ElementData<T_active>& data) { 
+        
+        // Seperate out the primal dofs into rank-1 components
+        // Maybe make this a seperate function. 
+        int nprimals = data.primals_rank1.size();
+        int facet_dim = data.primals_rank1[0].size() - 1;
+        data.L_4_facet_diff.resize(facet_dim*facet_dim*facet_dim*facet_dim);
+        data.L_4_facet_diff.setZero();
+        
+        Eigen::Matrix3d R_to_template = appState.R_facet_to_template.at(t_idx).at(n_idx);
+
+        Eigen::VectorX<T_active> neighbor_L4_facet = Eigen::VectorX<T_active>::Zero(facet_dim*facet_dim*facet_dim*facet_dim);
+        Eigen::VectorX<T_active> self_L4_facet = Eigen::VectorX<T_active>::Zero(facet_dim*facet_dim*facet_dim*facet_dim);
+       
+        
+
+        for (int v_i = 0; v_i < nprimals; v_i++)
+        {
+            Eigen::VectorX<T_active> cur_neighbor_vec = data.primals_rank1[v_i];
+            Eigen::VectorX<T_active> cur_self_vec = self_data.primals_rank1[v_i];
+
+            Eigen::VectorX<T_active> rot_neighbor = R_to_template * cur_neighbor_vec;
+            Eigen::VectorX<T_active> rot_self = R_to_template * cur_self_vec;
+
+
+            // TODO fix this later
+            int fsize = facet_dim;
+            int fsize2 = fsize*fsize;
+            int fsize3 = fsize2*fsize;
+            for (int i = 0; i < facet_dim; i++)
+            {
+                for (int j = 0; j < facet_dim; j++)
+                {
+                    for (int k = 0; k < facet_dim; k++)
+                    {
+                        for (int l = 0; l < facet_dim; l++)
+                        {
+                            // curcurt_flattened(i*psize3 + j*psize2 + k*psize + l) = cur(i)*cur(j)*cur(k)*cur(l);
+                            neighbor_L4_facet(i*fsize3 + j*fsize2 + k*fsize + l) = rot_neighbor(i)*rot_neighbor(j)*rot_neighbor(k)*rot_neighbor(l);
+                            self_L4_facet(i*fsize3 + j*fsize2 + k*fsize + l) = rot_self(i)*rot_self(j)*rot_self(k)*rot_self(l);
+                            
+                        }
+                    }
+                }
+            }
+
+        }
+
+        data.L_4_facet_diff = neighbor_L4_facet - self_L4_facet;
 
     }
 
