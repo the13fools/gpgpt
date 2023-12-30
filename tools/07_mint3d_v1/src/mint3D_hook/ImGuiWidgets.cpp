@@ -295,9 +295,9 @@ namespace ImGuiWidgets {
                     {
                             selected = Views::Sym_Curl_View::L4;
                     }
-                    if (ImGui::Selectable("L2 + L4_curl", selected == Views::Sym_Curl_View::L2_plus_L4))
+                    if (ImGui::Selectable("L2 + L4_curl", selected == Views::Sym_Curl_View::Total))
                     {
-                            selected = Views::Sym_Curl_View::L2_plus_L4;
+                            selected = Views::Sym_Curl_View::Total;
                     }
                     if (ImGui::Selectable("L6_curl", selected == Views::Sym_Curl_View::L6))
                     {

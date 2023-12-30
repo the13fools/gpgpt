@@ -24,7 +24,13 @@
 // Krushkal is a normalized represenation which is more suitable for geometric optimization, i.e. |v| \hat{v}\hat{v}'
 // TODO sym_tensor and sym_krushkal, which would both offer a non-trivial performance improvement 
 enum class ElementLiftType {
-    primal, L2_facets, L2_krushkal, L4_facets, L4_krushkal, Element_COUNT
+    primal, 
+    Lk_edge_contract,
+    L2_krushkal, 
+    L2_facets, 
+    L4_krushkal, 
+    L4_facets, 
+    Element_COUNT
 };
 
 
@@ -63,6 +69,8 @@ public:
 
     Eigen::VectorX<T_active> L_2_krushkal;
     Eigen::VectorX<T_active> L_4_krushkal;
+
+    Eigen::VectorX<T_active> Lk_edge_contract_diff;
 
     void set_primals_rank1(DOFMemoryLayout& primals_layout)
     {
@@ -118,8 +126,9 @@ public:
     // Surface* cur_surf;
     CubeCover::TetMeshConnectivity* cur_mesh;
 
-    // Eigen::Index f_idx; // maybe get rid of this it's redundant. 
-    Eigen::Index t_idx; // maybe get rid of this it's redundant. 
+    Eigen::Index t_idx; // maybe get rid of this, it's redundant. 
+
+    int edge_contract_order = -1;
 
 
     ElementData<T_active> self_data;
@@ -154,21 +163,17 @@ public:
 
             case(ElementLiftType::L2_krushkal):
                 L2_krushkal(appState, self_data);
-                break;
-            case(ElementLiftType::L2_facets):        
+                break;  
+            case(ElementLiftType::Lk_edge_contract):
+            case(ElementLiftType::L2_facets): 
+            case(ElementLiftType::L4_facets):  
+            // Computation for this happens per neighbor      
                 break;       
-            // case(ElementLiftType::L2_tensor):
-            // break;
 
             case(ElementLiftType::L4_krushkal):
                 L4_krushkal(appState, self_data);
                 break;
-            case(ElementLiftType::L4_facets):        
-                break;    
-
-            // case(ElementLiftType::L4_tensor):
-            // break;
-
+        
             default:
                 std::cout << "Error: LiftType not implemented" << std::endl;
         }
@@ -202,13 +207,17 @@ public:
                 case(ElementLiftType::primal):
                     break;
                 // Can seperate these two out to make it more granular if it's necessary for a bit of a speed boost
+                case(ElementLiftType::Lk_edge_contract):
+                    // std::cout << "Lk_edge_contract" << std::endl;
+                    // std::cout << edge_contract_order << std::endl;
+                    Lk_edge_contract(appState, i, neighbor_data_i);
+                    break;
+                
                 case(ElementLiftType::L2_krushkal):
                     L2_krushkal(appState, neighbor_data_i);
                     break;
                 case(ElementLiftType::L2_facets):
                     L2_facet_diff(appState, i, neighbor_data_i);
-
-                    
                 break;
 
                 case(ElementLiftType::L4_krushkal):
@@ -283,6 +292,81 @@ public:
             data.L_2_krushkal = data.L_2_krushkal + curcurt_normalized_flattened * cur_norm;
         
         }
+
+    }
+
+
+    void Lk_edge_contract(AppState& appState, const int n_idx, ElementData<T_active>& data) { 
+        
+        // Seperate out the primal dofs into rank-1 components
+        // Maybe make this a seperate function. 
+        int nprimals = data.primals_rank1.size();
+        int facet_dim = data.primals_rank1[0].size() - 1;
+        data.Lk_edge_contract_diff.resize(edge_contract_order+1);
+        data.Lk_edge_contract_diff.setZero();
+        
+        Eigen::MatrixXd tet_facet_basis = appState.tet_facet_basis.at(t_idx).at(n_idx);
+
+        Eigen::VectorX<T_active> neighbor_edge_proj_vals = Eigen::VectorX<T_active>::Zero(edge_contract_order+1);
+        Eigen::VectorX<T_active> self_edge_proj_vals = Eigen::VectorX<T_active>::Zero(edge_contract_order+1);
+       
+        Eigen::VectorXd e1 = tet_facet_basis.row(0);
+        Eigen::VectorXd e2 = tet_facet_basis.row(1);
+
+        // std::cout << "n_idx: " << n_idx << std::endl;
+        // std::cout << "e1: " << e1.transpose() << std::endl;
+        // std::cout << "e2: " << e2.transpose() << std::endl;
+
+
+        for (int v_i = 0; v_i < nprimals; v_i++)
+        {
+            Eigen::VectorX<T_active> cur_neighbor_vec = data.primals_rank1[v_i];
+            Eigen::VectorX<T_active> cur_self_vec = self_data.primals_rank1[v_i];
+
+            for (int term = 0; term < edge_contract_order+1; term++)
+            {
+                T_active neighbor_e1_contract = 0; //cur_neighbor_vec.dot(e1) + 1e-12;
+                T_active neighbor_e2_contract = 0; //cur_neighbor_vec.dot(e2) + 1e-12;
+                T_active self_e1_contract = 0; //cur_self_vec.dot(e1) + 1e-12;
+                T_active self_e2_contract = 0; // cur_self_vec.dot(e2) + 1e-12;
+
+                for (int i = 0; i<3; i++)
+                {
+                    neighbor_e1_contract += cur_neighbor_vec(i)*e1(i);
+                    neighbor_e2_contract += cur_neighbor_vec(i)*e2(i);
+                    self_e1_contract += cur_self_vec(i)*e1(i);
+                    self_e2_contract += cur_self_vec(i)*e2(i);
+                }
+
+                T_active pow_n_e1 = 1;
+                T_active pow_n_e2 = 1;
+                T_active pow_s_e1 = 1;
+                T_active pow_s_e2 = 1;
+
+                for (int i = 0; i < term; i++)
+                {
+                    pow_n_e1 *= neighbor_e1_contract;
+                    pow_s_e1 *= self_e1_contract;
+                }
+                for (int i = 0; i < edge_contract_order-term; i++)
+                {
+                    pow_n_e2 *= neighbor_e2_contract;
+                    pow_s_e2 *= self_e2_contract;
+                }
+
+                neighbor_edge_proj_vals(term) = pow_n_e1 * pow_n_e2;
+                self_edge_proj_vals(term) = pow_s_e1 * pow_s_e2;
+
+                // neighbor_edge_proj_vals(term) += std::pow(neighbor_e1_contract, term)*
+                //                                  std::pow(neighbor_e2_contract, edge_contract_order-term);
+                // self_edge_proj_vals(term) += std::pow(self_e1_contract, term)*
+                //                              std::pow(self_e2_contract, edge_contract_order-term);
+            }
+        
+        }
+
+        data.Lk_edge_contract_diff = neighbor_edge_proj_vals - self_edge_proj_vals;
+        // std::cout << "Lk_edge_contract_diff: " << data.Lk_edge_contract_diff.transpose() << std::endl;
 
     }
 

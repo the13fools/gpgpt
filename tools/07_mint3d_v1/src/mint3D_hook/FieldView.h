@@ -32,9 +32,9 @@ enum class Sym_Moment_View {
 
 
 enum class Sym_Curl_View {
+    Total,
     L2,
     L4,
-    L2_plus_L4,
     L6, 
     Element_COUNT
 };

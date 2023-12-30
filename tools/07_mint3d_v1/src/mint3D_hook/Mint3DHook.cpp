@@ -91,16 +91,28 @@ void Mint3DHook::updateRenderGeometry() {
             break;
     }
 
+// This is kinda brittle... 
+    int num_curls = appState->os->curls_Lks.size();
     switch (appState->cur_curl_view)
     {
         case Views::Sym_Curl_View::L2: 
-            appState->os->curls_sym = appState->os->curl_L2;
+            if(num_curls >= 1)
+                appState->os->curls_sym = appState->os->curls_Lks[0];
             break;
         case Views::Sym_Curl_View::L4: 
-            appState->os->curls_sym = appState->os->curl_L4;
+            if(num_curls >= 2)
+                appState->os->curls_sym = appState->os->curls_Lks[1];
             break;
-        case Views::Sym_Curl_View::L2_plus_L4: 
-            appState->os->curls_sym = appState->os->curl_L2 + appState->os->curl_L4;
+        case Views::Sym_Curl_View::L6: 
+            if(num_curls >= 3)
+                appState->os->curls_sym = appState->os->curls_Lks[2];
+            break;
+        case Views::Sym_Curl_View::Total: 
+            appState->os->curls_sym *= 0;
+            for(int i = 0; i < num_curls; i++)
+            {
+                appState->os->curls_sym += appState->os->curls_Lks[i];
+            }
             break;
     }
 
@@ -687,20 +699,24 @@ void Mint3DHook::resetAppState() {
 
 void Mint3DHook::initCurlOperators()
 {
-    
+    // this can probably be deleted but leaving in for now. 
     int ntets = appState->cur_tet_mesh->nTets();
     appState->R_facet_to_template.resize(ntets);
+    appState->tet_facet_basis.resize(ntets);
 
     for (int tetidx = 0; tetidx < ntets; tetidx++)
     {
         std::vector<Eigen::MatrixXd> rot_facets_to_template;
+        std::vector<Eigen::MatrixXd> cur_tet_bases;
         rot_facets_to_template.resize(4);
+        cur_tet_bases.resize(4);
         for (int idx = 0; idx < 4; idx++)
         {
             // std::cout << "ntets " << appState->cur_tet_mesh->nTets() << "nfaces" << appState->cur_tet_mesh->nFaces() << std::endl;
             int face_idx = appState->cur_tet_mesh->tetFace(tetidx, idx);
 
             Eigen::Matrix3d rot_facet_to_template;
+            Eigen::MatrixXd cur_facet_basis = Eigen::MatrixXd::Zero(2, 3);
 
             if (face_idx == -1)
             {
@@ -716,6 +732,9 @@ void Mint3DHook::initCurlOperators()
             Eigen::Vector3d b1 = (b - a).normalized();
             Eigen::Vector3d b2 = (c - a).normalized();
             Eigen::Vector3d n = b1.cross(b2).normalized();
+
+            cur_facet_basis.row(0) = b1;
+            cur_facet_basis.row(1) = b2;
 
 
             if (std::abs(n[2]) > .999)
@@ -733,8 +752,10 @@ void Mint3DHook::initCurlOperators()
             }
 
             rot_facets_to_template.at(idx) = (rot_facet_to_template.transpose());
+            cur_tet_bases.at(idx) = cur_facet_basis;
         }
         appState->R_facet_to_template.at(tetidx) = rot_facets_to_template;
+        appState->tet_facet_basis.at(tetidx) = cur_tet_bases;
     }
 
 

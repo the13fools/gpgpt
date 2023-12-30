@@ -363,6 +363,103 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 }
 
 
+
+// k is the order of the symmetric curl term. 
+static void addCurlTerms(ADFunc& func, AppState& appState) {
+
+    int num_curls = appState.curl_orders.size();
+    appState.os->curls_Lks.resize(num_curls);
+    for(int term = 0; term < num_curls; term++)
+    {
+        int k = appState.curl_orders[term];
+        std::cout << "add L" << k << " curl obj" << std::endl;
+        appState.os->curls_Lks[term].resize(appState.T.rows());
+    }
+
+
+
+    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+        int num_curls = appState.curl_orders.size();
+        
+        // Evaluate element using either double or TinyAD::Double
+        using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
+
+        T ret = T(0);
+        
+        for(int term = 0; term < num_curls; term++)
+        {
+            int k = appState.curl_orders[term];
+
+            // Get variable 2D vertex positions
+            Eigen::Index f_idx = element.handle;
+            // Eigen::VectorX<T> s_curr = element.variables(f_idx);
+
+            ProcElement<T,VAR> e(ElementLiftType::Lk_edge_contract); 
+            // e.setElementVars(appState, f_idx, s_curr);
+            e.setSelfData(appState, f_idx, element);
+            e.edge_contract_order = k; // set the order of the curl term.
+            // std::cout << "set edge contract order to " << k << std::endl;
+
+
+
+            Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+            if ((int)f_idx == 0)
+            {
+                // std::cout << "eval smoothness obj" << std::endl;
+                // std::cout << w_bound << " " << w_smooth_vector << " " << w_smooth << " " << w_curl << " " << w_attenuate << std::endl;
+            }
+
+
+    // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
+            // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+            if (bound_face_idx(f_idx) == 1)
+            {
+                return T(0);
+            }
+
+            e.setNeighborData(appState, f_idx, element);
+
+
+
+///////////////////
+//// Curl Term 
+///////////////////
+
+
+
+
+
+            T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
+
+            int num_neighbors = e.num_neighbors;
+            T curl_term = T(0);
+            for (int i = 0; i < num_neighbors; i++)
+            {
+                    curl_term += (e.neighbor_data.at(i).Lk_edge_contract_diff).squaredNorm();
+            }
+
+            appState.os->curls_Lks[term](f_idx) = TinyAD::to_passive(curl_term);
+
+            // hacky, should ideally have a curl_Lk for each k.
+            // appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
+
+
+            if (w_curl_new > 0)
+            {
+                ret = ret + 1./e.w_attenuate * w_curl_new * curl_term;
+            }
+        }
+          
+          return ret;
+
+    });
+}
+
+
 // deps primal vars 
 static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 

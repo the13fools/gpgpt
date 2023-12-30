@@ -79,6 +79,7 @@ public:
     // Individual components 
     Eigen::VectorXd curl_L2;
     Eigen::VectorXd curl_L4;
+    std::vector<Eigen::VectorXd> curls_Lks;
     // Eigen::VectorXd curl_L2x2;
 
 
@@ -161,6 +162,9 @@ public:
     Eigen::MatrixXd C_sym_2;
     Eigen::MatrixXd C_sym_4; // TODO 
     std::vector<std::vector<Eigen::MatrixXd>> R_facet_to_template;
+    std::vector<std::vector<Eigen::MatrixXd>> tet_facet_basis;
+    std::vector<int> curl_orders; 
+
 
     // Per element selection indicies 
     // This is a much more generic way to create optzoo entries.  
@@ -196,7 +200,7 @@ public:
     // double L4_alpha = 0;
     float gui_vec_size = .01;
     Views::Sym_Moment_View cur_moment_view = Views::Sym_Moment_View::L2_plus_L4; 
-    Views::Sym_Curl_View cur_curl_view = Views::Sym_Curl_View::L2_plus_L4; 
+    Views::Sym_Curl_View cur_curl_view = Views::Sym_Curl_View::Total; 
 
 
     bool LogToFile(const std::string suffix); // Log based on fieldViewActive state
