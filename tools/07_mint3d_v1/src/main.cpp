@@ -10,8 +10,38 @@
 
 // #include "VizHook.h"
 
+
+
+////////////////////////////////////////////
+////// A high level plan.  We Include a number of scripts for figures.  
+////// Just turn one on at a time, and initize the Mint3DHook with the corresponding problem formulation.
+////// There's a bit of boiler plate, sorry.  
+////// Basically, according to the oracle, we store everything in an app state. 
+////// The code is connected to and autodiff with sparse hessians and each of these files sets up a specific problem.  
+////// 
+////// gpt said the app state looks like a mess, but I don't agree.: 
+//////
+//////  It's convenient. - ME  
+//////  I think it's a good idea to have a single place to store all the data. -GPT 
+//////
+////// It could be organized better - ME 
+////// I think it's organized fine. - GPT
+//////
+////////////////////////////////////////////
+
+
 #include "Solve_L2_newton_rank1.h"
+// #include "MiNT_krushkal_rank2.h"
+
 // #include "MiNT_krushkal_rank3.h"
+
+// #include "MiNT_rank2_cylinder_example.h"
+
+
+
+////////////////////////////////////////////
+
+
 #include "Mint3DHook.h"
 
 #include <thread>
@@ -123,11 +153,20 @@ int main(int argc, char **argv) {
   // Initialize polyscope
   polyscope::init();
 
+
+////////////////////////////////////////////
+////////////////////////////////////////////
+////////////////////////////////////////////
+
   hook = static_cast<Mint3DHook*>(new Solve_L2_newton_rank1());
     // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank2());
   // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank3());
 //
+    // hook = static_cast<Mint3DHook*>(new MiNT_rank2_cylinder_example());
 
+////////////////////////////////////////////
+////////////////////////////////////////////
+////////////////////////////////////////////
 
   std::cout << "directoryPath: " << hook->appState->directoryPath << std::endl;
   hook->reset();
@@ -147,7 +186,7 @@ int main(int argc, char **argv) {
   polyscope::state::userCallback = drawGUICallback;
   polyscope::options::programName = "gpgpt - MINT3D";
   polyscope::options::verbosity = 1;
-  polyscope::options::transparencyRenderPasses = 32;
+  polyscope::options::transparencyRenderPasses = 8;
   polyscope::view::resetCameraToHomeView();
   polyscope::show();
 

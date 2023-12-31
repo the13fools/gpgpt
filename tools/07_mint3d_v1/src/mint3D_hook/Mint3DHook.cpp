@@ -295,9 +295,9 @@ void Mint3DHook::renderRenderGeometry()
             double color_shift = (v+1.) * 1.0 / num_vecs;
 
             auto vectorField = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field " + v, cur_vec);
-            vectorField->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+            vectorField->setVectorColor(glm::vec3(color_shift, 0.2, 0.5));
             auto vectorFieldNeg = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field (negative) " + v, (-1.) * cur_vec);
-            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.7, 0.7));
+            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.7));
 
             if(appState->show_frames && appState->show_frames_as_lines)
             {
@@ -306,8 +306,8 @@ void Mint3DHook::renderRenderGeometry()
                 vectorField->setVectorLengthScale(appState->gui_vec_size);
                 vectorFieldNeg->setVectorLengthScale(appState->gui_vec_size);
 
-                vectorField->setVectorRadius(0.001);
-                vectorFieldNeg->setVectorRadius(0.001);
+                vectorField->setVectorRadius(0.01);
+                vectorFieldNeg->setVectorRadius(0.01);
 
                 
                 
@@ -734,7 +734,7 @@ void Mint3DHook::initCurlOperators()
             Eigen::Vector3d n = b1.cross(b2).normalized();
 
             cur_facet_basis.row(0) = b1;
-            cur_facet_basis.row(1) = b2;
+            cur_facet_basis.row(1) = b1.cross(n); //b2
 
 
             if (std::abs(n[2]) > .999)

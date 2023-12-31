@@ -212,6 +212,12 @@ public:
             
             num_neighbors += 1;
             neighbor_data_i.dofs_curr_elem = element.variables(cur_mesh->tetOppositeVertex(t_idx, i));
+            
+            if(appState.bound_face_idx(n_idx) == 1)
+            {
+                neighbor_data_i.dofs_curr_elem = appState.frames_orig.row(n_idx);
+            }
+
             neighbor_data_i.set_primals_rank1(appState.primals_layout);
 
             switch(curr_lift)
@@ -413,8 +419,8 @@ public:
                     pow_s_e2 *= self_e2_contract;
                 }
 
-                neighbor_edge_proj_vals(term) = pow_n_e1 * pow_n_e2;
-                self_edge_proj_vals(term) = pow_s_e1 * pow_s_e2;
+                neighbor_edge_proj_vals(term) += pow_n_e1 * pow_n_e2;
+                self_edge_proj_vals(term) += pow_s_e1 * pow_s_e2;
 
                 // neighbor_edge_proj_vals(term) += std::pow(neighbor_e1_contract, term)*
                 //                                  std::pow(neighbor_e2_contract, edge_contract_order-term);
@@ -425,6 +431,23 @@ public:
         }
 
         data.Lk_edge_contract_diff = neighbor_edge_proj_vals - self_edge_proj_vals;
+
+
+        // do this in a less hacky way.  
+        std::vector<double> scales; 
+        if (edge_contract_order == 2)
+            scales = {1., 2., 1.};
+        if (edge_contract_order == 4)
+            scales = {1., 4., 6., 4., 1.};
+        if (edge_contract_order == 6)
+            scales = {1., 6., 15., 20., 15., 6., 1.};
+
+        for (int term = 0; term < edge_contract_order+1; term++)
+        {
+            data.Lk_edge_contract_diff(term) = data.Lk_edge_contract_diff(term) * std::sqrt(scales.at(term));
+        }
+
+        
         // std::cout << "Lk_edge_contract_diff: " << data.Lk_edge_contract_diff.transpose() << std::endl;
 
     }
@@ -467,7 +490,7 @@ public:
             {
                 for (int j = 0; j < facet_dim; j++)
                 {
-                    std::cout << "i: " << i << " j: " << j << std::endl;
+                    // std::cout << "i: " << i << " j: " << j << std::endl;
 
                     neighbor_L2_facet(i*facet_dim + j) += rot_neighbor(i)*rot_neighbor(j);
                     self_L2_facet(i*facet_dim + j) += rot_self(i)*rot_self(j);
@@ -636,8 +659,8 @@ public:
                         for (int l = 0; l < facet_dim; l++)
                         {
                             // curcurt_flattened(i*psize3 + j*psize2 + k*psize + l) = cur(i)*cur(j)*cur(k)*cur(l);
-                            neighbor_L4_facet(i*fsize3 + j*fsize2 + k*fsize + l) = rot_neighbor(i)*rot_neighbor(j)*rot_neighbor(k)*rot_neighbor(l);
-                            self_L4_facet(i*fsize3 + j*fsize2 + k*fsize + l) = rot_self(i)*rot_self(j)*rot_self(k)*rot_self(l);
+                            neighbor_L4_facet(i*fsize3 + j*fsize2 + k*fsize + l) += rot_neighbor(i)*rot_neighbor(j)*rot_neighbor(k)*rot_neighbor(l);
+                            self_L4_facet(i*fsize3 + j*fsize2 + k*fsize + l) += rot_self(i)*rot_self(j)*rot_self(k)*rot_self(l);
                             
                         }
                     }

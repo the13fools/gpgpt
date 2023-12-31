@@ -67,8 +67,16 @@ public:
       // appState->meshName = "circle_irreg_20000";
 
       // appState->meshName = "disk_v210";
-      appState->meshName = "disk_v623";
+      // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
+      // appState->meshName = "disk_3480_tets";
+  // appState->meshName = "cylinder_400";
+  appState->meshName = "cylinder3k";
+
+  // appState->meshName = "sphere_r0.17";
+    // appState->meshName = "sphere_r0.14";
+
+
       
 
       
@@ -99,13 +107,13 @@ public:
       /////////////////////////////
       // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
       
-      OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
-      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      appState->curl_orders = {2, 4, 6};
+      appState->curl_orders = {2,4,6};
       OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
 
       
@@ -206,9 +214,16 @@ public:
                                             appState->V.row(appState->T(i, 2)) + 
                                             appState->V.row(appState->T(i, 3))) / 4.0;
 
+                centroid(2) = 0.;
+
                 // if (centroid.norm() < 0.45) { // Custom condition for boundary faces
                 //     boundaryFaces(i) = -1; // Mark for special handling or exclusion
-                if (centroid.norm() < 40) { // Custom condition for boundary faces
+                // if (centroid.norm() < .3) { // Custom condition for boundary faces
+                // if (centroid.norm() < 4.3) { // disk_3480_tets
+                // if (centroid.norm() < 45) { // disk_v623
+                if (centroid.norm() < 95) { // cylinder3k
+
+
                     boundaryFaces(i) = 0;
                 } else {
                     // Set frame orientation based on the centroid
@@ -227,6 +242,10 @@ public:
                     // frame(2) = -vec(1);
                     // frame(3) = vec(0);
                     appState->frames.row(i) = frame;
+
+                    // appState->frames.row(i) = frame * 1./(centroid.norm() + 1e-10);
+                    // appState->frames.row(i) = frame * (centroid.norm() + 1e-10);
+
                 }
             }
         }
@@ -283,6 +302,10 @@ public:
       for(int i = 0; i < nelem; i++)
       {
         appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
+
+        if (appState->bound_face_idx(i) == 1) {
+          appState->frames.row(i) = appState->frames_orig.row(i);
+        }
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
 
         

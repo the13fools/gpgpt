@@ -68,7 +68,12 @@ public:
       // appState->meshName = "circle_irreg_20000";
       
       // appState->meshName = "disk_v210";
-      appState->meshName = "disk_v623"; 
+      // appState->meshName = "disk_v623"; 
+      // appState->meshName = "disk_v1000";
+
+       appState->meshName = "cylinder3k";
+
+      
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
@@ -101,8 +106,13 @@ public:
     OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
     OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-    // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
-    // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
+
+    // appState->curl_orders = {2, 4};
+    // OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
+
+
+    OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
+    OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
 
       // Update params specific to this solve here
 
@@ -158,8 +168,8 @@ public:
                                             appState->V.row(appState->T(i, 1)) +
                                             appState->V.row(appState->T(i, 2))+
                                             appState->V.row(appState->T(i, 3))) / 4.0;
-
-                if (centroid.norm() < 40) { // Custom condition for boundary faces
+                centroid(2) = 0;
+                if (centroid.norm() < 100) { // Custom condition for boundary faces
                     boundaryFaces(i) = 0;
                 } else {
                     // Set frame orientation based on the centroid
@@ -247,9 +257,9 @@ public:
     virtual void initConfigValues()
     {
       appState->config->w_attenuate = 1.;
-      appState->config->w_smooth = 1e5;
-      appState->config->w_bound = 1e8;
-      appState->config->w_curl = 1e1;
+      appState->config->w_smooth = 1e0;
+      appState->config->w_bound = 1e5;
+      appState->config->w_curl = 1e-3;
     }
 
 // This is called after each step.  
