@@ -202,7 +202,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
 }
 
-
+/*
 // Deps primal vars 
 static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
@@ -261,9 +261,176 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
 }
 
+*/
+
+
+// Deps primal vars 
+static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
+
+    std::cout << "add L2 smoonthess obj" << std::endl;
+
+    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+     // Evaluate element using either double or TinyAD::Double
+        using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
+
+        // Get variable 2D vertex positions
+        Eigen::Index f_idx = element.handle;
+
+        // ProcElement<T,VAR> e(ElementLiftType::L2_krushkal); 
+        // e.setSelfData(appState, f_idx, element);
+
+        ProcElement<T,VAR> e_sym(ElementLiftType::L2_sym_krushkal); 
+        e_sym.setSelfData(appState, f_idx, element);
+
+
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+        if ((int)f_idx == 0)
+        {
+            // std::cout << "eval smoothness obj" << std::endl;
+            // std::cout << w_bound << " " << w_smooth_vector << " " << w_smooth << " " << w_curl << " " << w_attenuate << std::endl;
+        }
+
+
+// A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
+        // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+        if (bound_face_idx(f_idx) == 1)
+        {
+            return T(0);
+        }
+        // e.setNeighborData(appState, f_idx, element);
+
+        e_sym.setNeighborData(appState, f_idx, element);
+
+///////////////////
+//// Initlaize elementwise objectives 
+///////////////////
+
+        //   T primal_dirichlet_term = T(0);
+        //   T dirichlet_term = T(0);
+        //   for (int i = 0; i < e.num_neighbors; i++)
+        //   {
+        //     primal_dirichlet_term += (e.neighbor_data.at(i).primals - e.self_data.primals).squaredNorm();
+        //     dirichlet_term += (e.neighbor_data.at(i).L_2_krushkal - e.self_data.L_2_krushkal).squaredNorm(); 
+        //   }
+
+          T sym_dirichlet_term = T(0);
+
+          for (int i = 0; i < e_sym.num_neighbors; i++)
+          {
+            Eigen::VectorX<T> curr_diff = e_sym.neighbor_data.at(i).L_2_sym_krushkal - e_sym.self_data.L_2_sym_krushkal;
+            sym_dirichlet_term += curr_diff.transpose() * appState.L2_sym_tensor_weights * curr_diff;   
+          }
+
+         // This is a test to make sure that the symmetric weights give the same answer as the full tensor 
+        //   appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(dirichlet_term - sym_dirichlet_term);
+        appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(sym_dirichlet_term);
+
+
+          T delta_weight = 1.; // std::min(w_curl/100., 1./w_attenuate);
+
+          T ret = T(0);//  delta_norm_term * delta_weight;
+
+          if (e_sym.w_smooth > 0)
+            ret = ret + e_sym.w_smooth * sym_dirichlet_term;
+
+
+          return ret;
+
+    });
+
+}
+
+
+// Deps primal vars 
+static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
+
+    std::cout << "add L4 smoonthess obj" << std::endl;
+
+    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+     // Evaluate element using either double or TinyAD::Double
+        using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
+
+        // Get variable 2D vertex positions
+        Eigen::Index f_idx = element.handle;
+
+        // ProcElement<T,VAR> e(ElementLiftType::L4_krushkal); 
+        // e.setSelfData(appState, f_idx, element);
+
+        ProcElement<T,VAR> e_sym(ElementLiftType::L4_sym_krushkal); 
+        e_sym.setSelfData(appState, f_idx, element);
+
+
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+        if ((int)f_idx == 0)
+        {
+            // std::cout << "eval smoothness obj" << std::endl;
+            // std::cout << w_bound << " " << w_smooth_vector << " " << w_smooth << " " << w_curl << " " << w_attenuate << std::endl;
+        }
+
+
+// A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
+        // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+        if (bound_face_idx(f_idx) == 1)
+        {
+            return T(0);
+        }
+        // e.setNeighborData(appState, f_idx, element);
+
+        e_sym.setNeighborData(appState, f_idx, element);
+
+///////////////////
+//// Initlaize elementwise objectives 
+///////////////////
+
+        //   T primal_dirichlet_term = T(0);
+        //   T dirichlet_term = T(0);
+        //   for (int i = 0; i < e.num_neighbors; i++)
+        //   {
+        //     // primal_dirichlet_term += (e.neighbor_data.at(i).primals - e.self_data.primals).squaredNorm();
+        //     dirichlet_term += (e.neighbor_data.at(i).L_4_krushkal - e.self_data.L_4_krushkal).squaredNorm(); 
+        //   }
+
+          T sym_dirichlet_term = T(0);
+
+          for (int i = 0; i < e_sym.num_neighbors; i++)
+          {
+            Eigen::VectorX<T> curr_diff = e_sym.neighbor_data.at(i).L_4_sym_krushkal - e_sym.self_data.L_4_sym_krushkal;
+            sym_dirichlet_term += curr_diff.transpose() * appState.L4_sym_tensor_weights * curr_diff;   
+          }
+
+         // This is a test to make sure that the symmetric weights give the same answer as the full tensor 
+        //   appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(dirichlet_term - sym_dirichlet_term);
+        appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(sym_dirichlet_term);
+
+
+          T delta_weight = 1.; // std::min(w_curl/100., 1./w_attenuate);
+
+          T ret = T(0);//  delta_norm_term * delta_weight;
+
+          if (e_sym.w_smooth > 0)
+            ret = ret + e_sym.w_smooth * sym_dirichlet_term;
+
+
+          return ret;
+
+    });
+
+}
 
 
 
+
+
+
+/*
 // Deps primal vars 
 static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
@@ -362,7 +529,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
 }
 
-
+*/
 
 // k is the order of the symmetric curl term. 
 static void addCurlTerms(ADFunc& func, AppState& appState) {

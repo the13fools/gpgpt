@@ -286,7 +286,10 @@ namespace ImGuiWidgets {
                 if (ImGui::TreeNode("Choose symmetric dirichlet component"))
                 {
                     Views::Sym_Curl_View selected = appState.cur_curl_view;
-                    
+                    if (ImGui::Selectable("Total Symmetric Curl Residual", selected == Views::Sym_Curl_View::Total))
+                    {
+                            selected = Views::Sym_Curl_View::Total;
+                    }
                     if (ImGui::Selectable("L2_curl", selected == Views::Sym_Curl_View::L2))
                     {
                             selected = Views::Sym_Curl_View::L2;
@@ -294,10 +297,6 @@ namespace ImGuiWidgets {
                     if (ImGui::Selectable("L4_curl", selected == Views::Sym_Curl_View::L4))
                     {
                             selected = Views::Sym_Curl_View::L4;
-                    }
-                    if (ImGui::Selectable("L2 + L4_curl", selected == Views::Sym_Curl_View::Total))
-                    {
-                            selected = Views::Sym_Curl_View::Total;
                     }
                     if (ImGui::Selectable("L6_curl", selected == Views::Sym_Curl_View::L6))
                     {

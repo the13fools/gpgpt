@@ -4,6 +4,7 @@
 #include "FieldView.h"
 
 #include <iostream>
+#include <Eigen/Sparse>
 
 // Constructor here
 AppState::AppState()
@@ -12,6 +13,32 @@ AppState::AppState()
 
     override_bounds.lower = 1e-16;
     override_bounds.upper = 1e-5;
+
+    std::vector< Eigen::Triplet<double> > triplets;
+
+    std::vector<double> L2_sym_weights = {1., 2., 2., 1., 2., 1.};
+    std::vector<double> L4_sym_weights = { 1., 4., 4., 6., 12., 6., 4., 12., 12., 4., 1., 4., 6., 4., 1.};
+
+    for (int i = 0; i < 6; i++)
+    {
+        triplets.push_back(Eigen::Triplet<double>(i, i, L2_sym_weights.at(i)));
+    }
+
+    L2_sym_tensor_weights = Eigen::SparseMatrix<double>(6, 6);
+    L2_sym_tensor_weights.setFromTriplets(triplets.begin(), triplets.end());
+    L2_sym_tensor_weights.makeCompressed();
+
+    triplets.clear();
+
+    for (int i = 0; i < 15; i++)
+    {
+        triplets.push_back(Eigen::Triplet<double>(i, i, L4_sym_weights.at(i)));
+    }
+
+    L4_sym_tensor_weights = Eigen::SparseMatrix<double>(15, 15);
+    L4_sym_tensor_weights.setFromTriplets(triplets.begin(), triplets.end());
+    L4_sym_tensor_weights.makeCompressed();
+
 }
 
 

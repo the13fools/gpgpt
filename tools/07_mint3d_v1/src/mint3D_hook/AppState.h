@@ -3,6 +3,8 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
+
 #include <string>
 #include <vector>
 #include <optional>
@@ -164,6 +166,9 @@ public:
     std::vector<std::vector<Eigen::MatrixXd>> R_facet_to_template;
     std::vector<std::vector<Eigen::MatrixXd>> tet_facet_basis;
     std::vector<int> curl_orders; 
+
+    Eigen::SparseMatrix<double> L2_sym_tensor_weights;
+    Eigen::SparseMatrix<double> L4_sym_tensor_weights;
 
 
     // Per element selection indicies 

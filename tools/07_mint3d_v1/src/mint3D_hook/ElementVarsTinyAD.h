@@ -27,8 +27,10 @@ enum class ElementLiftType {
     primal, 
     Lk_edge_contract,
     L2_krushkal, 
+    L2_sym_krushkal,
     L2_facets, 
     L4_krushkal, 
+    L4_sym_krushkal,
     L4_facets, 
     Element_COUNT
 };
@@ -68,7 +70,11 @@ public:
     // Eigen::VectorX<T_active> L_4_primals;
 
     Eigen::VectorX<T_active> L_2_krushkal;
+    Eigen::VectorX<T_active> L_2_sym_krushkal;
+
     Eigen::VectorX<T_active> L_4_krushkal;
+    Eigen::VectorX<T_active> L_4_sym_krushkal;
+
 
     Eigen::VectorX<T_active> Lk_edge_contract_diff;
 
@@ -164,6 +170,9 @@ public:
             case(ElementLiftType::L2_krushkal):
                 L2_krushkal(appState, self_data);
                 break;  
+            case(ElementLiftType::L2_sym_krushkal):
+                L2_sym_krushkal(appState, self_data);
+                break;  
             case(ElementLiftType::Lk_edge_contract):
             case(ElementLiftType::L2_facets): 
             case(ElementLiftType::L4_facets):  
@@ -172,6 +181,9 @@ public:
 
             case(ElementLiftType::L4_krushkal):
                 L4_krushkal(appState, self_data);
+                break;
+            case(ElementLiftType::L4_sym_krushkal):
+                L4_sym_krushkal(appState, self_data);
                 break;
         
             default:
@@ -216,10 +228,16 @@ public:
                 case(ElementLiftType::L2_krushkal):
                     L2_krushkal(appState, neighbor_data_i);
                     break;
+                case(ElementLiftType::L2_sym_krushkal):
+                    L2_sym_krushkal(appState, neighbor_data_i);
+                    break;
                 case(ElementLiftType::L2_facets):
                     L2_facet_diff(appState, i, neighbor_data_i);
                 break;
 
+                case(ElementLiftType::L4_sym_krushkal):
+                    L4_sym_krushkal(appState, neighbor_data_i);
+                    break;
                 case(ElementLiftType::L4_krushkal):
                     L4_krushkal(appState, neighbor_data_i);
                     break;
@@ -256,6 +274,47 @@ public:
         this->t_idx = t_idx;
     }
 
+
+    // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
+    void L2_sym_krushkal(AppState& appState, ElementData<T_active>& data) { 
+        
+        // Seperate out the primal dofs into rank-1 components
+        // Maybe make this a seperate function. 
+        int nprimals = data.primals_rank1.size();
+        int primals_size = data.primals_rank1[0].size();
+        int sym_size = 6;
+        data.L_2_sym_krushkal.resize(sym_size);
+        data.L_2_sym_krushkal.setZero();
+
+        // update for n vectors per frame.  
+        for (int v_i = 0; v_i < nprimals; v_i++)
+        {
+            Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+            T_active cur_norm = cur.norm() + 1e-10;
+            Eigen::VectorX<T_active> cur_normalized = cur / cur_norm;
+
+            // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
+            Eigen::VectorX<T_active> curcurt_normalized_flattened;
+            curcurt_normalized_flattened.resize(sym_size);// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
+            // Eigen::VectorX<T_active> curcurt_normalized_flattened = curcurt_flattened;
+            // TODO fix this later
+            int cur_idx = 0;
+            for (int i = 0; i < primals_size; i++)
+            {
+                for (int j = i; j < primals_size; j++)
+                {
+                    // curcurt_flattened(i*primals_size + j) = cur(i)*cur(j);
+                    curcurt_normalized_flattened(cur_idx) = cur_normalized(i)*cur_normalized(j);
+                    cur_idx++;
+                }
+            }
+
+            // data.L_2_primals = data.L_2_primals + curcurt_flattened;
+            data.L_2_sym_krushkal = data.L_2_sym_krushkal + curcurt_normalized_flattened * cur_norm;
+        
+        }
+
+    }
 
     // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
     void L2_krushkal(AppState& appState, ElementData<T_active>& data) { 
@@ -408,6 +467,8 @@ public:
             {
                 for (int j = 0; j < facet_dim; j++)
                 {
+                    std::cout << "i: " << i << " j: " << j << std::endl;
+
                     neighbor_L2_facet(i*facet_dim + j) += rot_neighbor(i)*rot_neighbor(j);
                     self_L2_facet(i*facet_dim + j) += rot_self(i)*rot_self(j);
                 }
@@ -419,10 +480,65 @@ public:
 
     }
 
-    // L_2_facet_diff
-    // self_data
 
-        // void setElementVars(AppState& appState, const Eigen::Index& f_idx, const Eigen::VectorX<T_active>& s_curr) { 
+    void L4_sym_krushkal(AppState& appState, ElementData<T_active>& data) { 
+        
+        // Seperate out the primal dofs into rank-1 components
+        // Maybe make this a seperate function. 
+        int nprimals = data.primals_rank1.size();
+        int primals_size = data.primals_rank1[0].size();
+        int L4_size = 15;
+        data.L_4_sym_krushkal.resize(L4_size);
+        data.L_4_sym_krushkal.setZero();
+        // data.L_4_krushkal = data.L_4_primals;
+
+
+        // update for n vectors per frame.  
+        for (int v_i = 0; v_i < nprimals; v_i++)
+        {
+            Eigen::VectorX<T_active> cur = data.primals_rank1[v_i];
+            
+            T_active cur_norm = cur.norm() + 1e-10;
+            Eigen::VectorX<T_active> cur_normalized = cur / cur_norm;
+
+
+            // Eigen::MatrixX<T_active> curcurt = cur*cur.transpose();
+            // Eigen::VectorX<T_active> curcurt_flattened;
+            // curcurt_flattened.resize(L4_size);// = Eigen::Zeros(cur.rows()*cur.rows()); // TODO: make this compressed 
+            Eigen::VectorX<T_active> curcurt_normalized_flattened; // = curcurt_flattened;
+            curcurt_normalized_flattened.resize(L4_size);
+            
+            int cur_idx = 0;
+            for (int i = 0; i < primals_size; i++)
+            {
+                for (int j = i; j < primals_size; j++)
+                {
+                    for (int k = j; k < primals_size; k++)
+                    {
+                        for (int l = k; l < primals_size; l++)
+                        {
+                            // std::cout << "i: " << i << " j: " << j << " k: " << k << " l: " << l << std::endl;
+                            // curcurt_flattened(i*psize3 + j*psize2 + k*psize + l) = cur(i)*cur(j)*cur(k)*cur(l);
+                            curcurt_normalized_flattened(cur_idx)  = cur_normalized(i)*cur_normalized(j)*cur_normalized(k)*cur_normalized(l); 
+                            cur_idx++;
+                        }
+                    }
+                }
+            }
+
+            // data.L_4_primals = data.L_4_primals + curcurt_flattened;
+            data.L_4_sym_krushkal = data.L_4_sym_krushkal + curcurt_normalized_flattened * cur_norm;
+        
+        }
+
+        // This sets the squared values which scales in the same way as L_4 to make the energy scale invariant. 
+        // L2_to_L2x2(data);
+
+    }
+    
+    
+    
+    
     void L4_krushkal(AppState& appState, ElementData<T_active>& data) { 
         
         // Seperate out the primal dofs into rank-1 components
