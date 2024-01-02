@@ -1,8 +1,8 @@
 include(FetchContent)
 FetchContent_Declare(
   tinyad
-  GIT_REPOSITORY https://github.com/patr-schm/tinyad.git
-  GIT_TAG 75093e14ef0d7bb39657c5f3b2aba1251afaa38c
+  GIT_REPOSITORY git@github.com:the13fools/gpgpt.git
+  GIT_TAG 770dc5011371787ef784019f62794ec560623f79
 )
 FetchContent_GetProperties(tinyad)
 if(NOT tinyad_POPULATED)

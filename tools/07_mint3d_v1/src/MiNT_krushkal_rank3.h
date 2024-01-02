@@ -162,7 +162,7 @@ public:
                 // if (centroid.norm() < 40) { // Custom condition for boundary faces
                 centroid(2) = 0;
                 // if (centroid.norm() < 100) { // cylinder
-                if (centroid.norm() < 49) { // disk_v623
+                if (centroid.norm() < 45) { // disk_v623
 
                     boundaryFaces(i) = 0;
                 } else {
