@@ -60,22 +60,6 @@ void Mint3DHook::drawGUI() {
 
 void Mint3DHook::updateRenderGeometry() {
     // Check if need to reload, and do this if needed.
-    if (appState->shouldReload) {
-        std::cout << "do from file reload" << std::endl;
-        pause();
-        if (!this->isPaused())
-        {
-            std::cout << "failed to pause" << std::endl;
-        }
-        initSimulation();
-    }
-    appState->updateRenderGeometryNextFrameIfPaused = false;
-
-    /// 
-    appState->os->norms_vec = appState->frames.rowwise().norm();
-    std::cout << "appState->os->norms_vec.rows(): " << appState->os->norms_vec.rows() <<  " maxcoeff: " << appState->os->norms_vec.maxCoeff() << std::endl;
-    appState->os->norms_delta = appState->deltas.rowwise().norm();
-
 
     // Set the smoothness and curl to visualize according to the gui 
     switch (appState->cur_moment_view)
@@ -115,6 +99,23 @@ void Mint3DHook::updateRenderGeometry() {
             }
             break;
     }
+
+
+    if (appState->shouldReload) {
+        std::cout << "do from file reload" << std::endl;
+        pause();
+        if (!this->isPaused())
+        {
+            std::cout << "failed to pause" << std::endl;
+        }
+        initSimulation();
+    }
+    appState->updateRenderGeometryNextFrameIfPaused = false;
+
+    /// 
+    appState->os->norms_vec = appState->frames.rowwise().norm();
+    std::cout << "appState->os->norms_vec.rows(): " << appState->os->norms_vec.rows() <<  " maxcoeff: " << appState->os->norms_vec.maxCoeff() << std::endl;
+    appState->os->norms_delta = appState->deltas.rowwise().norm();
 
 
 
@@ -282,8 +283,11 @@ void Mint3DHook::renderRenderGeometry()
     }
 
 
-
-    if (appState->showVectorField) {
+    if (appState->current_element == Field_View::gui_free)
+    {
+        // noop
+    }
+    else if (appState->showVectorField) {
         
         int num_vecs = outputData->frames.size();
         for(int v = 0; v < num_vecs; v++)
