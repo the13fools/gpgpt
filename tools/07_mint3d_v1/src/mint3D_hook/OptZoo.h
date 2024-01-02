@@ -375,7 +375,8 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
     {
         int k = appState.curl_orders[term];
         std::cout << "add L" << k << " curl obj" << std::endl;
-        appState.os->curls_Lks[term].resize(appState.T.rows());
+        // appState.os->curls_Lks[term].resize(appState.T.rows());
+        appState.os->curls_Lks[term] = Eigen::VectorXd::Zero(appState.T.rows());
     }
 
 
@@ -394,6 +395,22 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
         for(int term = 0; term < num_curls; term++)
         {
             int k = appState.curl_orders[term];
+            Eigen::SparseMatrix<double> weights; 
+            switch(k)
+            {
+                case 2:
+                    weights = appState.L2_curl_tensor_weights;
+                    break;
+                case 4:
+                    weights = appState.L4_curl_tensor_weights;
+                    break;
+                case 6:
+                    weights = appState.L6_curl_tensor_weights;
+                    break;
+                default:
+                    std::cout << "curl order not supported" << std::endl;
+                    exit(1);
+            }
 
             // Get variable 2D vertex positions
             Eigen::Index f_idx = element.handle;
@@ -441,7 +458,7 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
             T curl_term = T(0);
             for (int i = 0; i < num_neighbors; i++)
             {
-                    curl_term += (e.neighbor_data.at(i).Lk_edge_contract_diff).squaredNorm();
+                    curl_term += e.neighbor_data.at(i).Lk_edge_contract_diff.transpose() * weights * e.neighbor_data.at(i).Lk_edge_contract_diff;
             }
 
             appState.os->curls_Lks[term](f_idx) = TinyAD::to_passive(curl_term);

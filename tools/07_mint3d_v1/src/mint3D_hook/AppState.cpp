@@ -19,26 +19,50 @@ AppState::AppState()
     std::vector<double> L2_sym_weights = {1., 2., 2., 1., 2., 1.};
     std::vector<double> L4_sym_weights = { 1., 4., 4., 6., 12., 6., 4., 12., 12., 4., 1., 4., 6., 4., 1.};
 
-    for (int i = 0; i < 6; i++)
+    std::vector<double> L2_curl_weights = {1., 2., 1.};
+    std::vector<double> L4_curl_weights =  {1., 4., 6., 4., 1.};
+    std::vector<double> L6_curl_weights =  {1., 6., 15., 20., 15., 6., 1.};
+
+
+    setSparseMetricFromWeights(L2_sym_tensor_weights, L2_sym_weights);
+    setSparseMetricFromWeights(L4_sym_tensor_weights, L4_sym_weights);
+    setSparseMetricFromWeights(L2_curl_tensor_weights, L2_curl_weights);
+    setSparseMetricFromWeights(L4_curl_tensor_weights, L4_curl_weights);
+    setSparseMetricFromWeights(L6_curl_tensor_weights, L6_curl_weights);
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     triplets.push_back(Eigen::Triplet<double>(i, i, L2_sym_weights.at(i)));
+    // }
+
+    // L2_sym_tensor_weights = Eigen::SparseMatrix<double>(6, 6);
+    // L2_sym_tensor_weights.setFromTriplets(triplets.begin(), triplets.end());
+    // L2_sym_tensor_weights.makeCompressed();
+
+    // triplets.clear();
+
+    // for (int i = 0; i < 15; i++)
+    // {
+    //     triplets.push_back(Eigen::Triplet<double>(i, i, L4_sym_weights.at(i)));
+    // }
+
+    // L4_sym_tensor_weights = Eigen::SparseMatrix<double>(15, 15);
+    // L4_sym_tensor_weights.setFromTriplets(triplets.begin(), triplets.end());
+    // L4_sym_tensor_weights.makeCompressed();
+
+}
+
+void AppState::setSparseMetricFromWeights(Eigen::SparseMatrix<double> &M, const std::vector<double> weights)
+{
+    std::vector< Eigen::Triplet<double> > triplets;
+
+    for (int i = 0; i < weights.size(); i++)
     {
-        triplets.push_back(Eigen::Triplet<double>(i, i, L2_sym_weights.at(i)));
+        triplets.push_back(Eigen::Triplet<double>(i, i, weights.at(i)));
     }
 
-    L2_sym_tensor_weights = Eigen::SparseMatrix<double>(6, 6);
-    L2_sym_tensor_weights.setFromTriplets(triplets.begin(), triplets.end());
-    L2_sym_tensor_weights.makeCompressed();
-
-    triplets.clear();
-
-    for (int i = 0; i < 15; i++)
-    {
-        triplets.push_back(Eigen::Triplet<double>(i, i, L4_sym_weights.at(i)));
-    }
-
-    L4_sym_tensor_weights = Eigen::SparseMatrix<double>(15, 15);
-    L4_sym_tensor_weights.setFromTriplets(triplets.begin(), triplets.end());
-    L4_sym_tensor_weights.makeCompressed();
-
+    M = Eigen::SparseMatrix<double>(weights.size(), weights.size());
+    M.setFromTriplets(triplets.begin(), triplets.end());
+    M.makeCompressed();
 }
 
 
@@ -69,7 +93,12 @@ bool AppState::LogToFile(const std::string suffix)
 
 // TODO add moments here 
     Serialization::serializeMatrix(this->frames, this->logFolderPath + "/frames"+ "_" + suffix + ".bfra", num_vecs);
-    Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + suffix + ".bmom", num_vecs);
+
+    // TODO: Save frames prev and visualize diff
+    // Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + suffix + ".bmom", num_vecs);
+    // Serialization::serializeMatrix(this->deltas, this->logFolderPath + "/deltas" + "_" + suffix + ".bmom", num_vecs);
+
+
 
     Serialization::serializeConfig(*this->config, this->logFolderPath + "/config" + "_" + suffix + ".json");
 

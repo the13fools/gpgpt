@@ -170,6 +170,10 @@ public:
     Eigen::SparseMatrix<double> L2_sym_tensor_weights;
     Eigen::SparseMatrix<double> L4_sym_tensor_weights;
 
+    Eigen::SparseMatrix<double> L2_curl_tensor_weights;
+    Eigen::SparseMatrix<double> L4_curl_tensor_weights;
+    Eigen::SparseMatrix<double> L6_curl_tensor_weights;
+
 
     // Per element selection indicies 
     // This is a much more generic way to create optzoo entries.  
@@ -235,6 +239,8 @@ public:
     void serializeData();
     void deserializeData();
     void zeroPassiveVars();
+    void setSparseMetricFromWeights(Eigen::SparseMatrix<double> &M, const std::vector<double> weights);
+
 
     // Additional methods as needed
 };

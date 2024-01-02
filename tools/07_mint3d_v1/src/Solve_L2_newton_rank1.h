@@ -71,10 +71,13 @@ public:
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
-  appState->meshName = "cylinder3k";
+  // appState->meshName = "cylinder3k";
 
   // appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
+    // appState->meshName = "sphere_r0.10";
+        appState->meshName = "sphere_r0.05";
+
 
 
       
@@ -221,7 +224,9 @@ public:
                 // if (centroid.norm() < .3) { // Custom condition for boundary faces
                 // if (centroid.norm() < 4.3) { // disk_3480_tets
                 // if (centroid.norm() < 45) { // disk_v623
-                if (centroid.norm() < 95) { // cylinder3k
+                // if (centroid.norm() < 95) { // cylinder3k
+                if (centroid.norm() < .2) { // cylinder3k
+
 
 
                     boundaryFaces(i) = 0;
@@ -241,9 +246,9 @@ public:
                     frame(2) = 0.;
                     // frame(2) = -vec(1);
                     // frame(3) = vec(0);
-                    appState->frames.row(i) = frame;
+                    // appState->frames.row(i) = frame;
 
-                    // appState->frames.row(i) = frame * 1./(centroid.norm() + 1e-10);
+                    appState->frames.row(i) = frame *  1./(centroid.norm() + 1e-10);
                     // appState->frames.row(i) = frame * (centroid.norm() + 1e-10);
 
                 }

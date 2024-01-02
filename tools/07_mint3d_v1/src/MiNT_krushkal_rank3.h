@@ -60,15 +60,11 @@ public:
 
     virtual void initSimulation()
     {
-
-      // appState->meshName = "circle_1000";
-      // appState->meshName = "circle_subdiv";
-      // appState->meshName = "circle";
-      // appState->meshName = "circle_irreg";
-      // appState->meshName = "circle_irreg_20000";
       
       // appState->meshName = "disk_v210";
-      appState->meshName = "disk_v623"; 
+      // appState->meshName = "disk_v623"; 
+
+      appState->meshName = "cylinder_400";
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
@@ -94,12 +90,16 @@ public:
       
     
     // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
-    OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+    // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
     //   OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
 
     OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
     OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+
+
+    appState->curl_orders = {2,4,6};
+    OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
 
     // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
     // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
@@ -159,7 +159,9 @@ public:
                                             appState->V.row(appState->T(i, 2))+
                                             appState->V.row(appState->T(i, 3))) / 4.0;
 
-                if (centroid.norm() < 40) { // Custom condition for boundary faces
+                // if (centroid.norm() < 40) { // Custom condition for boundary faces
+                if (centroid.norm() < 100) { // cylinder
+
                     boundaryFaces(i) = 0;
                 } else {
                     // Set frame orientation based on the centroid
@@ -269,6 +271,11 @@ public:
       {
         appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
+
+        // Shouldn't be necessary but force this just in case. 
+        if (appState->bound_face_idx(i) == 1) {
+          appState->frames.row(i) = appState->frames_orig.row(i);
+        }
 
         
       }

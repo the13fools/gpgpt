@@ -17,23 +17,26 @@
 ////// Just turn one on at a time, and initize the Mint3DHook with the corresponding problem formulation.
 ////// There's a bit of boiler plate, sorry.  
 ////// Basically, according to the oracle, we store everything in an app state. 
-////// The code is connected to and autodiff with sparse hessians and each of these files sets up a specific problem.  
+////// The code is connected to an autodiff framework called TinyAD which supports with sparse hessians 
+////// Each of these hooks sets up a specific problem, and ultimately corresponds to a different paper figure.
 ////// 
 ////// gpt said the app state looks like a mess, but I don't agree.: 
 //////
 //////  It's convenient. - ME  
 //////  I think it's a good idea to have a single place to store all the data. -GPT 
+//////  So you changed your mind? - ME
+//////  No, I always thought it was a good idea. - GPT
 //////
-////// It could be organized better - ME 
+////// It could be organized better though, no? - ME 
 ////// I think it's organized fine. - GPT
 //////
 ////////////////////////////////////////////
 
 
-#include "Solve_L2_newton_rank1.h"
+// #include "Solve_L2_newton_rank1.h"
 // #include "MiNT_krushkal_rank2.h"
 
-// #include "MiNT_krushkal_rank3.h"
+#include "MiNT_krushkal_rank3.h"
 
 // #include "MiNT_rank2_cylinder_example.h"
 
@@ -158,9 +161,9 @@ int main(int argc, char **argv) {
 ////////////////////////////////////////////
 ////////////////////////////////////////////
 
-  hook = static_cast<Mint3DHook*>(new Solve_L2_newton_rank1());
+  // hook = static_cast<Mint3DHook*>(new Solve_L2_newton_rank1());
     // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank2());
-  // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank3());
+  hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank3());
 //
     // hook = static_cast<Mint3DHook*>(new MiNT_rank2_cylinder_example());
 
