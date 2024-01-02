@@ -62,9 +62,9 @@ public:
     {
       
       // appState->meshName = "disk_v210";
-      // appState->meshName = "disk_v623"; 
+      appState->meshName = "disk_v623"; 
 
-      appState->meshName = "cylinder_400";
+      // appState->meshName = "cylinder_400";
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
@@ -160,7 +160,9 @@ public:
                                             appState->V.row(appState->T(i, 3))) / 4.0;
 
                 // if (centroid.norm() < 40) { // Custom condition for boundary faces
-                if (centroid.norm() < 100) { // cylinder
+                centroid(2) = 0;
+                // if (centroid.norm() < 100) { // cylinder
+                if (centroid.norm() < 49) { // disk_v623
 
                     boundaryFaces(i) = 0;
                 } else {
