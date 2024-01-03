@@ -39,6 +39,13 @@ struct FieldBounds {
     // }
 };
 
+// // Struct to hold bounds for each field view quantity
+// enum BoundaryConditionType {
+//     dirichlet, // i.e. pinned condition 
+//     neumann,
+//     free;
+// };
+
 struct DOFMemoryLayout {
     int start = 0;
     int size = 2; 
@@ -149,6 +156,9 @@ public:
     double cur_max_gradient_norm = 0;
     double cur_step_progress = 0;
     double cur_step_time = 0;
+    double solve_residual = 0;
+    double rhs_norm = 0;
+    double solve_rel_residual = 0;
 
     // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;
@@ -204,6 +214,7 @@ public:
     bool override_bounds_active = false;
     bool show_frames = true;
     bool show_frames_as_lines = true;
+    bool loadedPreviousRun = false;
     int max_saved_index = 0;
 
     // double L4_alpha = 0;
@@ -213,6 +224,7 @@ public:
 
 
     bool LogToFile(const std::string suffix); // Log based on fieldViewActive state
+    void LogCurrentOptStats();
 
 
     // simulation metadata 

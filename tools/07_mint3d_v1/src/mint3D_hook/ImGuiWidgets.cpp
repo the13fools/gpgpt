@@ -50,12 +50,43 @@ namespace ImGuiWidgets {
         int prevFileIndex = *fileIndex;
 
         // appState.currentFileIndex, 0, appState.fileList.size() - 1
+        ImGui::PushItemWidth(250);
         if (ImGui::SliderInt("File Index", fileIndex, minIndex, maxIndex) )
         {
             std::cout << "file index changed" << std::endl;
             std::cout << "prev file index " << prevFileIndex << " | current file index " << *fileIndex <<  std::endl;
             appState.shouldReload = true;
         }
+        ImGui::PopItemWidth();
+        
+        ImGui::SameLine();
+
+        ImGui::PushButtonRepeat(true);
+        if (ImGui::ArrowButton("##file_scrub_der", ImGuiDir_Left) && *fileIndex > minIndex) { 
+            
+            appState.currentFileID--; 
+            appState.shouldReload = true;
+        }
+        ImGui::SameLine(0.0f, 5.0f);
+        if (ImGui::ArrowButton("##file_scrub_incr", ImGuiDir_Right) && *fileIndex < maxIndex) { 
+            appState.currentFileID++; 
+            appState.shouldReload = true;
+        }
+        ImGui::PopButtonRepeat();
+
+        if (appState.shouldReload && !appState.loadedPreviousRun)
+        {
+            appState.shouldLogData = false;
+        }
+
+            
+
+        // if (ImGui::InputInt("bump cur file id",fileIndex))
+        // {
+        //     appState.shouldReload = true;
+        // }
+        
+        
     }
 
     // Function to display checkboxes for field views in ImGui
@@ -112,8 +143,10 @@ namespace ImGuiWidgets {
                 // ImGui::Text("Current Step Time: %f", appState.currentStepTime);
         ImGui::Text("Current Energy: %f", appState.os->cur_global_objective_val);
         ImGui::Text("Step Progress: %e | Max Grad Norm: %e | Step Time: %e ms", appState.cur_step_progress, appState.cur_max_gradient_norm, appState.cur_step_time);
-        ImGui::Text("smooth primal %.1f bound %.1f curl %.1f smooth %.5f ", (float) appState.config->w_smooth_vector, (float) appState.config->w_bound, (float) appState.config->w_curl, (float) appState.config->w_smooth);
-        ImGui::Text("Attenuate weight %e, actual smoothness %e", appState.config->w_attenuate, appState.config->w_attenuate*appState.config->w_smooth);
+        // ImGui::Text("smooth primal %.1f bound %.1f curl %.1f smooth %.5f ", (float) appState.config->w_smooth_vector, (float) appState.config->w_bound, (float) appState.config->w_curl, (float) appState.config->w_smooth);
+        ImGui::Text("Attenuate weight %e, actual curl weight %e", appState.config->w_attenuate, 1./appState.config->w_attenuate*appState.config->w_curl);
+        ImGui::Text( "Solve Residual %e | gradient norm  %e | ratio %e ", appState.solve_residual, appState.rhs_norm, appState.solve_rel_residual);
+
         ImGui::Text("Relative Residual %e, Absolute Residual %e, Convergence EPS %e", appState.cur_rel_residual, appState.cur_abs_residual, appState.convergenceEpsilon);
             // 
         //     std::cout << "prev obj " << f << " | _prev_step_progress: " << _prev_step_progress << " | newton dec: " << _dec << "  | max_gradient_norm: " << _max_gradient_norm << std::endl;
@@ -395,6 +428,7 @@ namespace ImGuiWidgets {
         ImGui::Text("Plot: %s", label);
         ImGui::PlotLines(label, &values[0], static_cast<int>(values.size()), 0, NULL, minY, maxY, ImVec2(0, 80));
     }
+        // ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
 
     // void if(appState.current_element == )
 
@@ -431,9 +465,16 @@ namespace ImGuiWidgets {
         ImGui::End();
 
         // Display run information
-         ImGui::Begin("Optimization State");
+        ImGui::Begin("Optimization State");
         ShowRunInfo(appState);
         ImGui::End();
+
+        ImGui::Begin("Convergence Plot'/////");
+        ShowRunInfo(appState);
+        ImGui::End();
+
+
+        // ShowPlot
 
          ImGui::ShowDemoWindow(); // TODO remove this
 

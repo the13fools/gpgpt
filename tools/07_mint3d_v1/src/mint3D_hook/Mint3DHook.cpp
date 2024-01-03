@@ -124,6 +124,9 @@ void Mint3DHook::updateRenderGeometry() {
     Eigen::VectorXd tmp = opt->get_current_x();
     std::cout << tmp.rows() << " " << tmp.cols() << std::endl;
 
+  
+    
+
     if ( tmp.rows() == 0 )
     {
         std::cout << "ERROR INITIALIZING OPTIMIZATION PROBLEM - OPT STATE CURRENTLY EMPTY" << std::endl;
@@ -135,6 +138,11 @@ void Mint3DHook::updateRenderGeometry() {
             double cur_obj = opt->eval_func_at(tmp);
 
             appState->os->cur_global_objective_val = cur_obj;
+
+            // opt->eval_func_with_derivatives(tmp);
+
+            // appState->cur_abs_residual = opt->_dec;
+            // appState->cur_max_gradient_norm = opt->_max_gradient_norm;
 
             std::cout << "cur_obj " << cur_obj << std::endl;
         }
@@ -179,24 +187,51 @@ void Mint3DHook::updateRenderGeometry() {
     // outputData->frames.resize(appState->frames.rows(), 3);
     // outputData->frames << appState->frames, Eigen::MatrixXd::Zero(appState->frames.rows(), 1);
 
-    if (appState->shouldReload)
+    // if (appState->shouldReload)
+    // {
+    //     appState->currentFileID--;
+    //     appState->shouldReload = false;
+    // }
+
+    // // Log data if necessary
+    // if (appState->shouldLogData) {
+    //     // Serialize and save the frame data
+    //     // appState->currentFileID++;
+    //     appState->max_saved_index = appState->max_saved_index + 1;
+    //     std::string suffix = std::to_string(appState->max_saved_index + 100000);
+    //     appState->LogToFile(suffix);
+
+    //     if (appState->max_saved_index == appState->currentFileID + 1)
+    //     {
+    //         appState->currentFileID = appState->max_saved_index;
+    //     }
+
+
+    //     // Additional logging for any other fields in AppState as needed
+    // }
+
+     if (appState->shouldReload)
     {
         appState->currentFileID--;
         appState->shouldReload = false;
     }
 
-    // Log data if necessary
-    if (appState->shouldLogData) {
-        // Serialize and save the frame data
+ 
+     // Log data if necessary
+     if (appState->shouldLogData) {
+         // Serialize and save the frame data
         appState->currentFileID++;
         std::string suffix = std::to_string(appState->currentFileID + 100000);
-        appState->LogToFile(suffix);
-
+         appState->LogToFile(suffix);
+ 
         if (appState->max_saved_index < appState->currentFileID)
         {
             appState->max_saved_index = appState->currentFileID;
         }
-    }
+
+     }
+
+
     appState->LogToFile("curr");
 
 
@@ -454,27 +489,11 @@ void Mint3DHook::initSimulation() {
             initConfigValues();
         }
 
-        loadPrimaryData();
-        loadGuiState();
-
-    }
-
-    if (appState->shouldReload == true)
-    {
-        std::cout << " reload in progress " << std::endl;
-
-        if (appState->currentFileID == -1)
-        {
-            this->resetAppState();
-            appState->currentFileID = appState->max_saved_index;
-            appState->config = std::make_unique<MyConfig>(); // Assign default values to the config
-            initConfigValues();
-        }
-
+        
 
         loadPrimaryData();
         loadGuiState();
-        // 
+
     }
 
     if (create_new_dir)
@@ -482,6 +501,7 @@ void Mint3DHook::initSimulation() {
         this->resetAppState();
         initializeLogFolder();
         appState->directoryPath = appState->logFolderPath;
+        appState->currentFileID = 0;
 
     }
 
@@ -610,13 +630,16 @@ bool Mint3DHook::simulateOneStep() {
         appState->cur_max_gradient_norm = opt->_max_gradient_norm;
         appState->cur_step_progress = opt->_prev_step_progress;
         appState->cur_step_time = opt->_prev_step_time;
+        appState->solve_residual = opt->_solve_residual;
+        appState->rhs_norm = opt->_rhs_norm;
+        appState->solve_rel_residual = opt->_solve_residual / opt->_rhs_norm;
         // std::cout << "cur_obj: " <<  cur_obj  << " conv_eps: " << convergence_eps << "rel_res_correction: " << rel_res_correction << std::endl;
 
         // Three conditions for convergence:
         // 1. Relative residual is small
         // 2. Absolute residual is small
         // 3. Gradient norm is small or step progress is vanishing/negative (line search failing to make progress)
-        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->_prev_step_progress < 1e-10)) 
+        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->_prev_step_progress < 1e-12)) 
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;
@@ -626,6 +649,7 @@ bool Mint3DHook::simulateOneStep() {
             // In principle should load next config because an optimziation might have a schedule.
             //  cur_iter = max_iters; // break
             //  adhook.reset_params();
+            opt->reset_params();
         }
 
         updateAppStateFromOptState();
@@ -655,6 +679,8 @@ bool Mint3DHook::simulateOneStep() {
 void Mint3DHook::resetAppState() {
     // Resetting simulation parameters to default or initial values
     appState->currentIteration = 0;
+    appState->max_saved_index = 0;
+
     // appState->currentFileID = 0;
     appState->maxIterations = 9999; // Default maximum iterations
     appState->convergenceEpsilon = 1e-12;// 1e-9;
@@ -839,6 +865,10 @@ void Mint3DHook::initializeLogFolder() {
 
     // Create the directory using std::filesystem
     std::filesystem::create_directories(appState->logFolderPath);
+
+    std::filesystem::create_directories(appState->logFolderPath + "/outer_iter_ends");
+    std::filesystem::create_directories(appState->logFolderPath + "/outer_iter_starts");
+
 
     // Inform the user about the log folder creation
     std::cout << "Log folder created at: " << appState->logFolderPath << std::endl;

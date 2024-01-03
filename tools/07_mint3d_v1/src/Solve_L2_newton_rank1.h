@@ -67,7 +67,7 @@ public:
       // appState->meshName = "circle_irreg_20000";
 
       // appState->meshName = "disk_v210";
-      // appState->meshName = "disk_v623";
+      appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
@@ -76,7 +76,7 @@ public:
   // appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
     // appState->meshName = "sphere_r0.10";
-        appState->meshName = "sphere_r0.05";
+        // appState->meshName = "sphere_r0.05";
 
 
 
@@ -116,7 +116,7 @@ public:
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      appState->curl_orders = {2,4,6};
+      appState->curl_orders = {2,4};
       OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
 
       
@@ -223,9 +223,9 @@ public:
                 //     boundaryFaces(i) = -1; // Mark for special handling or exclusion
                 // if (centroid.norm() < .3) { // Custom condition for boundary faces
                 // if (centroid.norm() < 4.3) { // disk_3480_tets
-                // if (centroid.norm() < 45) { // disk_v623
+                if (centroid.norm() < 45) { // disk_v623
                 // if (centroid.norm() < 95) { // cylinder3k
-                if (centroid.norm() < .2) { // cylinder3k
+                // if (centroid.norm() < .2) { // cylinder3k
 
 
 
@@ -312,7 +312,7 @@ public:
           appState->frames.row(i) = appState->frames_orig.row(i);
         }
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
-
+    
         
       }
 

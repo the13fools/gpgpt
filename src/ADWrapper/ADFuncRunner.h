@@ -71,6 +71,8 @@ class ADFuncRunner
         double _prev_step_progress;
         double _line_search_step_size;
         double _prev_step_time;
+        double _solve_residual; 
+        double _rhs_norm; 
         
 
 

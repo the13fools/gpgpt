@@ -48,6 +48,8 @@
             this->eval_func_with_derivatives(x);
             double f = this->get_fval_at_x();
             Eigen::VectorXd g = this->get_grad_at_x();
+            _rhs_norm = g.squaredNorm();
+
             Eigen::SparseMatrix<double> H = this->get_hessian_at_x();
 
             Eigen::SparseMatrix<double> H_proj;
@@ -79,6 +81,10 @@
                 d = TinyAD::newton_direction(g, H_proj, solver, 0.);
                 dec = TinyAD::newton_decrement(d, g);
 
+                _solve_residual = (H_proj * d + g).squaredNorm();
+                
+              
+
 
                 // Decide when to switch to true hessian 
                 if ( dec / f < 1e-3)
@@ -94,6 +100,7 @@
                 d = TinyAD::newton_direction(g, H, solver, identity_weight);
                 dec = TinyAD::newton_decrement(d, g);
                 identity_weight = identity_weight / 2.;
+                _solve_residual = (H * d + g).squaredNorm();
               }
               
             }
@@ -108,6 +115,8 @@
               H_proj = this->get_hessian_at_x();
               d = TinyAD::newton_direction(g, H_proj, solver);
               dec = TinyAD::newton_decrement(d, g);
+
+              _solve_residual = (H_proj * d + g).squaredNorm();
               if ( !useProjHessian )
                 identity_weight = identity_weight * 10.;
               else 
@@ -119,6 +128,8 @@
                 std::cout << H_proj << std::endl;
               }
             }
+
+            std::cout << "Solve Residual " << std::scientific << _solve_residual << " | gradient norm " << _rhs_norm << " | ratio " << _solve_residual / _rhs_norm << std::endl;
 
             auto t2 = std::chrono::high_resolution_clock::now();
             auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);

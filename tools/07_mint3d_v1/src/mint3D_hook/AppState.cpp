@@ -6,6 +6,8 @@
 #include <iostream>
 #include <Eigen/Sparse>
 
+#include <fstream>
+
 // Constructor here
 AppState::AppState()
 {
@@ -102,49 +104,68 @@ bool AppState::LogToFile(const std::string suffix)
 
     Serialization::serializeConfig(*this->config, this->logFolderPath + "/config" + "_" + suffix + ".json");
 
+    LogCurrentOptStats();
 
-          // Here, we'll also log relevant data to files based on the fieldViewActive flags
+    // Here, we'll also log relevant data to files based on the fieldViewActive flags
 
-        // Log other Eigen::Vectors based on fieldViewActive flags
-        for (int i = 0; i < (int) Field_View::Element_COUNT; ++i) {
-            if (this->fieldViewActive[i]) {
-                // Determine the file path based on the field view
-                Field_View cfv = static_cast<Field_View>(i);
-                std::string stub = fieldViewToFileStub(cfv);
-                std::string filePath = this->logFolderPath + "/" + stub + "_" + suffix + ".bdat"; // better to call these bdat
+    // Log other Eigen::Vectors based on fieldViewActive flags
+    for (int i = 0; i < (int) Field_View::Element_COUNT; ++i) {
+        if (this->fieldViewActive[i]) {
+            // Determine the file path based on the field view
+            Field_View cfv = static_cast<Field_View>(i);
+            std::string stub = fieldViewToFileStub(cfv);
+            std::string filePath = this->logFolderPath + "/" + stub + "_" + suffix + ".bdat"; // better to call these bdat
 
-                // Serialize the corresponding Eigen::Vector
-                switch (static_cast<Field_View>(i)) {
-                    case Field_View::vec_norms:
-                        Serialization::serializeVector(os->norms_vec, filePath);
-                        break;
-                    case Field_View::delta_norms:
-                        Serialization::serializeVector(os->norms_delta, filePath);
-                        break;
-                    case Field_View::vec_dirch:
-                        Serialization::serializeVector(os->smoothness_primal, filePath);
-                        break;
-                    case Field_View::moment_dirch:
-                        // Serialization::serializeVector(os->smoothness_L2, filePath);
-                        // TODO FIX THIS LOGGING
-                        Serialization::serializeVector(os->smoothness_sym, filePath);
-                        break;
-                    case Field_View::primal_curl_residual:
-                        Serialization::serializeVector(os->curls_primal, filePath);
-                        break;
-                    case Field_View::sym_curl_residual:
-                        Serialization::serializeVector(os->curls_sym, filePath);
-                        break;
-                    // ... handle other Field_View cases as needed
-                    default:
-                        break; // Unknown or unsupported field view
-                }
+            // Serialize the corresponding Eigen::Vector
+            switch (static_cast<Field_View>(i)) {
+                case Field_View::vec_norms:
+                    Serialization::serializeVector(os->norms_vec, filePath);
+                    break;
+                case Field_View::delta_norms:
+                    Serialization::serializeVector(os->norms_delta, filePath);
+                    break;
+                case Field_View::vec_dirch:
+                    Serialization::serializeVector(os->smoothness_primal, filePath);
+                    break;
+                case Field_View::moment_dirch:
+                    // Serialization::serializeVector(os->smoothness_L2, filePath);
+                    // TODO FIX THIS LOGGING
+                    Serialization::serializeVector(os->smoothness_sym, filePath);
+                    break;
+                case Field_View::primal_curl_residual:
+                    Serialization::serializeVector(os->curls_primal, filePath);
+                    break;
+                case Field_View::sym_curl_residual:
+                    Serialization::serializeVector(os->curls_sym, filePath);
+                    break;
+                // ... handle other Field_View cases as needed
+                default:
+                    break; // Unknown or unsupported field view
             }
         }
-
+    }
 
     return true;
 }
+
+void AppState::LogCurrentOptStats()
+{
+    // std::ofstream out;
+    // out.open("myfile.txt", std::ios::app);
+    std::ofstream energyOut(this->logFolderPath + "/total_energy.txt", std::ios::app);
+    energyOut << this->os->cur_global_objective_val << std::endl;
+    energyOut.close();
+
+    std::ofstream gradNormOut(this->logFolderPath + "/max_grad_norm.txt", std::ios::app);
+    gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    gradNormOut.close();
+
+    // ofstream energyOut(this->logFolderPath + "/total_energy.txt", ios::app);
+    // energyOut << this.cur_max_gradient_norm() << std::endl;
+    // energyOut.close();
+}
+
+
 
 void AppState::zeroPassiveVars()
 {

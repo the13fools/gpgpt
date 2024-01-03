@@ -47,12 +47,16 @@ class ADFunc_TinyAD_Instance : public ADFuncRunner {
         _fun_val = f;
         _grad = g; 
         _hess = H_proj;
+
+        // _max_gradient_norm = g.cwiseAbs().maxCoeff(); 
     }; 
     void eval_func_and_proj_hess_to_psd_local(const Eigen::VectorXd &x){
         auto [f_h, g_h, H_proj_h] = _func->eval_with_hessian_proj(x);
         _fun_val = f_h;
         _grad = g_h; 
         _hess = H_proj_h;
+
+        // _max_gradient_norm = g.cwiseAbs().maxCoeff(); 
 
         // d = TinyAD::newton_direction(g, H_proj, solver);
         // dec = TinyAD::newton_decrement(d, g);
