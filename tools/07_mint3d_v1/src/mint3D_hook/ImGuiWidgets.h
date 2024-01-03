@@ -14,7 +14,8 @@ namespace ImGuiWidgets {
     void ShowFileScrubber(AppState& appState);
     void ShowFieldViewCheckboxes(AppState& appState);
     void ShowRunInfo(AppState& appState);
-    void ShowPlot(const std::vector<double>& data, const char* label, float minY, float maxY);
+    void ShowPlots(AppState& appState);
+    // void ShowPlot(const std::vector<double>& data, const char* label, float minY, float maxY);
     void DrawFileLoader(AppState& appState);
     void AddFieldViewScalarsToPolyscope(AppState& appState);
     void ShowFieldViewCheckboxesWithSliders(AppState& appState);

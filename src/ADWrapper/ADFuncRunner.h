@@ -62,6 +62,8 @@ class ADFuncRunner
         bool useProjHessian = true;
         double prev_energy = -100000.;
         double identity_weight = 1e-8;  // This term controls how much identity we add to the hessian to make it psd.  
+        double identity_min = 1e-14;
+        bool identity_vanished = false;
 
         // current state  
         Eigen::VectorXd _cur_x;

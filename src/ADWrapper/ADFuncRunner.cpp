@@ -22,6 +22,7 @@
         useProjHessian = true;
         prev_energy = -100000.;
         identity_weight = 1e-8; 
+        identity_vanished = false;
     }
     
     
@@ -66,6 +67,47 @@
             {
               prev_energy = f * 1.00000000001;
             }
+
+            _cur_x = x; 
+
+            std::cout << "current identity regularizer" << identity_weight << std::endl;
+            try
+            {
+
+              d = TinyAD::newton_direction(g, H, solver, identity_weight);
+              Eigen::VectorXd tmp = x + d;
+              double obj_after_step = this->eval_func_at(tmp);
+              dec = cur_obj - obj_after_step;
+              _solve_residual = (H * d + g).squaredNorm();
+
+              if ( dec > 0 )
+              {
+                _cur_x = tmp; 
+                identity_weight = std::max(identity_weight / 2., identity_min);
+                if (identity_weight == identity_min)
+                {
+                  identity_vanished = true;
+                }
+                else 
+                {
+                  identity_vanished = false;
+                }
+              }
+              else 
+              {
+                identity_weight *= 10.;
+              }
+              // dec = TinyAD::newton_decrement(d, g);
+            }
+            catch(const std::exception& e)
+            {
+              identity_weight *= 10.;
+              // std::cerr << e.what() << '\n';
+            }
+            
+
+
+            /*
             
             try
             {
@@ -99,7 +141,17 @@
               {
                 d = TinyAD::newton_direction(g, H, solver, identity_weight);
                 dec = TinyAD::newton_decrement(d, g);
-                identity_weight = identity_weight / 2.;
+                identity_weight = std::max(identity_weight / 2., identity_min);
+                if (identity_weight == identity_min)
+                {
+                  identity_vanished = true;
+                }
+                else 
+                {
+                  identity_vanished = false;
+                }
+              
+
                 _solve_residual = (H * d + g).squaredNorm();
               }
               
@@ -131,12 +183,16 @@
 
             std::cout << "Solve Residual " << std::scientific << _solve_residual << " | gradient norm " << _rhs_norm << " | ratio " << _solve_residual / _rhs_norm << std::endl;
 
+          */
+
+
+
             auto t2 = std::chrono::high_resolution_clock::now();
             auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
             // std::cout << ms_int.count() << "ms\n";
 
 
-            _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
+            // _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
             _newton_dir = d;
             _dec = dec;
             _max_gradient_norm = g.cwiseAbs().maxCoeff(); 

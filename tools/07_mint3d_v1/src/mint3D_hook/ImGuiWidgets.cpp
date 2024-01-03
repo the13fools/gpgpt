@@ -5,6 +5,7 @@
 #include "FieldView.h"
 
 #include "MyConfig.h"
+#include "implot/implot.h"
 
 namespace ImGuiWidgets {
 
@@ -152,8 +153,6 @@ namespace ImGuiWidgets {
         //     std::cout << "prev obj " << f << " | _prev_step_progress: " << _prev_step_progress << " | newton dec: " << _dec << "  | max_gradient_norm: " << _max_gradient_norm << std::endl;
 
         //   std::cout << "finshed newton step" << " | solve took " << _prev_step_time << " ms " << std::endl;
-
-
 
 
         ImGui::Text("TODO");
@@ -423,11 +422,72 @@ namespace ImGuiWidgets {
         
     }
 
-    // Function to display a plot in ImGui
-    void ShowPlot(const char* label, const std::vector<float>& values, float minY, float maxY) {
-        ImGui::Text("Plot: %s", label);
-        ImGui::PlotLines(label, &values[0], static_cast<int>(values.size()), 0, NULL, minY, maxY, ImVec2(0, 80));
+    void ShowPlots(AppState& appState)
+    {
+        ImPlot::CreateContext();
+
+// static double xs[1001], ys1[1001], ys2[1001], ys3[1001];
+//     for (int i = 0; i < 1001; ++i) {
+//         xs[i]  = i*0.1f;
+//         ys1[i] = sin(xs[i]) + 1;
+//         ys2[i] = log(xs[i]);
+//         ys3[i] = pow(10.0, xs[i]);
+//     }
+    if (ImPlot::BeginPlot("Log Plot", ImVec2(-1,0))) {
+        // conf.values.ys = ;
+        // conf.values.count = appState.energy_trace.size();
+
+        int iter_count = appState.energy_trace.size();
+        // ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+        ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
+
+        ImPlot::SetupAxesLimits(0, iter_count, 1e-20, 1e10);
+        ImPlot::PlotLine("objective val", &(appState.energy_trace[0]), iter_count);
+        ImPlot::PlotLine("relative solver residual", &(appState.solve_rel_residual_trace[0]), iter_count);
+        ImPlot::PlotLine("max gradient norm", &(appState.cur_max_gradient_norm_trace[0]), iter_count);
+        ImPlot::PlotLine("Identity Weight", &(appState.identity_weight_trace[0]), iter_count);
+
+        // ImPlot::PlotLine("f(x) = x", &(appState.energy_trace[0]), iter_count);
+        // ImPlot::PlotLine("f(x) = sin(x)+1", xs, ys1, 1001);
+        // ImPlot::PlotLine("f(x) = log(x)",   xs, ys2, 1001);
+        // ImPlot::PlotLine("f(x) = 10^x",     xs, ys3, 21);
+        ImPlot::EndPlot();
     }
+
+    ImPlot::DestroyContext();
+
+
+
+
+
+
+        // ImGui::PlotConfig conf;
+        // // conf.values.xs = x_data; // this line is optional
+        // // conf.values.ys = y_data;
+        // conf.values.ys = &(appState.energy_trace[0]);
+        // conf.values.count = appState.energy_trace.size();
+
+        // conf.scale.min = 0;
+        // conf.scale.max = 1e1;
+        // // conf.scale.type = conf.scale.Log10;
+        
+        // conf.tooltip.show = true;
+        // conf.tooltip.format = "x=%.2f, y=%.2f";
+        // conf.grid_x.show = true;
+        // conf.grid_y.show = true;
+        // conf.frame_size = ImVec2(400, 400);
+        // conf.line_thickness = 2.f;
+
+        // ImGui::Plot("plot", conf);
+    }
+
+
+
+    // // Function to display a plot in ImGui
+    // void ShowPlot(const char* label, const std::vector<float>& values, float minY, float maxY) {
+    //     ImGui::Text("Plot: %s", label);
+    //     ImGui::PlotLines(label, &values[0], static_cast<int>(values.size()), 0, NULL, minY, maxY, ImVec2(0, 80));
+    // }
         // ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
 
     // void if(appState.current_element == )
@@ -469,8 +529,8 @@ namespace ImGuiWidgets {
         ShowRunInfo(appState);
         ImGui::End();
 
-        ImGui::Begin("Convergence Plot'/////");
-        ShowRunInfo(appState);
+        ImGui::Begin("Convergence Plots");
+        ShowPlots(appState);
         ImGui::End();
 
 

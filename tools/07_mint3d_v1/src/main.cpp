@@ -7,6 +7,7 @@
 
 #include "polyscope/polyscope.h"
 
+
 // #include "VizHook.h"
 
 
@@ -98,6 +99,7 @@ void drawGUICallback()
             if (ImGui::Button("Run/Pause Sim"))
             {
                 toggleSimulation();
+                // hook->appState->turn logging on 
             }
             if (ImGui::Button("Reset Sim"))
             {

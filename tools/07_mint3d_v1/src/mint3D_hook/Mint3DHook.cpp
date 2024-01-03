@@ -138,6 +138,7 @@ void Mint3DHook::updateRenderGeometry() {
             double cur_obj = opt->eval_func_at(tmp);
 
             appState->os->cur_global_objective_val = cur_obj;
+            // appState->energy_trace.push_back(cur_obj);
 
             // opt->eval_func_with_derivatives(tmp);
 
@@ -228,6 +229,11 @@ void Mint3DHook::updateRenderGeometry() {
         {
             appState->max_saved_index = appState->currentFileID;
         }
+
+        appState->energy_trace.push_back(appState->os->cur_global_objective_val);
+        appState->cur_max_gradient_norm_trace.push_back(appState->cur_max_gradient_norm);
+        appState->solve_rel_residual_trace.push_back(appState->solve_rel_residual);
+        appState->identity_weight_trace.push_back(appState->identity_weight);
 
      }
 
@@ -633,13 +639,20 @@ bool Mint3DHook::simulateOneStep() {
         appState->solve_residual = opt->_solve_residual;
         appState->rhs_norm = opt->_rhs_norm;
         appState->solve_rel_residual = opt->_solve_residual / opt->_rhs_norm;
+        appState->identity_weight = opt->identity_weight;
         // std::cout << "cur_obj: " <<  cur_obj  << " conv_eps: " << convergence_eps << "rel_res_correction: " << rel_res_correction << std::endl;
+
+
+
+
+
 
         // Three conditions for convergence:
         // 1. Relative residual is small
         // 2. Absolute residual is small
         // 3. Gradient norm is small or step progress is vanishing/negative (line search failing to make progress)
-        if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->_prev_step_progress < 1e-12)) 
+        // if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->identity_vanished)) 
+        if (appState->cur_max_gradient_norm < 1e-8 || opt->identity_weight > 1e12)
         {
             std::cout << "**** Converged current step ****" << std::endl;
             std::cout << "Current Objective is " << opt->get_fval_at_x() << std::endl;

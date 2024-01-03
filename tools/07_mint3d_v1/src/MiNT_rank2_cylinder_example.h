@@ -1,5 +1,5 @@
-#ifndef SOLVE_L2_NETWON_RANK1_H
-#define SOLVE_L2_NETWON_RANK1_H
+#ifndef MINT_RANK2_CYLINDER_EXAMPLE_H
+#define MINT_RANK2_CYLINDER_EXAMPLE_H
 
 
 
@@ -17,36 +17,38 @@
 #include "ADWrapper/ADFuncRunner.h"
 #include "ADWrapper/ADFunc_TinyAD_Instance.h"
 
-#include <igl/on_boundary.h>
 
+#include <igl/on_boundary.h>
 #include <igl/writeDMAT.h>
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 3
+#define DOFS_PER_ELEMENT 6
 
 
-class Solve_L2_newton_rank1 : public Mint3DHook
+class MiNT_rank2_cylinder_example : public Mint3DHook
 {
 public:
-    Solve_L2_newton_rank1() : Mint3DHook(new AppState()) {
+    MiNT_rank2_cylinder_example() : Mint3DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
-      appState->solveType = "L2_newton_rank1";
-      appState->solveDescription = "L2_newton_rank1";
+      appState->solveType = "MiNT_rank2_cylinder_example";
+      appState->solveDescription = "This solver optimizes for an integrable rank 2 vector field on a disk";
 
 
 
 
-      appState->primals_layout = {0, 3};
-      appState->moments_layout = {0, 0};
+      appState->primals_layout = {0, 6, 2}; 
+      // This says 4 dofs stored starting at 0 divided into 2 vectors 
+      
+    appState->moments_layout = {0, 0};
       // appState->deltas_layout = {2, 4};
-      appState->deltas_layout = {3, 0};
+      appState->deltas_layout = {0, 0};
 
       assert(DOFS_PER_ELEMENT == (appState->primals_layout.size + appState->moments_layout.size + appState->deltas_layout.size));
 
     }
 
-    ~Solve_L2_newton_rank1(){
+    ~MiNT_rank2_cylinder_example(){
       // delete _opt;
     }
 
@@ -59,45 +61,32 @@ public:
     virtual void initSimulation()
     {
 
-
-        // appState->meshName = "circle_1000";
+      // appState->meshName = "circle_1000";
       // appState->meshName = "circle_subdiv";
       // appState->meshName = "circle";
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
-
+      
       // appState->meshName = "disk_v210";
-      appState->meshName = "disk_v623";
+      // appState->meshName = "disk_v623"; 
       // appState->meshName = "disk_v1000";
-      // appState->meshName = "disk_3480_tets";
+
+       appState->meshName = "cylinder3k";
+//   appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
-  // appState->meshName = "cylinder3k";
-
-  // appState->meshName = "sphere_r0.17";
-    // appState->meshName = "sphere_r0.14";
-    // appState->meshName = "sphere_r0.10";
-        // appState->meshName = "sphere_r0.05";
-
-
 
       
-
-      
-
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
       Mint3DHook::initSimulation();
 
       // move this inside mint2d
-      appState->solveStatus = "init L2 newton rank 1";
+      appState->solveStatus = "init " + appState->solveType;
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
       func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->T.rows()));
-
-
-      // func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->F.rows()));
 
       /////////////////////////////
       /// Add terms to the objective function here.  
@@ -108,23 +97,28 @@ public:
       ///
       /// convenient auto-diff with sparse hessians is quite new, there's a lot to explore! 
       /////////////////////////////
-      // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+    //    OptZoo::addConstTestTerm(func, *appState);
       
-      // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+    
+    // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+    // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
-      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
-      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
-      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+    //   OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
 
-      appState->curl_orders = {2,4};
-      OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
+    OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
+    OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      
-      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
-      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
 
+    appState->curl_orders = {2, 4, 6};
+    OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
+
+
+    // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
+    // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L4(func, *appState);
 
       // Update params specific to this solve here
+
+
       
 
 
@@ -155,46 +149,6 @@ public:
 
     }
 
-// Init state and clone it to the appstate in order to make the visualization accurate.  
-    void init_opt_state()
-    {
-      Eigen::VectorXd x = _opt->_cur_x;
-      int nelem = appState->T.rows();
-      int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
-
-      // Eigen::VectorXd x = opt->get_current_x();
-      for(int i = 0; i < nelem; i++)
-      {
-        appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
-        // appState->frames.row(i) = Eigen::VectorXd::Ones(DOFS_PER_ELEMENT);
-
-
-        if (appState->bound_face_idx(i) == 1) {
-          appState->frames.row(i) = appState->frames_orig.row(i);
-        }
-
-        // Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
-        //                                     appState->V.row(appState->T(i, 1)) +
-        //                                     appState->V.row(appState->T(i, 2)) +
-        //                                     appState->V.row(appState->T(i, 3))) / 4.0;
-
-        // double r = centroid.norm() + 1e-10;
-        // Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
-        // appState->frames.row(i) = frame_cur;
-
-
-        // appState->frames.row(i)
- 
-        // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
-        x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
-        // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
-        
-      }
-      _opt->_cur_x = x;
-
-      appState->config->w_smooth_vector = 0;
-
-    }
 
     virtual void initBoundaryConditions() {
         // Assuming boundary faces are identified in AppState
@@ -214,43 +168,26 @@ public:
             if (boundaryFaces(i) == 1) { // If face is on the boundary
                 Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
                                             appState->V.row(appState->T(i, 1)) +
-                                            appState->V.row(appState->T(i, 2)) + 
+                                            appState->V.row(appState->T(i, 2))+
                                             appState->V.row(appState->T(i, 3))) / 4.0;
-
-                centroid(2) = 0.;
-
-                // if (centroid.norm() < 0.45) { // Custom condition for boundary faces
-                //     boundaryFaces(i) = -1; // Mark for special handling or exclusion
-                // if (centroid.norm() < .3) { // Custom condition for boundary faces
-                // if (centroid.norm() < 4.3) { // disk_3480_tets
-                if (centroid.norm() < 45) { // disk_v623
-                // if (centroid.norm() < 95) { // cylinder3k
-                // if (centroid.norm() < .2) { // cylinder3k
-
-
-
+                centroid(2) = 0;
+                if (centroid.norm() < 100) { // Custom condition for boundary faces
                     boundaryFaces(i) = 0;
                 } else {
                     // Set frame orientation based on the centroid
                     Eigen::Vector2d vec = Eigen::Vector2d(centroid.x(), centroid.y()).normalized();
 
                     Eigen::VectorXd frame = Eigen::VectorXd::Zero(DOFS_PER_ELEMENT);
-                    double theta = atan2(vec(1),vec(0)); // acos(vec(1)) * .5;
-                    // frame(0) = cos(theta);
-                    // frame(1) = sin(theta);
-                    // frame(2) = 0.;
 
-
-                    frame(0) = -sin(theta);
-                    frame(1) = cos(theta);
+                    double theta = atan2(vec(1),vec(0)) * .25; // acos(vec(1)) * .5;
+                    frame(0) = cos(theta);
+                    frame(1) = sin(theta);
                     frame(2) = 0.;
-                    // frame(2) = -vec(1);
-                    // frame(3) = vec(0);
+                    frame(3) = -sin(theta);
+                    frame(4) = cos(theta);
+                    frame(5) = 0.;
+
                     appState->frames.row(i) = frame;
-
-                    // appState->frames.row(i) = frame *  1./(centroid.norm() + 1e-10);
-                    // appState->frames.row(i) = frame * (centroid.norm() + 1e-10);
-
                 }
             }
         }
@@ -261,6 +198,39 @@ public:
         // 
 
         // 
+
+    }
+
+
+
+
+
+
+
+// Init state and clone it to the appstate in order to make the visualization accurate.  
+    void init_opt_state()
+    {
+      Eigen::VectorXd x = _opt->_cur_x;
+      int nelem = appState->T.rows();
+      int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
+
+      // Eigen::VectorXd x = opt->get_current_x();
+      appState->frames.resize(nelem, DOFS_PER_ELEMENT);
+      for(int i = 0; i < nelem; i++)
+      {
+        appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
+        // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
+
+        if (appState->bound_face_idx(i) == 1) {
+          appState->frames.row(i) = appState->frames_orig.row(i);
+        }
+        x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
+        // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
+        
+      }
+      _opt->_cur_x = x;
+
+      appState->config->w_smooth_vector = 0;
 
     }
 
@@ -307,12 +277,8 @@ public:
       for(int i = 0; i < nelem; i++)
       {
         appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
-
-        if (appState->bound_face_idx(i) == 1) {
-          appState->frames.row(i) = appState->frames_orig.row(i);
-        }
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
-    
+
         
       }
 
@@ -334,7 +300,6 @@ public:
         appState->outerLoopIteration += 1;
         std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
       }
-
 
 
 
@@ -379,5 +344,5 @@ protected:
 
 
 
-#endif // SOLVE_L2_NETWON_RANK1_H
+#endif // MINT_RANK2_CYLINDER_EXAMPLE_H
 

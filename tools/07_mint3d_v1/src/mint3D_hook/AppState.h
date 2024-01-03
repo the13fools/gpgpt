@@ -159,6 +159,17 @@ public:
     double solve_residual = 0;
     double rhs_norm = 0;
     double solve_rel_residual = 0;
+    double identity_weight = 0; 
+    std::vector<float> energy_trace; 
+    std::vector<float> smoothness_trace; 
+    std::vector<float> curl_penalty_trace;
+    std::vector<float> identity_weight_trace; 
+
+
+    std::vector<float> solve_rel_residual_trace; 
+    std::vector<float> cur_max_gradient_norm_trace; 
+    // std::vector<float> energy_trace; 
+
 
     // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;
