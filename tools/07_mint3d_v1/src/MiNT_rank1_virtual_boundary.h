@@ -173,22 +173,8 @@ public:
           appState->frames.row(i) = appState->frames_orig.row(i);
         }
 
-        // Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
-        //                                     appState->V.row(appState->T(i, 1)) +
-        //                                     appState->V.row(appState->T(i, 2)) +
-        //                                     appState->V.row(appState->T(i, 3))) / 4.0;
-
-        // double r = centroid.norm() + 1e-10;
-        // Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
-        // appState->frames.row(i) = frame_cur;
-
-
-        // appState->frames.row(i)
- 
-        // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
-        // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
-        
+
       }
       _opt->_cur_x = x;
 
@@ -244,8 +230,7 @@ public:
                     frame(0) = -sin(theta);
                     frame(1) = cos(theta);
                     frame(2) = 0.;
-                    // frame(2) = -vec(1);
-                    // frame(3) = vec(0);
+
                     appState->frames.row(i) = frame;
 
                     // appState->frames.row(i) = frame *  1./(centroid.norm() + 1e-10);
@@ -307,12 +292,6 @@ public:
       for(int i = 0; i < nelem; i++)
       {
         appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
-
-        // if (appState->bound_face_idx(i) == 1) {
-        //   appState->frames.row(i) = appState->frames_orig.row(i);
-        // }
-        // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
-    
         
       }
 
@@ -362,16 +341,9 @@ public:
 
 
 protected:
-  // Read mesh and compute Tutte embedding
-
-
-
 
     std::unique_ptr<ADFunc_TinyAD_Instance<DOFS_PER_ELEMENT> > _opt;
     decltype(TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(1))) func;
-
-
-
     
 };
 
