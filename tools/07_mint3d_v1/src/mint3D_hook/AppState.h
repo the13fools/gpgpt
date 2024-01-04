@@ -160,7 +160,11 @@ public:
     double rhs_norm = 0;
     double solve_rel_residual = 0;
     double identity_weight = 0; 
+    double obj_smoothness_part = 0;
+    double obj_curl_part = 0;
     std::vector<float> energy_trace; 
+    std::vector<float> energy_smoothness_part_trace; 
+    std::vector<float> energy_curl_part_trace; 
     std::vector<float> smoothness_trace; 
     std::vector<float> curl_penalty_trace;
     std::vector<float> identity_weight_trace; 

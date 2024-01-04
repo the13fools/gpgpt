@@ -64,7 +64,11 @@ public:
       // appState->meshName = "disk_v210";
       // appState->meshName = "disk_v623"; 
 
-      appState->meshName = "cylinder_400";
+      // appState->meshName = "cylinder_400";
+      //  appState->meshName = "cylinder3k";
+      appState->meshName = "disk_3480_tets";
+
+      
 
       // Call Parent initialization to load mesh and initialize data structures
       // Add file parsing logic here.
@@ -90,7 +94,7 @@ public:
       
     
     // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
-    // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+    OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
     //   OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
 
@@ -161,8 +165,10 @@ public:
 
                 // if (centroid.norm() < 40) { // Custom condition for boundary faces
                 centroid(2) = 0;
-                if (centroid.norm() < 90) { // cylinder
+                // if (centroid.norm() < 90) { // cylinder
                 // if (centroid.norm() < 45) { // disk_v623
+                if (centroid.norm() < 4.5) { // cylinder
+
 
                     boundaryFaces(i) = 0;
                 } else {
@@ -216,9 +222,9 @@ public:
         appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
 
-        if (appState->bound_face_idx(i) == 1) {
-          appState->frames.row(i) = appState->frames_orig.row(i);
-        }
+        // if (appState->bound_face_idx(i) == 1) {
+        //   appState->frames.row(i) = appState->frames_orig.row(i);
+        // }
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
         

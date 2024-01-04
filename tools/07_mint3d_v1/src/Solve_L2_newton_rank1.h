@@ -67,11 +67,11 @@ public:
       // appState->meshName = "circle_irreg_20000";
 
       // appState->meshName = "disk_v210";
-      appState->meshName = "disk_v623";
+      // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
-  // appState->meshName = "cylinder3k";
+  appState->meshName = "cylinder3k";
 
   // appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
@@ -110,13 +110,13 @@ public:
       /////////////////////////////
       // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
       
-      // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      appState->curl_orders = {2,4};
+      appState->curl_orders = {2,4,6};
       OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
 
       
@@ -222,10 +222,10 @@ public:
                 // if (centroid.norm() < 0.45) { // Custom condition for boundary faces
                 //     boundaryFaces(i) = -1; // Mark for special handling or exclusion
                 // if (centroid.norm() < .3) { // Custom condition for boundary faces
-                // if (centroid.norm() < 4.3) { // disk_3480_tets
-                if (centroid.norm() < 45) { // disk_v623
-                // if (centroid.norm() < 95) { // cylinder3k
-                // if (centroid.norm() < .2) { // cylinder3k
+                // if (centroid.norm() < 4) { // disk_3480_tets
+                // if (centroid.norm() < 45) { // disk_v623
+                if (centroid.norm() < 95) { // cylinder3k
+                // if (centroid.norm() < .2) { // sphere
 
 
 
@@ -290,7 +290,7 @@ public:
     {
       appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e0;
-      appState->config->w_bound = 1e5;
+      appState->config->w_bound = 1e3;
       appState->config->w_curl = 1e-3;
     }
 
@@ -308,9 +308,9 @@ public:
       {
         appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
 
-        if (appState->bound_face_idx(i) == 1) {
-          appState->frames.row(i) = appState->frames_orig.row(i);
-        }
+        // if (appState->bound_face_idx(i) == 1) {
+        //   appState->frames.row(i) = appState->frames_orig.row(i);
+        // }
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
     
         

@@ -33,10 +33,10 @@
 ////////////////////////////////////////////
 
 
-#include "Solve_L2_newton_rank1.h"
+// #include "Solve_L2_newton_rank1.h"
 // #include "MiNT_krushkal_rank2.h"
 
-// #include "MiNT_krushkal_rank3.h"
+#include "MiNT_krushkal_rank3.h"
 
 // #include "MiNT_rank2_cylinder_example.h"
 
@@ -162,9 +162,9 @@ int main(int argc, char **argv) {
 ////////////////////////////////////////////
 ////////////////////////////////////////////
 
-  hook = static_cast<Mint3DHook*>(new Solve_L2_newton_rank1());
+  // hook = static_cast<Mint3DHook*>(new Solve_L2_newton_rank1());
     // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank2());
-  // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank3());
+  hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank3());
 //
     // hook = static_cast<Mint3DHook*>(new MiNT_rank2_cylinder_example());
 

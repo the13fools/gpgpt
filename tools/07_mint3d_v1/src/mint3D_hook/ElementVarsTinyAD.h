@@ -200,6 +200,8 @@ public:
 
         num_neighbors = 0;
 
+        int pinned_neighbors = 0;
+
         for (int i = 0; i < max_neighbors; i++)
         {
             ElementData<T_active> neighbor_data_i;
@@ -210,13 +212,30 @@ public:
             neighbor_data_i.faceNeighbor_idx = i;
             if (n_idx == -1) continue; // Make sure this is the correct convention.  Do more advance boundary handling later.
             
+            // if(appState.bound_face_idx(n_idx) == 1 && curr_lift == ElementLiftType::Lk_edge_contract) // && edge_contract_order != 2)
+            // {
+            //     // continue;
+            //     pinned_neighbors++;
+            //     if (pinned_neighbors > 2)
+            //         continue;
+            // }
+
+            // if(appState.bound_face_idx(n_idx) == 1 && curr_lift == ElementLiftType::Lk_edge_contract && edge_contract_order != 2)
+            // {
+            //     continue;
+            //     pinned_neighbors++;
+            //     if (pinned_neighbors > 2)
+            //         continue;
+            // }
+
+
             num_neighbors += 1;
             neighbor_data_i.dofs_curr_elem = element.variables(cur_mesh->tetOppositeVertex(t_idx, i));
             
-            if(appState.bound_face_idx(n_idx) == 1)
-            {
-                neighbor_data_i.dofs_curr_elem = appState.frames_orig.row(n_idx);
-            }
+            // if(appState.bound_face_idx(n_idx) == 1)
+            // {
+            //     neighbor_data_i.dofs_curr_elem = appState.frames_orig.row(n_idx);
+            // }
 
             neighbor_data_i.set_primals_rank1(appState.primals_layout);
 
@@ -229,6 +248,11 @@ public:
                     // std::cout << "Lk_edge_contract" << std::endl;
                     // std::cout << edge_contract_order << std::endl;
                     Lk_edge_contract(appState, i, neighbor_data_i);
+
+                    // if(appState.bound_face_idx(n_idx) == 1)
+                    // {
+                    //     neighbor_data_i.Lk_edge_contract_diff *= appState.config->w_attenuate / appState.config->w_curl * 10;
+                    // }
                     break;
                 
                 case(ElementLiftType::L2_krushkal):

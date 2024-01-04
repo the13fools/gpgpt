@@ -219,9 +219,9 @@ public:
         appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
         // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
 
-        if (appState->bound_face_idx(i) == 1) {
-          appState->frames.row(i) = appState->frames_orig.row(i);
-        }
+        // if (appState->bound_face_idx(i) == 1) {
+        //   appState->frames.row(i) = appState->frames_orig.row(i);
+        // }
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
         // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
         

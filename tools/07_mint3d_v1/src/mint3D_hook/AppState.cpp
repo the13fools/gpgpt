@@ -89,7 +89,7 @@ void AppState::refreshFileLists() {
 bool AppState::LogToFile(const std::string suffix)
 {
         
-    int num_vecs = this->os->frames.size();
+    int num_vecs = this->frames.size();
 
     std::cout << "num_vecs: " << num_vecs << std::endl;
 

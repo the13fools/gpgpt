@@ -443,6 +443,8 @@ namespace ImGuiWidgets {
 
         ImPlot::SetupAxesLimits(0, iter_count, 1e-20, 1e10);
         ImPlot::PlotLine("objective val", &(appState.energy_trace[0]), iter_count);
+        ImPlot::PlotLine("smoothness part", &(appState.energy_smoothness_part_trace[0]), iter_count);
+        ImPlot::PlotLine("curl part (w/o attenuation)", &(appState.energy_curl_part_trace[0]), iter_count);
         ImPlot::PlotLine("relative solver residual", &(appState.solve_rel_residual_trace[0]), iter_count);
         ImPlot::PlotLine("max gradient norm", &(appState.cur_max_gradient_norm_trace[0]), iter_count);
         ImPlot::PlotLine("Identity Weight", &(appState.identity_weight_trace[0]), iter_count);

@@ -135,9 +135,35 @@ void Mint3DHook::updateRenderGeometry() {
     else
     {
         try {
-            double cur_obj = opt->eval_func_at(tmp);
 
-            appState->os->cur_global_objective_val = cur_obj;
+            //// Compute different parts of the objective function by changing hyper parameters to
+            //// switch things on and off.  
+
+            // A little fragile, make sure these are correct if you change stuff. 
+
+            double prev_curl = appState->config->w_curl;
+            double prev_smoothness = appState->config->w_smooth;
+            double prev_attenuate = appState->config->w_attenuate;
+            double prev_bound = appState->config->w_bound;
+
+            appState->os->cur_global_objective_val = opt->eval_func_at(tmp);
+
+            appState->config->w_curl = 0.;
+            appState->config->w_smooth = 1.;
+            appState->config->w_attenuate = 1.;
+            appState->config->w_bound = 0;
+
+            appState->obj_smoothness_part = opt->eval_func_at(tmp);
+
+            appState->config->w_curl = 1.;
+            appState->config->w_smooth = 0.;
+
+            appState->obj_curl_part = opt->eval_func_at(tmp);
+
+            appState->config->w_curl = prev_curl;
+            appState->config->w_smooth = prev_smoothness;
+            appState->config->w_attenuate = prev_attenuate;
+            appState->config->w_bound = prev_bound;
             // appState->energy_trace.push_back(cur_obj);
 
             // opt->eval_func_with_derivatives(tmp);
@@ -145,7 +171,7 @@ void Mint3DHook::updateRenderGeometry() {
             // appState->cur_abs_residual = opt->_dec;
             // appState->cur_max_gradient_norm = opt->_max_gradient_norm;
 
-            std::cout << "cur_obj " << cur_obj << std::endl;
+            // std::cout << "cur_obj " << appState->os->cur_global_objective_val << std::endl;
         }
         catch (std::runtime_error& e)
         {
@@ -231,6 +257,8 @@ void Mint3DHook::updateRenderGeometry() {
         }
 
         appState->energy_trace.push_back(appState->os->cur_global_objective_val);
+        appState->energy_smoothness_part_trace.push_back(appState->obj_smoothness_part);
+        appState->energy_curl_part_trace.push_back(appState->obj_curl_part);
         appState->cur_max_gradient_norm_trace.push_back(appState->cur_max_gradient_norm);
         appState->solve_rel_residual_trace.push_back(appState->solve_rel_residual);
         appState->identity_weight_trace.push_back(appState->identity_weight);
@@ -651,7 +679,7 @@ bool Mint3DHook::simulateOneStep() {
         // 1. Relative residual is small
         // 2. Absolute residual is small
         // 3. Gradient norm is small or step progress is vanishing/negative (line search failing to make progress)
-        // if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->identity_vanished)) 
+        // if (appState->cur_rel_residual  < convergence_eps && appState->cur_abs_residual < 1e-4 && (appState->cur_max_gradient_norm < 1e-8 || opt->identity_vanished || opt->_prev_step_progress < 1e-10)) 
         if (appState->cur_max_gradient_norm < 1e-8 || opt->identity_weight > 1e12)
         {
             std::cout << "**** Converged current step ****" << std::endl;
