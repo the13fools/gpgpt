@@ -141,13 +141,6 @@ public:
 
     std::vector<ElementData<T_active>> neighbor_data;
 
-    // static const Eigen::VectorX<int> L_2_weights << 1, 2, 1;
-    // static const Eigen::VectorX<int> L_4_weights << 1, 4, 6, 4, 1;
-    // static const Eigen::VectorX<int> L_6_weights << 1, 6, 15, 20, 15, 6, 1;
-
-    // Eigen::MatrixX<T_active> currcurr;
-    // Eigen::VectorX<T_active> currcurrt;
-
 
     void setSelfData(AppState& appState, const Eigen::Index t_idx, ELEM& element) { 
 
@@ -206,11 +199,33 @@ public:
         {
             ElementData<T_active> neighbor_data_i;
             // int n_idx = cur_surf->data().faceNeighbors(f_idx, i); // 2d change 
-            int n_idx = cur_mesh->tetOppositeVertex(t_idx, i);
+
+            int n_idx;
+
+            if (t_idx >= cur_mesh->nTets())
+            {
+                n_idx = cur_mesh->boundaryElementTet(t_idx - cur_mesh->nTets());
+                max_neighbors = 1;
+            }
+            else
+            {
+                n_idx = cur_mesh->tetOppositeVertex(t_idx, i);
+                if (n_idx == -1) // continue; 
+                {
+                    // std::cout <<" current face " << cur_mesh->tetFace( t_idx, i ) << std::endl;
+                    // std::cout <<" current face orientation " << cur_mesh->tetFaceOrientation( t_idx, i ) << std::endl;
+
+                    n_idx = cur_mesh->faceBoundaryElement( cur_mesh->tetFace( t_idx, i ), (cur_mesh->tetFaceOrientation(t_idx, i) + 1) % 2  ); 
+                    // std::cout << n_idx << " current n_idx" << std::endl;
+                }
+
+            }
+
 
             neighbor_data_i.curr_idx = n_idx;
             neighbor_data_i.faceNeighbor_idx = i;
-            if (n_idx == -1) continue; // Make sure this is the correct convention.  Do more advance boundary handling later.
+            
+            // Make sure this is the correct convention.  Do more advance boundary handling later.
             
             // if(appState.bound_face_idx(n_idx) == 1 && curr_lift == ElementLiftType::Lk_edge_contract) // && edge_contract_order != 2)
             // {
@@ -230,7 +245,7 @@ public:
 
 
             num_neighbors += 1;
-            neighbor_data_i.dofs_curr_elem = element.variables(cur_mesh->tetOppositeVertex(t_idx, i));
+            neighbor_data_i.dofs_curr_elem = element.variables(n_idx);
             
             // if(appState.bound_face_idx(n_idx) == 1)
             // {
@@ -263,7 +278,7 @@ public:
                     break;
                 case(ElementLiftType::L2_facets):
                     L2_facet_diff(appState, i, neighbor_data_i);
-                break;
+                    break;
 
                 case(ElementLiftType::L4_sym_krushkal):
                     L4_sym_krushkal(appState, neighbor_data_i);
@@ -384,7 +399,8 @@ public:
 
     }
 
-
+// This is being called twice as much as it needs to be, there's a significant savings that could be
+// had from doing this per dual edge instead of per tet... 
     void Lk_edge_contract(AppState& appState, const int n_idx, ElementData<T_active>& data) { 
         
         // Seperate out the primal dofs into rank-1 components
@@ -393,6 +409,11 @@ public:
         int facet_dim = data.primals_rank1[0].size() - 1;
         data.Lk_edge_contract_diff.resize(edge_contract_order+1);
         data.Lk_edge_contract_diff.setZero();
+
+        if (t_idx >= cur_mesh->nTets())
+        {
+            return;
+        }
         
         Eigen::MatrixXd tet_facet_basis = appState.tet_facet_basis.at(t_idx).at(n_idx);
 

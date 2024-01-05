@@ -32,7 +32,7 @@ template<int N>
 
         std::cout << "add const obj" << std::endl;
 
-    func.template add_elements<1>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<1>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -82,7 +82,7 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 
         std::cout << "add unit norm (ginzburg-landau) obj" << std::endl;
 
-    func.template add_elements<1>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<1>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
         using T = TINYAD_SCALAR_TYPE(element);
@@ -117,16 +117,6 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 
         return ret; 
 
-
-        // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-      
-        // Eigen::Vector2<T> targ = Eigen::Vector2<T>::Ones();
-        
-        // return .00001*(curr-targ).squaredNorm() + w_bound*delta.squaredNorm();
-      
-
-
-
     });
 
  
@@ -141,7 +131,7 @@ static void addPinnedBoundaryTerm(ADFunc& func, AppState& appState) {
 
     std::cout << "add boundary obj: TODO replace with hard constraint" << std::endl;
 
-    func.template add_elements<4>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<4>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -208,7 +198,7 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
     std::cout << "add L2 smoonthess obj" << std::endl;
 
-    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -236,10 +226,10 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
 // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
         // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-        if (bound_face_idx(f_idx) == 1)
-        {
-            return T(0);
-        }
+        // if (bound_face_idx(f_idx) == 1)
+        // {
+        //     return T(0);
+        // }
         // e.setNeighborData(appState, f_idx, element);
 
         e_sym.setNeighborData(appState, f_idx, element);
@@ -266,7 +256,9 @@ static void addSmoothness_L2_Term(ADFunc& func, AppState& appState) {
 
          // This is a test to make sure that the symmetric weights give the same answer as the full tensor 
         //   appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(dirichlet_term - sym_dirichlet_term);
-        appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(sym_dirichlet_term);
+
+        if ( f_idx < appState.cur_tet_mesh->nTets() )
+            appState.os->smoothness_L2(f_idx) = TinyAD::to_passive(sym_dirichlet_term);
 
 
           T delta_weight = 1.; // std::min(w_curl/100., 1./w_attenuate);
@@ -289,7 +281,7 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
     std::cout << "add L4 smoonthess obj" << std::endl;
 
-    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -317,10 +309,10 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
 // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
         // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-        if (bound_face_idx(f_idx) == 1)
-        {
-            return T(0);
-        }
+        // if (bound_face_idx(f_idx) == 1)
+        // {
+        //     return T(0);
+        // }
         // e.setNeighborData(appState, f_idx, element);
 
         e_sym.setNeighborData(appState, f_idx, element);
@@ -347,7 +339,8 @@ static void addSmoothness_L4_Term(ADFunc& func, AppState& appState) {
 
          // This is a test to make sure that the symmetric weights give the same answer as the full tensor 
         //   appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(dirichlet_term - sym_dirichlet_term);
-          appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(sym_dirichlet_term);
+          if ( f_idx < appState.cur_tet_mesh->nTets() )
+            appState.os->smoothness_L4(f_idx) = TinyAD::to_passive(sym_dirichlet_term);
 
 
           T delta_weight = 1.; // std::min(w_curl/100., 1./w_attenuate);
@@ -381,7 +374,7 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
 
 
 
-    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
         int num_curls = appState.curl_orders.size();
@@ -433,12 +426,21 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
             }
 
 
-    // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
-            // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-            if (bound_face_idx(f_idx) == 1)
+            
+            if ( f_idx >= appState.cur_tet_mesh->nTets() )
             {
                 return T(0);
             }
+
+            
+
+
+    // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
+            // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+            // if (bound_face_idx(f_idx) == 1)
+            // {
+            //     return T(0);
+            // }
 
             e.setNeighborData(appState, f_idx, element);
 
@@ -448,20 +450,25 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
 //// Curl Term 
 ///////////////////
 
-
-
-
-
             T w_curl_new = e.w_curl; // std::min(1e8, 1./e.w_attenuate) * e.w_curl;
+
+            
 
             int num_neighbors = e.num_neighbors;
             T curl_term = T(0);
             for (int i = 0; i < num_neighbors; i++)
             {
-                    curl_term += e.neighbor_data.at(i).Lk_edge_contract_diff.transpose() * weights * e.neighbor_data.at(i).Lk_edge_contract_diff;
+                // if enforce boundary curl, then should multiply the weight by 2, but 
+                // this doens't do much, maybe useful for improving boundary coupling?  Can try on and off 
+                T boundary_multiplier = 1;
+                int n_idx = e.neighbor_data.at(i).curr_idx;
+                if (n_idx >= appState.cur_tet_mesh->nTets())
+                    boundary_multiplier = 2; // could also be zero? 
+                curl_term += boundary_multiplier * e.neighbor_data.at(i).Lk_edge_contract_diff.transpose() * weights * e.neighbor_data.at(i).Lk_edge_contract_diff;
             }
 
-            appState.os->curls_Lks[term](f_idx) = TinyAD::to_passive(curl_term);
+            if ( f_idx < appState.cur_tet_mesh->nTets() )
+                appState.os->curls_Lks[term](f_idx) = TinyAD::to_passive(curl_term);
 
             // hacky, should ideally have a curl_Lk for each k.
             // appState.os->curl_L2(f_idx) = TinyAD::to_passive(curl_term);
@@ -484,7 +491,7 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
     std::cout << "add L2 curl obj" << std::endl;
 
-    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -514,10 +521,10 @@ static void addCurlTerm_L2(ADFunc& func, AppState& appState) {
 
 // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
         // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-        if (bound_face_idx(f_idx) == 1)
-        {
-            return T(0);
-        }
+        // if (bound_face_idx(f_idx) == 1)
+        // {
+        //     return T(0);
+        // }
 
         e.setNeighborData(appState, f_idx, element);
 
@@ -562,7 +569,7 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
 
     std::cout << "add L4 curl obj" << std::endl;
 
-    func.template add_elements<5>(TinyAD::range(appState.T.rows()), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    func.template add_elements<5>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
     {
 
      // Evaluate element using either double or TinyAD::Double
@@ -592,10 +599,11 @@ static void addCurlTerm_L4(ADFunc& func, AppState& appState) {
 
 // A bit hacky but exit early if on a boundary element.  Should really do it same as in matlab mint and make boundary elements distict from the mesh. 
         // Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-        if (bound_face_idx(f_idx) == 1)
-        {
-            return T(0);
-        }
+        // if (bound_face_idx(f_idx) == 1)
+        // {
+        //     return T(0);
+            
+        // }
 
         e.setNeighborData(appState, f_idx, element);
 

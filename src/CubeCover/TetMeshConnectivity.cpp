@@ -298,6 +298,8 @@ namespace CubeCover
             }
         }
 
+        std::cout << B << std::endl;
+
         assert(bidx_iter == nboundaryelements);
 
     }

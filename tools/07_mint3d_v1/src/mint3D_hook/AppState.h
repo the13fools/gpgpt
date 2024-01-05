@@ -181,6 +181,7 @@ public:
     // TODO: merge in the cube cover stuff.  
     Eigen::MatrixXd frames;
     Eigen::MatrixXd frames_orig;
+    Eigen::MatrixXd boundary_frames;
     // Eigen::MatrixXd frames_viz;
 
     Eigen::MatrixXd moments; // TODO implement this!

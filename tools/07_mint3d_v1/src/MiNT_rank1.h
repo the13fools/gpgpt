@@ -44,6 +44,8 @@ public:
 
       assert(DOFS_PER_ELEMENT == (appState->primals_layout.size + appState->moments_layout.size + appState->deltas_layout.size));
 
+      appState->useBoundaryFrames = true;
+
     }
 
     ~MiNT_rank1(){
@@ -71,9 +73,9 @@ public:
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
-  appState->meshName = "cylinder3k";
+  // appState->meshName = "cylinder3k";
 
-  // appState->meshName = "sphere_r0.17";
+  appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
     // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
@@ -90,11 +92,11 @@ public:
       Mint3DHook::initSimulation();
 
       // move this inside mint2d
-      appState->solveStatus = "init L2 newton rank 1";
+      appState->solveStatus = "init MiNT rank1";
 
       std::cout << "**** setup tinyAD optimization ****" << std::endl;
 
-      func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->T.rows()));
+      func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->nelem));
 
 
       // func = TinyAD::scalar_function<DOFS_PER_ELEMENT>(TinyAD::range(appState->F.rows()));
@@ -108,16 +110,16 @@ public:
       ///
       /// convenient auto-diff with sparse hessians is quite new, there's a lot to explore! 
       /////////////////////////////
-      // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
       
-      OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
-      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      appState->curl_orders = {2,4,6};
-      OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
+      // appState->curl_orders = {2,4,6};
+      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
 
       
       // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
@@ -159,36 +161,22 @@ public:
     void init_opt_state()
     {
       Eigen::VectorXd x = _opt->_cur_x;
-      int nelem = appState->T.rows();
+      int nelem = appState->nelem;
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
+      int ntets = appState->T.rows();
 
       // Eigen::VectorXd x = opt->get_current_x();
-      for(int i = 0; i < nelem; i++)
+      for(int i = 0; i < ntets; i++)
       {
         appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
         // appState->frames.row(i) = Eigen::VectorXd::Ones(DOFS_PER_ELEMENT);
 
+// add back pinned constraints later.  
+        // if (appState->bound_face_idx(i) == 1) {
+        //   appState->frames.row(i) = appState->frames_orig.row(i);
+        // }
 
-        if (appState->bound_face_idx(i) == 1) {
-          appState->frames.row(i) = appState->frames_orig.row(i);
-        }
-
-        // Eigen::RowVector3d centroid = (appState->V.row(appState->T(i, 0)) +
-        //                                     appState->V.row(appState->T(i, 1)) +
-        //                                     appState->V.row(appState->T(i, 2)) +
-        //                                     appState->V.row(appState->T(i, 3))) / 4.0;
-
-        // double r = centroid.norm() + 1e-10;
-        // Eigen::Vector2d frame_cur = 1./r * Eigen::Vector2d(centroid.y(), -centroid.x()).normalized();
-        // appState->frames.row(i) = frame_cur;
-
-
-        // appState->frames.row(i)
- 
-        // appState->deltas.row(i) = Eigen::VectorXd::Zero(4);
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
-        // x.segment<4>(nvars*i+2) = appState->deltas.row(i);
-        
       }
       _opt->_cur_x = x;
 
@@ -224,8 +212,8 @@ public:
                 // if (centroid.norm() < .3) { // Custom condition for boundary faces
                 // if (centroid.norm() < 4) { // disk_3480_tets
                 // if (centroid.norm() < 45) { // disk_v623
-                if (centroid.norm() < 95) { // cylinder3k
-                // if (centroid.norm() < .2) { // sphere
+                // if (centroid.norm() < 95) { // cylinder3k
+                if (centroid.norm() < .2) { // sphere
 
 
 
@@ -297,14 +285,15 @@ public:
 // This is called after each step.  
     virtual void updateAppStateFromOptState()
     {
-      int nelem = appState->T.rows();
+      int nelem = appState->nelem;
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
+      int ntets = appState->T.rows();
 
       // Try to add post projection curl operator here.  
 
 
       Eigen::VectorXd x = opt->get_current_x();
-      for(int i = 0; i < nelem; i++)
+      for(int i = 0; i < ntets; i++)
       {
         appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
 
@@ -315,6 +304,17 @@ public:
     
         
       }
+
+
+      for(int i = 0; i < nelem - ntets; i++)
+      {
+        appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);   
+        
+      }
+
+
+
+      
 
 
       
@@ -344,7 +344,7 @@ public:
     virtual void updateOptStateFromAppState()
     {
       Eigen::VectorXd x = _opt->_cur_x;
-      int nelem = appState->T.rows();
+      int nelem = appState->nelem;
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Eigen::VectorXd x = opt->get_current_x();
@@ -380,4 +380,6 @@ protected:
 
 
 #endif // MINT_RANK1_H
+
+#undef DOFS_PER_ELEMENT
 

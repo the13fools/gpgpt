@@ -45,7 +45,7 @@ public:
       appState->deltas_layout = {0, 0};
 
       assert(DOFS_PER_ELEMENT == (appState->primals_layout.size + appState->moments_layout.size + appState->deltas_layout.size));
-
+      bool useBoundaryFrames = false;
     }
 
     ~MiNT_krushkal_rank3(){
@@ -349,4 +349,5 @@ protected:
 
 
 #endif // MINT_KRUSHKAL_RANK3_H
+#undef DOFS_PER_ELEMENT
 
