@@ -193,13 +193,15 @@ void Mint3DHook::updateRenderGeometry() {
     // renderState = new AppState(*appState);
 
     outputData->frames.clear();
+    outputData->boundary_frames.clear();
 
     int frame_rank = appState->primals_layout.rank;
     int vec_dofs = appState->primals_layout.size / frame_rank;
     int frows = appState->frames.rows();
+    int bfrows = appState->boundary_frames.rows();
 
     if (vec_dofs != 3 )
-        std::cout << "wrong number of dofs for mint3d" << std::endl;
+        std::cout << "******** wrong number of dofs for mint3d ********" << std::endl;
 
     // outputData->frames = appState->frames;
 
@@ -207,8 +209,16 @@ void Mint3DHook::updateRenderGeometry() {
     {
         Eigen::MatrixXd vec_cur = Eigen::MatrixXd::Zero(appState->frames.rows(), 3);
 
+
         vec_cur << appState->frames.block(0, vid * vec_dofs, frows, vec_dofs); // ,  Eigen::MatrixXd::Zero(frows, 1);
         outputData->frames.push_back(vec_cur);
+    }
+
+    for(int vid = 0; vid < frame_rank; vid++)
+    {
+        Eigen::MatrixXd vec_cur = Eigen::MatrixXd::Zero(appState->boundary_frames.rows(), 3);
+        vec_cur << appState->boundary_frames.block(0, vid * vec_dofs, bfrows, vec_dofs); // ,  Eigen::MatrixXd::Zero(frows, 1);
+        outputData->boundary_frames.push_back(vec_cur);
     }
 
     // outputData->frames.resize(appState->frames.rows(), 3);
@@ -364,16 +374,42 @@ void Mint3DHook::renderRenderGeometry()
 
             Eigen::MatrixXd cur_vec = outputData->frames[v];
 
-
             double color_shift = (v+1.) * 1.0 / num_vecs;
 
             auto vectorField = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
-            
             auto vectorFieldNeg = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
-            // vectorField->setVectorColor(glm::vec3(color_shift, 0.2, 0.5));
-            // vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.7));
-            // vectorField->setVectorRadius(0.01);
-            // vectorFieldNeg->setVectorRadius(0.01);
+
+            if(appState->show_frames && appState->show_frames_as_lines)
+            {
+                vectorField->setEnabled(true);
+                vectorFieldNeg->setEnabled(true);
+                vectorField->setVectorLengthScale(appState->gui_vec_size);
+                vectorFieldNeg->setVectorLengthScale(appState->gui_vec_size);
+                
+            }
+            else if (appState->show_frames)
+            {
+                vectorField->setEnabled(true);
+                vectorFieldNeg->setEnabled(false);
+            }
+            else 
+            {
+                vectorField->setEnabled(false);
+                vectorFieldNeg->setEnabled(false);
+            }
+
+
+        }
+
+        for(int v = 0; v < num_vecs; v++)
+        {
+
+            Eigen::MatrixXd cur_vec = outputData->boundary_frames[v];
+
+            double color_shift = (v+1.) * 1.0 / num_vecs;
+
+            auto vectorField = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
+            auto vectorFieldNeg = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
 
             if(appState->show_frames && appState->show_frames_as_lines)
             {
@@ -793,6 +829,39 @@ void Mint3DHook::resetAppState() {
         vectorField->setVectorRadius(0.01);
         vectorFieldNeg->setVectorRadius(0.01);
     }
+
+
+    appState->bound_centroids = Eigen::MatrixXd::Zero(appState->cur_tet_mesh->nBoundaryElements(), 3);
+    for(int i = 0; i < appState->bound_centroids.rows(); i++)
+    {
+        int boundaryFace = appState->cur_tet_mesh->boundaryFace(i);
+        appState->bound_centroids.row(i) = (appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 0)) +
+                                            appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 1)) +
+                                            appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 2))) / 3.0;
+    }
+
+    polyscope::registerPointCloud("surface_vecs", appState->bound_centroids)->setPointRadius(0.0);
+
+
+    // int num_vecs = 3; // appState->frames.size();
+    for(int v = 0; v < num_vecs; v++)
+    {
+        // Eigen::MatrixXd cur_vec = outputData->frames[v];
+        Eigen::MatrixXd cur_vec = Eigen::MatrixXd::Zero(appState->boundary_frames.rows(), 3);
+
+        double color_shift = (v+1.) * 1.0 / num_vecs;
+
+        auto vectorField = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
+            
+        auto vectorFieldNeg = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
+        vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.3));
+        vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.7));
+        vectorField->setVectorRadius(0.01);
+        vectorFieldNeg->setVectorRadius(0.01);
+    }
+
+
+    
 }
 
 

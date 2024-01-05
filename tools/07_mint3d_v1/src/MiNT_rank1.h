@@ -68,14 +68,14 @@ public:
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
 
-      appState->meshName = "disk_v210";
+      // appState->meshName = "disk_v210";
       // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
   // appState->meshName = "cylinder3k";
 
-  // appState->meshName = "sphere_r0.17";
+  appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
     // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
@@ -118,8 +118,8 @@ public:
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      // appState->curl_orders = {2,4,6};
-      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
+      appState->curl_orders = {2,4,6};
+      OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
 
       
       // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
@@ -205,6 +205,7 @@ public:
         appState->bound_face_idx = boundaryFaces;
 
         appState->frames.resize(appState->T.rows(), DOFS_PER_ELEMENT);
+        appState->boundary_frames.resize(appState->cur_tet_mesh->nBoundaryElements(), DOFS_PER_ELEMENT);
 
         // Initialize boundary conditions
         for (int i = 0; i < boundaryFaces.size(); ++i) {

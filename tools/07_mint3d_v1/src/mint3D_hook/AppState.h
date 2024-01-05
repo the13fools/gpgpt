@@ -62,6 +62,8 @@ class OutputState
 public: 
 
     std::vector<Eigen::MatrixXd> frames;
+    std::vector<Eigen::MatrixXd> boundary_frames;
+
 
     // derived variables 
     double cur_global_objective_val;
@@ -151,7 +153,9 @@ public:
     std::unique_ptr<Surface> cur_surf; // This initializes some more convenient data structures for building up local energies.
     std::unique_ptr<CubeCover::TetMeshConnectivity> cur_tet_mesh;  
     Eigen::MatrixXd tet_centroids;                 // In 3d need to use mesh data structures instead of surface.   
-    
+    Eigen::MatrixXd bound_centroids;                 // In 3d need to use mesh data structures instead of surface.   
+
+
     bool keepSolving = true;
     int outerLoopIteration = 0;
     double cur_rel_residual = 0;

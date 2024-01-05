@@ -273,7 +273,7 @@ namespace CubeCover
             }
         }
 
-        B.resize(nboundaryelements, 2);
+        B.resize(nboundaryelements, 3);
 
         // Implement tet to boundary map 
         faceBoundaryElements.resize(nfaces, 2);
@@ -290,6 +290,7 @@ namespace CubeCover
                     
                     B(bidx_iter, 0) = faceTet(i, (j + 1)%2);
                     B(bidx_iter, 1) = j;
+                    B(bidx_iter, 2) = i;
 
                     faceBoundaryElements(i, j) = bidx_iter;
 
@@ -298,7 +299,7 @@ namespace CubeCover
             }
         }
 
-        std::cout << B << std::endl;
+        // std::cout << B << std::endl;
 
         assert(bidx_iter == nboundaryelements);
 

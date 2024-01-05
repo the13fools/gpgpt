@@ -101,6 +101,10 @@ namespace CubeCover {
          */
         int boundaryElementOppositeVertexIndex(int boundaryElement) const { return B(boundaryElement, 1); }
 
+        /*
+         * This returns the global id of the face associated to the given boundary element
+         */
+        int boundaryFace(int boundaryElement) const { return B(boundaryElement, 2); } // tetFace(B(boundaryElement, 0), B(boundaryElement, 1)); }
         
         /*
          * Maps a local index (0 <= idx <= 5) to the edge's global index.
