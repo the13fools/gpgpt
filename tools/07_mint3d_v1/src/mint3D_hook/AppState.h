@@ -128,6 +128,9 @@ public:
     Eigen::MatrixXi T; // Tet indices
     Eigen::MatrixXi F; // Face indices
 
+    bool useBoundaryFrames = true;
+    int nelem; // number of elements, i.e. T.rows() + 
+
     /// @brief config optimization variables and params stored and initialized here.  ///
     std::unique_ptr<MyConfig> config;
     Eigen::VectorXi bound_face_idx;  

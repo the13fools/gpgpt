@@ -20,6 +20,7 @@ namespace CubeCover {
         int nTets() const { return T.rows(); }
         int nFaces() const { return F.rows(); }
         int nEdges() const { return E.rows(); }
+        int nBoundaryElements() const { return B.rows(); }
 
         /*
          * Maps a local index on a tet (0 <= idx <= 3) to the vertex's global
@@ -75,6 +76,32 @@ namespace CubeCover {
          */
         int tetOppositeVertex(int tet, int idx) const;
 
+        /*
+         * Given the local index of a vertex on a tet (0 <= idx <= 3), computes
+         * the global index of the boundary element that borders tet on the face 
+         * opposite the given vertex. Returns -1 if there is no such boundary element
+         * (because the opposite face is an interior face).
+         */
+        int boundaryIdxOppositeVertex(int tet, int idx) const;
+
+        /*
+         * Maps a local index on a face (0 <= idx <= 1) to the tet's global
+         * index. Returns -1 if there is no such boundary element (which can only happen 
+         * when the face is on the interior).
+         */
+        int faceBoundaryElement(int face, int idx) const { return faceBoundaryElements(face, idx); }
+
+        /*
+         * Returns the tet adjacent to this boundary element
+         */
+        int boundaryElementTet(int boundaryElement) const { return B(boundaryElement, 0); }
+
+        /*
+         * This returns the local index of the vertex on the tet that is opposite this boundary element
+         */
+        int boundaryElementOppositeVertexIndex(int boundaryElement) const { return B(boundaryElement, 1); }
+
+        
         /*
          * Maps a local index (0 <= idx <= 5) to the edge's global index.
          */
@@ -140,10 +167,12 @@ namespace CubeCover {
         Eigen::MatrixXi T;
         Eigen::MatrixXi F;
         Eigen::MatrixXi E;
+        Eigen::MatrixXi B;
 
         // Tet-Face connectivity
         // faceTets(tetFaces(i,j), tetFaceOrientations(i,j)) == i
         Eigen::MatrixXi faceTets;
+        Eigen::MatrixXi faceBoundaryElements;
         Eigen::MatrixXi tetFaces;
         Eigen::MatrixXi tetFaceOrientations;
         Eigen::MatrixXi faceTetVertIndices;

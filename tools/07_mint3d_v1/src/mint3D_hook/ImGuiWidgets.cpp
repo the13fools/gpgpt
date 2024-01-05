@@ -5,7 +5,7 @@
 #include "FieldView.h"
 
 #include "MyConfig.h"
-#include "implot/implot.h"
+// #include "implot/implot.h"
 
 namespace ImGuiWidgets {
 
@@ -424,6 +424,9 @@ namespace ImGuiWidgets {
 
     void ShowPlots(AppState& appState)
     {
+
+
+        /*
         ImPlot::CreateContext();
 
 // static double xs[1001], ys1[1001], ys2[1001], ys3[1001];
@@ -481,6 +484,8 @@ namespace ImGuiWidgets {
         // conf.line_thickness = 2.f;
 
         // ImGui::Plot("plot", conf);
+
+        */
     }
 
 

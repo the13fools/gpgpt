@@ -260,11 +260,56 @@ namespace CubeCover
             edgeTetFaceIndices[i] = newedgetetfaces;
             indexOnEdgeTets[i] = newindexonedgetets;
         }
+
+        int nboundaryelements = 0;
+        for(int i = 0; i < nfaces; i++)
+        {
+            for(int j = 0; j < 2; j++)
+            {
+                if(faceTet(i, j) == -1)
+                {
+                    nboundaryelements++;
+                }
+            }
+        }
+
+        B.resize(nboundaryelements, 2);
+
+        // Implement tet to boundary map 
+        faceBoundaryElements.resize(nfaces, 2);
+        faceBoundaryElements.setConstant(-1);
+
+        int bidx_iter = 0;
+
+        for(int i = 0; i < nfaces; i++)
+        {
+            for(int j = 0; j < 2; j++)
+            {
+                if(faceTet(i, j) == -1)
+                {
+                    
+                    B(bidx_iter, 0) = i;
+                    B(bidx_iter, 1) = j;
+
+                    faceBoundaryElements(i, j) = bidx_iter;
+
+                    bidx_iter++;
+                }
+            }
+        }
+
+        assert(bidx_iter == nboundaryelements);
+
     }
 
     int TetMeshConnectivity::tetOppositeVertex(int tet, int idx) const
     {
         return faceTet(tetFace(tet, idx), 1 - tetFaceOrientation(tet, idx));
+    }
+
+    int TetMeshConnectivity::boundaryIdxOppositeVertex(int tet, int idx) const
+    {
+        return faceBoundaryElement(faceBoundaryElement(tet, idx), 1 - tetFaceOrientation(tet, idx));
     }
 
     bool TetMeshConnectivity::isBoundaryFace(int face) const

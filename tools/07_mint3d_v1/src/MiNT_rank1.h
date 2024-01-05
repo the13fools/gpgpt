@@ -1,5 +1,5 @@
-#ifndef SOLVE_L2_NETWON_RANK1_H
-#define SOLVE_L2_NETWON_RANK1_H
+#ifndef MINT_RANK1_H
+#define MINT_RANK1_H
 
 
 
@@ -26,10 +26,10 @@
 #define DOFS_PER_ELEMENT 3
 
 
-class Solve_L2_newton_rank1 : public Mint3DHook
+class MiNT_rank1 : public Mint3DHook
 {
 public:
-    Solve_L2_newton_rank1() : Mint3DHook(new AppState()) {
+    MiNT_rank1() : Mint3DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
       appState->solveType = "L2_newton_rank1";
       appState->solveDescription = "L2_newton_rank1";
@@ -46,7 +46,7 @@ public:
 
     }
 
-    ~Solve_L2_newton_rank1(){
+    ~MiNT_rank1(){
       // delete _opt;
     }
 
@@ -379,5 +379,5 @@ protected:
 
 
 
-#endif // SOLVE_L2_NETWON_RANK1_H
+#endif // MINT_RANK1_H
 
