@@ -68,47 +68,92 @@
               prev_energy = f * 1.00000000001;
             }
 
+            
+
             _cur_x = x; 
 
-            std::cout << "current identity regularizer" << identity_weight << std::endl;
-            try
+            
+            if (useProjHessian) /// w_smooth_vector > 0 || 
+            {
+              std::cout << "Compute Hessian" << std::endl;
+              this->eval_func_and_proj_hess_to_psd_local(x);
+              f = this->get_fval_at_x(); // maybe don't need these two lines 
+              g = this->get_grad_at_x();
+              H_proj = this->get_hessian_at_x();
+              std::cout << "Start Newton Solve, add timing here" << std::endl;
+              d = TinyAD::newton_direction(g, H_proj, solver, 0.);
+              dec = TinyAD::newton_decrement(d, g);
+
+              _solve_residual = (H_proj * d + g).squaredNorm();
+                
+              
+
+
+              // Decide when to switch to true hessian 
+              if ( dec / f < 1e-3)
+              {
+                useProjHessian = false;
+                std::cout << "*** switch off projected hessian to fine-tune result ***" << std::endl;
+              }
+
+              _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
+
+
+            }
+            else
             {
 
-              d = TinyAD::newton_direction(g, H, solver, identity_weight);
-              Eigen::VectorXd tmp = x + d;
-              double obj_after_step = this->eval_func_at(tmp);
-              dec = cur_obj - obj_after_step;
-              _solve_residual = (H * d + g).squaredNorm();
 
-              if ( dec > 0 )
+
+              std::cout << "current identity regularizer" << identity_weight << std::endl;
+              try
               {
-                _cur_x = tmp; 
-                identity_weight = std::max(identity_weight / 2., identity_min);
-                if (identity_weight == identity_min)
+
+                d = TinyAD::newton_direction(g, H, solver, identity_weight);
+                Eigen::VectorXd tmp = x + d;
+                double obj_after_step = this->eval_func_at(tmp);
+                dec = cur_obj - obj_after_step;
+                _solve_residual = (H * d + g).squaredNorm();
+
+                if ( dec > 0 )
                 {
-                  identity_vanished = true;
+                  _cur_x = tmp; 
+                  identity_weight = std::max(identity_weight / 2., identity_min);
+                  if (identity_weight == identity_min)
+                  {
+                    identity_vanished = true;
+                  }
+                  else 
+                  {
+                    identity_vanished = false;
+                  }
                 }
                 else 
                 {
-                  identity_vanished = false;
+                  identity_weight *= 10.;
                 }
+                // dec = TinyAD::newton_decrement(d, g);
               }
-              else 
+              catch(const std::exception& e)
               {
                 identity_weight *= 10.;
+                // std::cerr << e.what() << '\n';
               }
-              // dec = TinyAD::newton_decrement(d, g);
+
+
+
+
             }
-            catch(const std::exception& e)
-            {
-              identity_weight *= 10.;
-              // std::cerr << e.what() << '\n';
-            }
+
+
+
+
+
             
 
 
+            
             /*
-            
             try
             {
               // First try to converge with projected hessian 
