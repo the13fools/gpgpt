@@ -2,7 +2,7 @@
 *.slo
 *.lo
 *.o
-# *.obj
+*.obj
 
 # Precompiled Headers
 *.gch
@@ -32,6 +32,8 @@
 *.swp
 
 build/*
+build.release/*
+build.debug/*
 cmake-build-*/*
 */results/*
 */*/results/*
