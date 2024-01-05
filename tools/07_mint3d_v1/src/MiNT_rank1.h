@@ -31,8 +31,8 @@ class MiNT_rank1 : public Mint3DHook
 public:
     MiNT_rank1() : Mint3DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
-      appState->solveType = "L2_newton_rank1";
-      appState->solveDescription = "L2_newton_rank1";
+      appState->solveType = "MiNT_rank1";
+      appState->solveDescription = "MiNT_rank1";
 
 
 
@@ -68,14 +68,14 @@ public:
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
 
-      // appState->meshName = "disk_v210";
+      appState->meshName = "disk_v210";
       // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
   // appState->meshName = "cylinder3k";
 
-  appState->meshName = "sphere_r0.17";
+  // appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
     // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
@@ -110,13 +110,13 @@ public:
       ///
       /// convenient auto-diff with sparse hessians is quite new, there's a lot to explore! 
       /////////////////////////////
-      OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
       
       // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2_Term(func, *appState);
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
-      // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
       // appState->curl_orders = {2,4,6};
       // OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
@@ -178,6 +178,15 @@ public:
 
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
       }
+
+      for (int i = 0; i < nelem - ntets; ++i)
+      {
+        appState->boundary_frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
+        x.segment<DOFS_PER_ELEMENT>(nvars*(i+ntets)) = appState->boundary_frames.row(i);
+      }
+
+      // add pin here 
+
       _opt->_cur_x = x;
 
       appState->config->w_smooth_vector = 0;
@@ -308,16 +317,10 @@ public:
 
       for(int i = 0; i < nelem - ntets; i++)
       {
-        appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);   
+        appState->boundary_frames.row(i) = x.segment<DOFS_PER_ELEMENT>( nvars*(i + ntets) );   
         
       }
 
-
-
-      
-
-
-      
 
       if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-17)
       {
@@ -345,13 +348,22 @@ public:
     {
       Eigen::VectorXd x = _opt->_cur_x;
       int nelem = appState->nelem;
+      int ntets = appState->T.rows();
       int nvars = DOFS_PER_ELEMENT; // opt->get_num_vars();
 
       // Eigen::VectorXd x = opt->get_current_x();
-      for(int i = 0; i < nelem; i++)
+      for(int i = 0; i < ntets; i++)
       {
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
       }
+
+      for (int i = 0; i < nelem - ntets; ++i)
+      {
+        x.segment<DOFS_PER_ELEMENT>(nvars*(i+ntets)) = appState->boundary_frames.row(i);
+      }
+
+      
+
       _opt->_cur_x = x;
 
       // appState->config->w_smooth_vector = 0;

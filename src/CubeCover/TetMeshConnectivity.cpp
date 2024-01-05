@@ -288,7 +288,7 @@ namespace CubeCover
                 if(faceTet(i, j) == -1)
                 {
                     
-                    B(bidx_iter, 0) = i;
+                    B(bidx_iter, 0) = faceTet(i, (j + 1)%2);
                     B(bidx_iter, 1) = j;
 
                     faceBoundaryElements(i, j) = bidx_iter;
