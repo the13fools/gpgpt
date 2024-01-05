@@ -168,8 +168,6 @@ public:
                 // if (centroid.norm() < 90) { // cylinder
                 // if (centroid.norm() < 45) { // disk_v623
                 if (centroid.norm() < 4.5) { // cylinder
-
-
                     boundaryFaces(i) = 0;
                 } else {
                     // Set frame orientation based on the centroid
@@ -177,7 +175,7 @@ public:
 
                     Eigen::VectorXd frame = Eigen::VectorXd::Zero(DOFS_PER_ELEMENT);
 
-                    double theta = atan2(vec(1),vec(0)) * .25; // acos(vec(1)) * .5;
+                    double theta = atan2(vec(1),vec(0)); // acos(vec(1)) * .5;
                     frame(0) = cos(theta);
                     frame(1) = sin(theta);
                     frame(2) = 0.;
@@ -260,9 +258,9 @@ public:
     virtual void initConfigValues()
     {
       appState->config->w_attenuate = 1.;
-      appState->config->w_smooth = 1e5;
-      appState->config->w_bound = 1e8;
-      appState->config->w_curl = 1e1;
+      appState->config->w_smooth = 1.;
+      appState->config->w_bound = 1e4;
+      appState->config->w_curl = 1e-9;
     }
 
 // This is called after each step.  

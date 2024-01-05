@@ -90,10 +90,11 @@
 
 
               // Decide when to switch to true hessian 
-              if ( dec / f < 1e-3)
+              if ( dec / f < 1e-4)
               {
                 useProjHessian = false;
                 std::cout << "*** switch off projected hessian to fine-tune result ***" << std::endl;
+                std::cout << "*** *** *** newton decrement was: " << dec << " | fval was: " << f << " | ratio was: " << dec / f << "*** *** ***" << std::endl;
               }
 
               _cur_x = TinyAD::line_search(x, d, f, g, [&] (Eigen::VectorXd& point) -> double { return this->eval_func_at(point); }, 1., .8, 512, 1e-3);
