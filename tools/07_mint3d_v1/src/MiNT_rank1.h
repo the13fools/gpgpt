@@ -294,7 +294,7 @@ public:
     {
       appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e0;
-      appState->config->w_bound = 1e10;
+      appState->config->w_bound = 1e4;
       appState->config->w_curl = 1e-3;
     }
 

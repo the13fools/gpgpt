@@ -116,7 +116,7 @@ template<int N>
                 }
             }
 
-            return ret * 1e-6;
+            return ret * 1e-3;
 
         });
 
@@ -168,11 +168,11 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 
             if (i == 0 )
             {
-                curr_diff *= 1e3;
+                curr_diff *= 5e1;
             }
             else 
             {
-                curr_diff *= 1e-2;
+                curr_diff *= 1e-1;
             }
 
 
