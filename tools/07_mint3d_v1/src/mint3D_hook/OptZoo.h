@@ -116,7 +116,7 @@ template<int N>
                 }
             }
 
-            return ret * e.w_bound / 1e6;
+            return ret * 1e-6;
 
         });
 
@@ -166,9 +166,13 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
         {
             T curr_diff = e.self_data.primal_norms[i] - targ;
             ret = ret + curr_diff*curr_diff;
+            if (i == 0 )
+            {
+                ret *= 1e4;
+            }
         }
 
-        return ret; 
+        return ret * 1e-4; 
 
     });
 
