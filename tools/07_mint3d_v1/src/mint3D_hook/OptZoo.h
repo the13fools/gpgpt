@@ -116,7 +116,7 @@ template<int N>
                 }
             }
 
-            return ret * 1e-3;
+            return ret * 1e4 * e.w_attenuate;
 
         });
 
