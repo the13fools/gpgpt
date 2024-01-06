@@ -116,7 +116,7 @@ template<int N>
                 }
             }
 
-            return ret * e.w_bound / 1e4;
+            return ret * e.w_bound / 1e6;
 
         });
 
