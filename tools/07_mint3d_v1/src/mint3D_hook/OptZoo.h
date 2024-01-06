@@ -116,7 +116,7 @@ template<int N>
                 }
             }
 
-            return ret * 1e4 * e.w_attenuate;
+            return ret * 1e2 * e.w_attenuate;
 
         });
 
@@ -168,11 +168,11 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 
             if (i == 0 )
             {
-                curr_diff *= 5e1;
+                curr_diff *= 10;
             }
             else 
             {
-                curr_diff *= 1e-1;
+                // curr_diff *= 1e-1;
             }
 
 
@@ -181,7 +181,7 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             
         }
 
-        return ret; 
+        return ret * 100; 
 
     });
 
@@ -227,14 +227,20 @@ static void addNormalBoundaryTerm(ADFunc& func, AppState& appState) {
         Eigen::Vector3d b = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 1));
         Eigen::Vector3d c = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 2));
 
-        Eigen::VectorX<T> b1 = (a-b).normalized();
-        Eigen::VectorX<T> b2 = (a-c).normalized();
+        Eigen::Vector3<T> b1 = (a-b).normalized();
+        Eigen::Vector3<T> b2 = (a-c).normalized();
+        Eigen::VectorX<T> n = b1.cross(b2).normalized();
         Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
 
         T orth1 = b1.dot( curr );
         T orth2 = b2.dot( curr );
+        T unit = 1 - curr.dot(n);
+        // T unit = 1 - curr.dot(curr);
 
-        return (orth1*orth1 + orth2*orth2) * e.w_bound;
+
+        return (orth1*orth1 + orth2*orth2 ) * e.w_bound * e.w_bound + unit*unit * e.w_bound;
+        // return unit*unit * e.w_bound;
+
 
         // if (f_idx == 0)
         // {
@@ -518,6 +524,9 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
         using VAR = std::decay_t<decltype(element)>; 
 
         T ret = T(0);
+
+        if ((appState.config->w_curl) < 1e-9)
+            return ret;
         
         for(int term = 0; term < num_curls; term++)
         {
@@ -595,9 +604,9 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
                 // if enforce boundary curl, then should multiply the weight by 2, but 
                 // this doens't do much, maybe useful for improving boundary coupling?  Can try on and off 
                 T boundary_multiplier = 1;
-                // int n_idx = e.neighbor_data.at(i).curr_idx;
-                // if (n_idx >= appState.cur_tet_mesh->nTets())
-                //     boundary_multiplier = 2; // could also be zero? 
+                int n_idx = e.neighbor_data.at(i).curr_idx;
+                if (n_idx >= appState.cur_tet_mesh->nTets())
+                    boundary_multiplier = 2; // could also be zero? 
                 curl_term += boundary_multiplier * e.neighbor_data.at(i).Lk_edge_contract_diff.transpose() * weights * e.neighbor_data.at(i).Lk_edge_contract_diff;
             }
 

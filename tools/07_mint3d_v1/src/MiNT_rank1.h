@@ -17,9 +17,9 @@
 #include "ADWrapper/ADFuncRunner.h"
 #include "ADWrapper/ADFunc_TinyAD_Instance.h"
 
-#include <igl/on_boundary.h>
+// #include <igl/on_boundary.h>
 
-#include <igl/writeDMAT.h>
+// #include <igl/writeDMAT.h>
 
 #include "OptZoo.h"
 
@@ -52,6 +52,14 @@ public:
       // delete _opt;
     }
 
+    virtual void initConfigValues()
+    {
+      appState->config->w_attenuate = 1.;
+      appState->config->w_smooth = 1e0;
+      appState->config->w_bound = 1e2;
+      appState->config->w_curl = 7e-10; // this is off for the first outer iter 
+    }
+
     virtual void drawGUI()
     {
       Mint3DHook::drawGUI();
@@ -72,7 +80,7 @@ public:
       // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
-  appState->meshName = "cylinder_400";
+  // appState->meshName = "cylinder_400";
   // appState->meshName = "cylinder3k";
 
   // appState->meshName = "sphere_r0.17";
@@ -80,10 +88,12 @@ public:
     // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
 
+// appState->meshName = "triangle_notwist_400";
+// appState->meshName = "tetrahedron_100";
+      // tetrahedron_100
+// parallelogram_exact
 
-
-      
-
+appState->meshName = "parallelogram_exact";
       
 
 
@@ -113,7 +123,7 @@ public:
       // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
 
       OptZoo<DOFS_PER_ELEMENT>::addWeakOrthogonalityTerm(func, *appState);
-      OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
+      // OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
       
       OptZoo<DOFS_PER_ELEMENT>::addNormalBoundaryTerm(func, *appState);
       
@@ -124,8 +134,8 @@ public:
       // OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L2x2_Term(func, *appState);
       OptZoo<DOFS_PER_ELEMENT>::addSmoothness_L4_Term(func, *appState);
 
-      // appState->curl_orders = {2,4,6};
-      // OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
+      appState->curl_orders = {2,4,6};
+      OptZoo<DOFS_PER_ELEMENT>::addCurlTerms(func, *appState);
 
       
       // OptZoo<DOFS_PER_ELEMENT>::addCurlTerm_L2(func, *appState);
@@ -203,15 +213,17 @@ public:
         // Assuming boundary faces are identified in AppState
         Eigen::MatrixXi K;
 
-        // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
+        appState->frames.resize(appState->T.rows(), DOFS_PER_ELEMENT);
+        appState->boundary_frames.resize(appState->cur_tet_mesh->nBoundaryElements(), DOFS_PER_ELEMENT);
 
+
+        // Eigen::MatrixXi bound_face_idx = appState->bound_face_idx;
+/*
         Eigen::VectorXi boundaryFaces;
         igl::on_boundary(appState->T,boundaryFaces, K);
 
         appState->bound_face_idx = boundaryFaces;
 
-        appState->frames.resize(appState->T.rows(), DOFS_PER_ELEMENT);
-        appState->boundary_frames.resize(appState->cur_tet_mesh->nBoundaryElements(), DOFS_PER_ELEMENT);
 
         // Initialize boundary conditions
         for (int i = 0; i < boundaryFaces.size(); ++i) {
@@ -261,6 +273,8 @@ public:
 
         appState->bound_face_idx = boundaryFaces;
         appState->frames_orig = appState->frames;
+ 
+*/
 
         // 
 
@@ -290,13 +304,7 @@ public:
 
     }
 
-    virtual void initConfigValues()
-    {
-      appState->config->w_attenuate = 1.;
-      appState->config->w_smooth = 1e0;
-      appState->config->w_bound = 1e4;
-      appState->config->w_curl = 1e-3;
-    }
+
 
 // This is called after each step.  
     virtual void updateAppStateFromOptState()
