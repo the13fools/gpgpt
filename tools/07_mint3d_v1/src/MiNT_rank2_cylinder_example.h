@@ -279,6 +279,10 @@ public:
         appState->frames.row(i) = x.segment<DOFS_PER_ELEMENT>(nvars*i);
         // appState->deltas.row(i) = x.segment<4>(nvars*i+2);
 
+        if (appState->bound_face_idx(i) == 1) {
+          appState->frames.row(i) = appState->frames_orig.row(i);
+        }
+
         
       }
 

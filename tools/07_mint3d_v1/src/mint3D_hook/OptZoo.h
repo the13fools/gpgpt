@@ -94,10 +94,10 @@ template<int N>
     //         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
 
     // // Exit early if on a boundary element. 
-            if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
-            {
-                return T(0);
-            }
+            // if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
+            // {
+            //     return T(0);
+            // }
 
             ProcElement<T,VAR> e(ElementLiftType::primal); 
             // e.setElementVars(appState, f_idx, s_curr);
@@ -116,7 +116,7 @@ template<int N>
                 }
             }
 
-            return ret * 1e2 * e.w_attenuate;
+            return ret * 1e-1 * e.w_attenuate;
 
         });
 
@@ -181,7 +181,7 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             
         }
 
-        return ret * 100; 
+        return ret * 1e-3; 
 
     });
 
@@ -238,7 +238,7 @@ static void addNormalBoundaryTerm(ADFunc& func, AppState& appState) {
         // T unit = 1 - curr.dot(curr);
 
 
-        return (orth1*orth1 + orth2*orth2 ) * e.w_bound * e.w_bound + unit*unit * e.w_bound;
+        return (orth1*orth1 + orth2*orth2 ) * e.w_bound * e.w_bound * e.w_bound * e.w_bound + unit*unit * e.w_bound;
         // return unit*unit * e.w_bound;
 
 

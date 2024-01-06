@@ -56,7 +56,7 @@ public:
     {
       appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e0;
-      appState->config->w_bound = 1e2;
+      appState->config->w_bound = 1e1;
       appState->config->w_curl = 7e-10; // this is off for the first outer iter 
     }
 
@@ -93,7 +93,9 @@ public:
       // tetrahedron_100
 // parallelogram_exact
 
-appState->meshName = "parallelogram_exact";
+// appState->meshName = "parallelogram_exact";
+appState->meshName = "tetrahedron";
+
       
 
 
@@ -123,7 +125,7 @@ appState->meshName = "parallelogram_exact";
       // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
 
       OptZoo<DOFS_PER_ELEMENT>::addWeakOrthogonalityTerm(func, *appState);
-      // OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
       
       OptZoo<DOFS_PER_ELEMENT>::addNormalBoundaryTerm(func, *appState);
       
@@ -211,6 +213,7 @@ appState->meshName = "parallelogram_exact";
        
        
        
+        appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-4;
         // appState->frames.row(i) = Eigen::VectorXd::Ones(DOFS_PER_ELEMENT);
 
 // add back pinned constraints later.  
@@ -363,7 +366,7 @@ appState->meshName = "parallelogram_exact";
       }
 
 
-      if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-17)
+      if ( appState->keepSolving == false && 1./appState->config->w_attenuate * appState->config->w_curl < 1e17)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 2.;
         appState->keepSolving = true;  
@@ -371,7 +374,7 @@ appState->meshName = "parallelogram_exact";
         std::cout << "~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ attenuate set to: " << appState->config->w_attenuate << " ~~~~~ ~~~~~~ ~~~~~~ ~~~~~~ ~~~~~~" << std::endl;
 
       }
-      else if ( appState->keepSolving == false && appState->config->w_attenuate > 1e-23)
+      else if ( appState->keepSolving == false && 1./appState->config->w_attenuate * appState->config->w_curl < 1e23)
       {
         appState->config->w_attenuate = appState->config->w_attenuate / 10.;
         appState->keepSolving = true;  
