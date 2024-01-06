@@ -23,7 +23,7 @@
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 3
+#define DOFS_PER_ELEMENT 9
 
 
 class MiNT_rank1 : public Mint3DHook
@@ -37,7 +37,7 @@ public:
 
 
 
-      appState->primals_layout = {0, 3};
+      appState->primals_layout = {0, DOFS_PER_ELEMENT, DOFS_PER_ELEMENT / 3};
       appState->moments_layout = {0, 0};
       // appState->deltas_layout = {2, 4};
       appState->deltas_layout = {3, 0};
@@ -68,14 +68,14 @@ public:
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
 
-      // appState->meshName = "disk_v210";
+      appState->meshName = "disk_v210";
       // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
   // appState->meshName = "cylinder3k";
 
-  appState->meshName = "sphere_r0.17";
+  // appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
     // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
@@ -111,6 +111,12 @@ public:
       /// convenient auto-diff with sparse hessians is quite new, there's a lot to explore! 
       /////////////////////////////
       // OptZoo<DOFS_PER_ELEMENT>::addConstTestTerm(func, *appState);
+
+      OptZoo<DOFS_PER_ELEMENT>::addWeakOrthogonalityTerm(func, *appState);
+      OptZoo<DOFS_PER_ELEMENT>::addUnitNormTerm(func, *appState);
+      
+      OptZoo<DOFS_PER_ELEMENT>::addNormalBoundaryTerm(func, *appState);
+      
       
       // OptZoo<DOFS_PER_ELEMENT>::addPinnedBoundaryTerm(func, *appState);
 

@@ -5,7 +5,7 @@
 #include "FieldView.h"
 
 #include "MyConfig.h"
-// #include "implot/implot.h"
+#include "implot/implot.h"
 
 namespace ImGuiWidgets {
 
@@ -426,7 +426,7 @@ namespace ImGuiWidgets {
     {
 
 
-        /*
+        
         ImPlot::CreateContext();
 
 // static double xs[1001], ys1[1001], ys2[1001], ys3[1001];
@@ -485,7 +485,7 @@ namespace ImGuiWidgets {
 
         // ImGui::Plot("plot", conf);
 
-        */
+        
     }
 
 

@@ -32,49 +32,97 @@ template<int N>
 
         std::cout << "add const obj" << std::endl;
 
-    func.template add_elements<1>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
-    {
-
-     // Evaluate element using either double or TinyAD::Double
-        using T = TINYAD_SCALAR_TYPE(element);
-        using VAR = std::decay_t<decltype(element)>; 
-
-        Eigen::Index f_idx = element.handle;
-//         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-
-// // Exit early if on a boundary element. 
-//         if (bound_face_idx(f_idx) == 1)
-//         {
-//             return T(0);
-//         }
-
-        ProcElement<T,VAR> e(ElementLiftType::primal); 
-        // e.setElementVars(appState, f_idx, s_curr);
-        e.setSelfData(appState, f_idx, element);
-        // e.setNeighborData(appState, f_idx, element);
-
-        if (f_idx == 0)
+        func.template add_elements<1>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
         {
 
-        }
+        // Evaluate element using either double or TinyAD::Double
+            using T = TINYAD_SCALAR_TYPE(element);
+            using VAR = std::decay_t<decltype(element)>; 
+
+            Eigen::Index f_idx = element.handle;
+    //         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+    // // Exit early if on a boundary element. 
+    //         if (bound_face_idx(f_idx) == 1)
+    //         {
+    //             return T(0);
+    //         }
+
+            ProcElement<T,VAR> e(ElementLiftType::primal); 
+            // e.setElementVars(appState, f_idx, s_curr);
+            e.setSelfData(appState, f_idx, element);
+            // e.setNeighborData(appState, f_idx, element);
+
+            if (f_idx == 0)
+            {
+
+            }
 
 
-        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
-      
-        Eigen::VectorX<T> targ = Eigen::VectorX<T>::Ones(N);
-
-        Eigen::VectorX<T> curr = e.self_data.dofs_curr_elem;
+            Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
         
-        return 1000.*(curr-targ).squaredNorm(); // + w_bound*delta.squaredNorm();
-      
+            Eigen::VectorX<T> targ = Eigen::VectorX<T>::Ones(N);
+
+            Eigen::VectorX<T> curr = e.self_data.dofs_curr_elem;
+            
+            return 1000.*(curr-targ).squaredNorm(); // + w_bound*delta.squaredNorm();
+        
 
 
 
-    });
+        });
 
  
 
-}
+    }   
+
+
+
+// the const test term tried to make all the vectors the all ones or somethgn.
+    static void addWeakOrthogonalityTerm(ADFunc& func, AppState& appState) {
+
+        std::cout << "add const obj" << std::endl;
+
+        func.template add_elements<1>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+        {
+
+        // Evaluate element using either double or TinyAD::Double
+            using T = TINYAD_SCALAR_TYPE(element);
+            using VAR = std::decay_t<decltype(element)>; 
+
+            Eigen::Index f_idx = element.handle;
+    //         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+    // // Exit early if on a boundary element. 
+            if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
+            {
+                return T(0);
+            }
+
+            ProcElement<T,VAR> e(ElementLiftType::primal); 
+            // e.setElementVars(appState, f_idx, s_curr);
+            e.setSelfData(appState, f_idx, element);
+            // e.setNeighborData(appState, f_idx, element);
+
+
+            T ret = T(0);
+            int nvecs = e.self_data.primals_rank1.size();
+            for (int i = 0; i < nvecs; i++)
+            {
+                for (int j = i+1; j < nvecs; j++)
+                {
+                    T dprod = e.self_data.primals_rank1[i].transpose() * e.self_data.primals_rank1[j];
+                    ret = ret + dprod*dprod;
+                }
+            }
+
+            return ret * e.w_bound / 1e4;
+
+        });
+
+ 
+
+    }      
 
 
 // the const test term tried to make all the vectors the all ones or somethgn.
@@ -91,8 +139,13 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
         Eigen::Index f_idx = element.handle;
         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
 
-// Exit early if on a boundary element. 
-        if (bound_face_idx(f_idx) == 1)
+// // Exit early if on a boundary element. 
+//         if (bound_face_idx(f_idx) == 1)
+//         {
+//             return T(0);
+//         }
+
+        if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
         {
             return T(0);
         }
@@ -116,6 +169,74 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
         }
 
         return ret; 
+
+    });
+
+ 
+
+}
+
+
+// the const test term tried to make all the vectors the all ones or somethgn.
+static void addNormalBoundaryTerm(ADFunc& func, AppState& appState) {
+
+        std::cout << "add unit norm (ginzburg-landau) obj" << std::endl;
+
+    func.template add_elements<1>(TinyAD::range(appState.nelem), [&] (auto& element) -> TINYAD_SCALAR_TYPE(element)
+    {
+
+        using T = TINYAD_SCALAR_TYPE(element);
+        using VAR = std::decay_t<decltype(element)>; 
+
+        Eigen::Index f_idx = element.handle;
+        Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
+
+// // Exit early if on a boundary element. 
+//         if (bound_face_idx(f_idx) == 1)
+//         {
+//             return T(0);
+//         }
+
+        if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
+        {
+            return T(0);
+        }
+
+        ProcElement<T,VAR> e(ElementLiftType::primal); 
+        // e.setElementVars(appState, f_idx, s_curr);
+        e.setSelfData(appState, f_idx, element);
+        // e.setNeighborData(appState, f_idx, element);
+
+
+        int boundaryFace = appState.cur_tet_mesh->boundaryFace(f_idx - appState.cur_tet_mesh->nTets() );
+        // Eigen::Vector3d normal = appState->cur_tet_mesh->faceNormal(boundaryFace);
+        Eigen::Vector3d a = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 0));
+        Eigen::Vector3d b = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 1));
+        Eigen::Vector3d c = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 2));
+
+        Eigen::VectorX<T> b1 = (a-b).normalized();
+        Eigen::VectorX<T> b2 = (a-c).normalized();
+        Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
+
+        T orth1 = b1.dot( curr );
+        T orth2 = b2.dot( curr );
+
+        return (orth1*orth1 + orth2*orth2) * e.w_bound;
+
+        // if (f_idx == 0)
+        // {
+
+        // }
+        // T ret = T(0);
+        // T targ = T(1);
+
+        // for (int i = 0; i < e.self_data.primal_norms.size(); i++)
+        // {
+        //     T curr_diff = e.self_data.primal_norms[0] - targ;
+        //     ret = ret + curr_diff*curr_diff;
+        // }
+
+        // return ret; 
 
     });
 
@@ -461,9 +582,9 @@ static void addCurlTerms(ADFunc& func, AppState& appState) {
                 // if enforce boundary curl, then should multiply the weight by 2, but 
                 // this doens't do much, maybe useful for improving boundary coupling?  Can try on and off 
                 T boundary_multiplier = 1;
-                int n_idx = e.neighbor_data.at(i).curr_idx;
-                if (n_idx >= appState.cur_tet_mesh->nTets())
-                    boundary_multiplier = 2; // could also be zero? 
+                // int n_idx = e.neighbor_data.at(i).curr_idx;
+                // if (n_idx >= appState.cur_tet_mesh->nTets())
+                //     boundary_multiplier = 2; // could also be zero? 
                 curl_term += boundary_multiplier * e.neighbor_data.at(i).Lk_edge_contract_diff.transpose() * weights * e.neighbor_data.at(i).Lk_edge_contract_diff;
             }
 
