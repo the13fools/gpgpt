@@ -165,14 +165,23 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
         for (int i = 0; i < e.self_data.primal_norms.size(); i++)
         {
             T curr_diff = e.self_data.primal_norms[i] - targ;
-            ret = ret + curr_diff*curr_diff;
+
             if (i == 0 )
             {
-                ret *= 1e4;
+                curr_diff *= 1e3;
             }
+            else 
+            {
+                curr_diff *= 1e-2;
+            }
+
+
+
+            ret = ret + curr_diff*curr_diff;
+            
         }
 
-        return ret * 1e-4; 
+        return ret; 
 
     });
 
