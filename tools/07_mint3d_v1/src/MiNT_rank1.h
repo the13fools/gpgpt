@@ -184,7 +184,33 @@ appState->meshName = "parallelogram_exact";
       // Eigen::VectorXd x = opt->get_current_x();
       for(int i = 0; i < ntets; i++)
       {
-        appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
+        // appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
+
+        Eigen::Vector3d a = Eigen::VectorXd::Random(3); 
+        Eigen::Vector3d b = Eigen::VectorXd::Random(3); 
+        Eigen::Vector3d c = a.cross(b);
+        b = c.cross(a);
+        a.normalize();
+        b.normalize();
+        c.normalize();
+        appState->frames.row(i).segment<3>(0) = a;
+        if (DOFS_PER_ELEMENT >= 6)
+        {
+          appState->frames.row(i).segment<3>(3) = b;
+        }
+        if (DOFS_PER_ELEMENT >= 9)
+        {
+          appState->frames.row(i).segment<3>(6) = c;
+        }
+
+
+        // for (int j = 0; j < DOFS_PER_ELEMENT / 3; ++j)
+        // {
+        //   appState->frames.row(i).segment<3>(j*3) = 0.;
+        // }
+       
+       
+       
         // appState->frames.row(i) = Eigen::VectorXd::Ones(DOFS_PER_ELEMENT);
 
 // add back pinned constraints later.  
