@@ -154,7 +154,9 @@ public:
     std::unique_ptr<CubeCover::TetMeshConnectivity> cur_tet_mesh;  
     Eigen::MatrixXd tet_centroids;                 // In 3d need to use mesh data structures instead of surface.   
     Eigen::MatrixXd bound_centroids;                 // In 3d need to use mesh data structures instead of surface.   
-
+    Eigen::MatrixXd bound_normals; 
+    Eigen::MatrixXd bound_b1; // a bit ugly organization, sorry.  Maybe nicer to have a std::vector of both, can change later 
+    Eigen::MatrixXd bound_b2;                 
 
     bool keepSolving = true;
     int outerLoopIteration = 0;

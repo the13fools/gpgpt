@@ -89,11 +89,11 @@ public:
         // appState->meshName = "sphere_r0.05";
 
 // appState->meshName = "triangle_notwist_400";
-// appState->meshName = "tetrahedron_200";
+appState->meshName = "tetrahedron_200";
       // tetrahedron_100
 // parallelogram_exact
 
-appState->meshName = "parallelogram_exact";
+// appState->meshName = "parallelogram_exact";
 // appState->meshName = "tetrahedron";
 
       

@@ -832,12 +832,25 @@ void Mint3DHook::resetAppState() {
 
 
     appState->bound_centroids = Eigen::MatrixXd::Zero(appState->cur_tet_mesh->nBoundaryElements(), 3);
+    appState->bound_normals = appState->bound_centroids;
+    appState->bound_b1 = appState->bound_centroids;
+    appState->bound_b2 = appState->bound_centroids;
     for(int i = 0; i < appState->bound_centroids.rows(); i++)
     {
         int boundaryFace = appState->cur_tet_mesh->boundaryFace(i);
-        appState->bound_centroids.row(i) = (appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 0)) +
-                                            appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 1)) +
-                                            appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 2))) / 3.0;
+        Eigen::Vector3d a = appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 0));
+        Eigen::Vector3d b = appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 1));
+        Eigen::Vector3d c = appState->V.row(appState->cur_tet_mesh->faceVertex(boundaryFace, 2));
+
+        Eigen::Vector3d b1 = (b - a).normalized();
+        Eigen::Vector3d b2 = (c - a).normalized();
+        Eigen::Vector3d n = b1.cross(b2).normalized();
+
+
+        appState->bound_centroids.row(i) = ( a + b + c )  / 3.0;
+        appState->bound_normals.row(i) = n;
+        appState->bound_b1.row(i) = b1;
+        appState->bound_b2.row(i) = n.cross(b1);
     }
 
     polyscope::registerPointCloud("surface_vecs", appState->bound_centroids)->setPointRadius(0.0);

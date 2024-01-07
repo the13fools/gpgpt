@@ -23,9 +23,9 @@
 
 #include "OptZoo.h"
 
-// #define DOFS_PER_ELEMENT 9
+#define DOFS_PER_ELEMENT 9
 
-template<int DOFS_PER_ELEMENT>
+// template<int DOFS_PER_ELEMENT>
 class MiNT_mesh : public Mint3DHook
 {
 public:
@@ -56,7 +56,7 @@ public:
     {
       appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e0;
-      appState->config->w_bound = 1e1;
+      appState->config->w_bound = 1e2;
       appState->config->w_curl = 7e-10; // this is off for the first outer iter 
     }
 
@@ -89,11 +89,11 @@ public:
         // appState->meshName = "sphere_r0.05";
 
 // appState->meshName = "triangle_notwist_400";
-// appState->meshName = "tetrahedron_200";
+appState->meshName = "tetrahedron_200";
       // tetrahedron_100
 // parallelogram_exact
 
-appState->meshName = "parallelogram_exact";
+// appState->meshName = "parallelogram_exact";
 // appState->meshName = "tetrahedron";
 
       
@@ -184,50 +184,49 @@ appState->meshName = "parallelogram_exact";
       int ntets = appState->T.rows();
 
       // Eigen::VectorXd x = opt->get_current_x();
-      for(int i = 0; i < ntets; i++)
+      for(int i = 0; i < nelem; i++)
       {
         // appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
 
         Eigen::Vector3d a = Eigen::VectorXd::Random(3); 
+
+        if ( i >= ntets )
+          a = appState->bound_normals.row(i - ntets);
+
+
         Eigen::Vector3d b = Eigen::VectorXd::Random(3); 
         Eigen::Vector3d c = a.cross(b);
         b = c.cross(a);
         a.normalize();
         b.normalize();
         c.normalize();
-        appState->frames.row(i).segment<3>(0) = a;
+
+        Eigen::VectorXd ret_vec = Eigen::VectorXd::Zero(DOFS_PER_ELEMENT);
+        ret_vec.segment<3>(0) = a;
         if (DOFS_PER_ELEMENT >= 6)
         {
-          appState->frames.row(i).segment<3>(3) = b;
+          ret_vec.segment<3>(3) = b;
         }
         if (DOFS_PER_ELEMENT >= 9)
         {
-          appState->frames.row(i).segment<3>(6) = c;
+          ret_vec.segment<3>(6) = c;
         }
 
-
-        // for (int j = 0; j < DOFS_PER_ELEMENT / 3; ++j)
-        // {
-        //   appState->frames.row(i).segment<3>(j*3) = 0.;
-        // }
+        ret_vec *= 1e-1;
        
+        if ( i < ntets )
+        {
+          ret_vec *= 1e-4;
+          appState->frames.row(i) = ret_vec;
+        }
+        else
+        {
+          // ret_vec *= 1e-1;
+          ret_vec.tail(DOFS_PER_ELEMENT - 3) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT - 3) * 1e-4;
+          appState->boundary_frames.row(i - ntets) = ret_vec;
+        }
+        x.segment<DOFS_PER_ELEMENT>(nvars*i) = ret_vec;
        
-       
-        appState->frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-4;
-        // appState->frames.row(i) = Eigen::VectorXd::Ones(DOFS_PER_ELEMENT);
-
-// add back pinned constraints later.  
-        // if (appState->bound_face_idx(i) == 1) {
-        //   appState->frames.row(i) = appState->frames_orig.row(i);
-        // }
-
-        x.segment<DOFS_PER_ELEMENT>(nvars*i) = appState->frames.row(i);
-      }
-
-      for (int i = 0; i < nelem - ntets; ++i)
-      {
-        appState->boundary_frames.row(i) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT) * 1e-1;
-        x.segment<DOFS_PER_ELEMENT>(nvars*(i+ntets)) = appState->boundary_frames.row(i);
       }
 
       // add pin here 

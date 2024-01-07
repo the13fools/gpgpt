@@ -160,7 +160,7 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 
         }
         T ret = T(0);
-        T targ = T(1);
+        T targ = T(1.000);
 
         for (int i = 0; i < e.self_data.primal_norms.size(); i++)
         {
@@ -172,8 +172,10 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             }
             else if (e.w_attenuate > 1e-10)
             {
-                curr_diff = e.w_attenuate;
+                // curr_diff *= e.w_attenuate;
                 // curr_diff *= 1e-1;
+                curr_diff = T(0);
+                // continue;
             }
             else 
             {
@@ -214,7 +216,7 @@ static void addNormalBoundaryTerm(ADFunc& func, AppState& appState) {
 //         {
 //             return T(0);
 //         }
-
+        int ntets = appState.cur_tet_mesh->nTets();
         if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
         {
             return T(0);
@@ -228,22 +230,27 @@ static void addNormalBoundaryTerm(ADFunc& func, AppState& appState) {
 
         int boundaryFace = appState.cur_tet_mesh->boundaryFace(f_idx - appState.cur_tet_mesh->nTets() );
         // Eigen::Vector3d normal = appState->cur_tet_mesh->faceNormal(boundaryFace);
-        Eigen::Vector3d a = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 0));
-        Eigen::Vector3d b = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 1));
-        Eigen::Vector3d c = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 2));
+        // Eigen::Vector3d a = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 0));
+        // Eigen::Vector3d b = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 1));
+        // Eigen::Vector3d c = appState.V.row(appState.cur_tet_mesh->faceVertex(boundaryFace, 2));
 
-        Eigen::Vector3<T> b1 = (a-b).normalized();
-        Eigen::Vector3<T> b2 = (a-c).normalized();
-        Eigen::VectorX<T> n = b1.cross(b2).normalized();
+        // Eigen::Vector3<T> b1 = (a-b).normalized();
+        // Eigen::Vector3<T> b2 = (a-c).normalized();
+        // Eigen::VectorX<T> n = b1.cross(b2).normalized();
+
+        Eigen::Vector3<T> b1 = appState.bound_b1.row(f_idx - ntets);
+        Eigen::Vector3<T> b2 = appState.bound_b2.row(f_idx - ntets);
+        Eigen::VectorX<T> n = appState.bound_normals.row(f_idx - ntets);
+
         Eigen::VectorX<T> curr = e.self_data.primals_rank1[0];
 
-        T orth1 = b1.dot( curr );
-        T orth2 = b2.dot( curr );
+        T orth1 = curr.dot(b1);
+        T orth2 = curr.dot(b2);
         T unit = 1 - curr.dot(n);
         // T unit = 1 - curr.dot(curr);
 
 
-        return (orth1*orth1 + orth2*orth2 ) * e.w_bound * e.w_bound * e.w_bound * e.w_bound + unit*unit * e.w_bound;
+        return (orth1*orth1 + orth2*orth2 ) * e.w_bound * e.w_bound * e.w_bound * e.w_bound * e.w_smooth + unit*unit * e.w_bound* e.w_smooth;
         // return unit*unit * e.w_bound;
 
 

@@ -162,7 +162,9 @@ int main(int argc, char **argv) {
 ////////////////////////////////////////////
 ////////////////////////////////////////////
 
-  hook = static_cast<Mint3DHook*>(new MiNT_mesh<9>());
+  // hook = static_cast<Mint3DHook*>(new MiNT_mesh<9>());
+    hook = static_cast<Mint3DHook*>(new MiNT_mesh());
+
     // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank2());
   // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank3());
 //
