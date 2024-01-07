@@ -145,10 +145,10 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 //             return T(0);
 //         }
 
-        if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
-        {
-            return T(0);
-        }
+        // if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
+        // {
+        //     return T(0);
+        // }
 
         ProcElement<T,VAR> e(ElementLiftType::primal); 
         // e.setElementVars(appState, f_idx, s_curr);
@@ -170,9 +170,14 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             {
                 curr_diff *= 10;
             }
+            else if (e.w_attenuate > 1e-10)
+            {
+                curr_diff = e.w_attenuate;
+                // curr_diff *= 1e-1;
+            }
             else 
             {
-                // curr_diff *= 1e-1;
+                curr_diff = T(0);
             }
 
 
@@ -181,7 +186,7 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             
         }
 
-        return ret * 1e-3; 
+        return ret * 1e2; 
 
     });
 
