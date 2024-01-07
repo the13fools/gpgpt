@@ -94,10 +94,10 @@ template<int N>
     //         Eigen::VectorXi bound_face_idx = appState.bound_face_idx;
 
     // // Exit early if on a boundary element. 
-            // if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
-            // {
-            //     return T(0);
-            // }
+            if ( f_idx < appState.cur_tet_mesh->nTets()  ) 
+            {
+                return T(0);
+            }
 
             ProcElement<T,VAR> e(ElementLiftType::primal); 
             // e.setElementVars(appState, f_idx, s_curr);
