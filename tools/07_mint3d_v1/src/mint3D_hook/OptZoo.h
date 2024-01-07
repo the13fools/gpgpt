@@ -116,7 +116,10 @@ template<int N>
                 }
             }
 
-            return ret * 1e-1 * e.w_attenuate;
+
+            // double 
+
+            return ret * 1e2 * e.w_attenuate;
 
         });
 

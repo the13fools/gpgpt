@@ -410,10 +410,10 @@ public:
         data.Lk_edge_contract_diff.resize(edge_contract_order+1);
         data.Lk_edge_contract_diff.setZero();
 
-        if (t_idx >= cur_mesh->nTets())
-        {
-            return;
-        }
+        // if (t_idx >= cur_mesh->nTets())
+        // {
+        //     return;
+        // }
         
         Eigen::MatrixXd tet_facet_basis = appState.tet_facet_basis.at(t_idx).at(n_idx);
 

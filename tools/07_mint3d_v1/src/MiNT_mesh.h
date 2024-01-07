@@ -54,7 +54,7 @@ public:
 
     virtual void initConfigValues()
     {
-      appState->config->w_attenuate = 1.;
+      appState->config->w_attenuate = 1.e-4;
       appState->config->w_smooth = 1e0;
       appState->config->w_bound = 1e2;
       appState->config->w_curl = 7e-10; // this is off for the first outer iter 
@@ -85,11 +85,11 @@ public:
 
   // appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
-    // appState->meshName = "sphere_r0.10";
+    appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
 
 // appState->meshName = "triangle_notwist_400";
-appState->meshName = "tetrahedron_200";
+// appState->meshName = "tetrahedron_200";
       // tetrahedron_100
 // parallelogram_exact
 
