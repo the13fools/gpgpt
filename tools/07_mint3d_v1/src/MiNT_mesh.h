@@ -54,10 +54,10 @@ public:
 
     virtual void initConfigValues()
     {
-      appState->config->w_attenuate = 1.e-4;
+      appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e0;
       appState->config->w_bound = 1e2;
-      appState->config->w_curl = 7e-10; // this is off for the first outer iter 
+      appState->config->w_curl = 1e-4; //7e-10; // this is off for the first outer iter 
     }
 
     virtual void drawGUI()
