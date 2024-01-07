@@ -23,16 +23,16 @@
 
 #include "OptZoo.h"
 
-#define DOFS_PER_ELEMENT 9
+// #define DOFS_PER_ELEMENT 9
 
-
-class MiNT_rank1 : public Mint3DHook
+template<int DOFS_PER_ELEMENT>
+class MiNT_mesh : public Mint3DHook
 {
 public:
-    MiNT_rank1() : Mint3DHook(new AppState()) {
+    MiNT_mesh() : Mint3DHook(new AppState()) {
       appState->current_element = Field_View::vec_norms;
-      appState->solveType = "MiNT_rank1";
-      appState->solveDescription = "MiNT_rank1";
+      appState->solveType = "MiNT_mesh_rank_" + std::to_string(DOFS_PER_ELEMENT/3);
+      appState->solveDescription = "MiNT_mesh solver with " + std::to_string(DOFS_PER_ELEMENT) + " dofs per element";
 
 
 
@@ -48,7 +48,7 @@ public:
 
     }
 
-    ~MiNT_rank1(){
+    ~MiNT_mesh(){
       // delete _opt;
     }
 
@@ -89,11 +89,11 @@ public:
         // appState->meshName = "sphere_r0.05";
 
 // appState->meshName = "triangle_notwist_400";
-appState->meshName = "tetrahedron_200";
+// appState->meshName = "tetrahedron_200";
       // tetrahedron_100
 // parallelogram_exact
 
-// appState->meshName = "parallelogram_exact";
+appState->meshName = "parallelogram_exact";
 // appState->meshName = "tetrahedron";
 
       
@@ -437,5 +437,5 @@ protected:
 
 #endif // MINT_RANK1_H
 
-#undef DOFS_PER_ELEMENT
+// #undef DOFS_PER_ELEMENT
 

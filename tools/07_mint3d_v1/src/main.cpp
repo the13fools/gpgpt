@@ -33,7 +33,7 @@
 ////////////////////////////////////////////
 
 
-#include "MiNT_rank1.h"
+#include "MiNT_mesh.h"
 // #include "MiNT_krushkal_rank2.h"
 
 // #include "MiNT_krushkal_rank3.h"
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
 ////////////////////////////////////////////
 ////////////////////////////////////////////
 
-  hook = static_cast<Mint3DHook*>(new MiNT_rank1());
+  hook = static_cast<Mint3DHook*>(new MiNT_mesh<9>());
     // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank2());
   // hook = static_cast<Mint3DHook*>(new MiNT_krushkal_rank3());
 //
