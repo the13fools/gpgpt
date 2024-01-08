@@ -83,9 +83,9 @@ public:
   // appState->meshName = "cylinder_400";
   // appState->meshName = "cylinder3k";
 
-  // appState->meshName = "sphere_r0.17";
+  appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
-    appState->meshName = "sphere_r0.10";
+    // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
 
 // appState->meshName = "triangle_notwist_400";

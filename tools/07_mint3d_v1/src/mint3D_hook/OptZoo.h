@@ -119,7 +119,7 @@ template<int N>
 
             // double 
 
-            return ret * 1e2 * e.w_attenuate;
+            return ret * 1e3 * e.w_attenuate;
 
         });
 
@@ -175,10 +175,10 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
             }
             else if (e.w_attenuate > 1e-10)
             {
-                // curr_diff *= e.w_attenuate;
-                // curr_diff *= 1e-1;
-                curr_diff = T(0);
-                // continue;
+                curr_diff *= e.w_attenuate;
+                // curr_diff *= 1e-2;
+                // curr_diff = T(0);
+                continue;
             }
             else 
             {
