@@ -54,8 +54,10 @@ void Mint3DHook::drawGUI() {
     */
 
 
-
-    ImGuiWidgets::ShowMainGUI(*appState);
+    if (!appState->headless_mode)
+    {
+        ImGuiWidgets::ShowMainGUI(*appState);
+    }
 }
 
 void Mint3DHook::updateRenderGeometry() {
@@ -282,13 +284,23 @@ void Mint3DHook::updateRenderGeometry() {
     // appState->zeroPassiveVars();
 
     // Request a redraw in Polyscope to update the visualization
-    polyscope::requestRedraw();
+
+    if (!appState->headless_mode)
+    {
+        polyscope::requestRedraw();
+    }
+
 }
 
 
 // Need to fill out viewer for each of: Field_View { vec_dirch, moment_dirch, sym_curl_residual, primal_curl_residual,
 void Mint3DHook::renderRenderGeometry()
 {
+    // still do this I guess but return as a no-op in headless mode
+    // if (appState->headless_mode)
+    // {
+    //     return;
+    // }
 
     if ((appState->shouldReload || appState->updateRenderGeometryNextFrameIfPaused) && this->isPaused())
     {
@@ -793,13 +805,6 @@ void Mint3DHook::resetAppState() {
     // Initialize symmetric curl operators 
     initCurlOperators();
 
-    // Optionally, re-register mesh with Polyscope if visualization needs a reset
-    polyscope::removeAllStructures();
-    polyscope::registerTetMesh("c", appState->V, appState->T);
-    polyscope::getVolumeMesh("c")->setEdgeWidth(0.6)->setTransparency(0.5);
-    // polyscope::getVolumeMesh("c")->setEdgeWidth(0.6);
-    polyscope::view::resetCameraToHomeView();
-
 
     appState->tet_centroids = Eigen::MatrixXd::Zero(appState->T.rows(), 3);
     for(int i = 0; i < appState->T.rows(); i++)
@@ -808,42 +813,6 @@ void Mint3DHook::resetAppState() {
                                             appState->V.row(appState->T(i, 1)) +
                                             appState->V.row(appState->T(i, 2)) +
                                             appState->V.row(appState->T(i, 3))) / 4.0;
-    }
-
-    polyscope::registerPointCloud("c_vecs", appState->tet_centroids)->setPointRadius(0.0);
-
-
-    int num_vecs = 3; // appState->frames.size();
-    for(int v = 0; v < num_vecs; v++)
-    {
-        // Eigen::MatrixXd cur_vec = outputData->frames[v];
-        Eigen::MatrixXd cur_vec = Eigen::MatrixXd::Zero(appState->frames.rows(), 3);
-
-        double color_shift = (v+1.) * 1.0 / num_vecs;
-
-        auto vectorField = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
-            
-        auto vectorFieldNeg = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
-        if ( v % 3 == 0 ) 
-        {
-            vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.1));
-            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.4, 0.4));
-        }
-        else if ( v % 3 == 1 ) 
-        {
-            vectorField->setVectorColor(glm::vec3(0.1, color_shift, 0.1));
-            vectorFieldNeg->setVectorColor(glm::vec3(0.4, color_shift, 0.4));
-        }
-        else if ( v % 3 == 2 ) 
-        {
-            vectorField->setVectorColor(glm::vec3(0.1, 0.1, color_shift));
-            vectorFieldNeg->setVectorColor(glm::vec3(0.4, 0.4, color_shift));
-        }
-
-
-
-        vectorField->setVectorRadius(0.003);
-        vectorFieldNeg->setVectorRadius(0.003);
     }
 
 
@@ -869,41 +838,94 @@ void Mint3DHook::resetAppState() {
         appState->bound_b2.row(i) = n.cross(b1);
     }
 
-    polyscope::registerPointCloud("surface_vecs", appState->bound_centroids)->setPointRadius(0.0);
-
-
-    // int num_vecs = 3; // appState->frames.size();
-    for(int v = 0; v < num_vecs; v++)
+    if (!appState->headless_mode)
     {
-        // Eigen::MatrixXd cur_vec = outputData->frames[v];
-        Eigen::MatrixXd cur_vec = Eigen::MatrixXd::Zero(appState->boundary_frames.rows(), 3);
+        // reset polyscope state
 
-        double color_shift = .5 + (v+1.) * 1.0 / (2 * num_vecs);
+ 
 
-        auto vectorField = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
-            
-        auto vectorFieldNeg = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
+        // Optionally, re-register mesh with Polyscope if visualization needs a reset
+        polyscope::removeAllStructures();
+        polyscope::registerTetMesh("c", appState->V, appState->T);
+        polyscope::getVolumeMesh("c")->setEdgeWidth(0.6)->setTransparency(0.5);
+        // polyscope::getVolumeMesh("c")->setEdgeWidth(0.6);
+        polyscope::view::resetCameraToHomeView();
 
-        if ( v % 3 == 0 ) 
+        polyscope::registerPointCloud("c_vecs", appState->tet_centroids)->setPointRadius(0.0);
+
+
+        int num_vecs = 3; // appState->frames.size();
+        for(int v = 0; v < num_vecs; v++)
         {
-            vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.2));
-            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.8));
-        }
-        else if ( v % 3 == 1 ) 
-        {
-            vectorField->setVectorColor(glm::vec3(0.1, color_shift, 0.2));
-            vectorFieldNeg->setVectorColor(glm::vec3(0.9, color_shift, 0.8));
-        }
-        else if ( v % 3 == 2 ) 
-        {
-            vectorField->setVectorColor(glm::vec3(0.1, 0.2, color_shift));
-            vectorFieldNeg->setVectorColor(glm::vec3(0.9, 0.8, color_shift));
+            // Eigen::MatrixXd cur_vec = outputData->frames[v];
+            Eigen::MatrixXd cur_vec = Eigen::MatrixXd::Zero(appState->frames.rows(), 3);
+
+            double color_shift = (v+1.) * 1.0 / num_vecs;
+
+            auto vectorField = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
+                
+            auto vectorFieldNeg = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
+            if ( v % 3 == 0 ) 
+            {
+                vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.1));
+                vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.4, 0.4));
+            }
+            else if ( v % 3 == 1 ) 
+            {
+                vectorField->setVectorColor(glm::vec3(0.1, color_shift, 0.1));
+                vectorFieldNeg->setVectorColor(glm::vec3(0.4, color_shift, 0.4));
+            }
+            else if ( v % 3 == 2 ) 
+            {
+                vectorField->setVectorColor(glm::vec3(0.1, 0.1, color_shift));
+                vectorFieldNeg->setVectorColor(glm::vec3(0.4, 0.4, color_shift));
+            }
+
+
+
+            vectorField->setVectorRadius(0.003);
+            vectorFieldNeg->setVectorRadius(0.003);
         }
 
 
-        vectorField->setVectorRadius(0.005);
-        vectorFieldNeg->setVectorRadius(0.005);
+        polyscope::registerPointCloud("surface_vecs", appState->bound_centroids)->setPointRadius(0.0);
+
+        // int num_vecs = 3; // appState->frames.size();
+        for(int v = 0; v < num_vecs; v++)
+        {
+            // Eigen::MatrixXd cur_vec = outputData->frames[v];
+            Eigen::MatrixXd cur_vec = Eigen::MatrixXd::Zero(appState->boundary_frames.rows(), 3);
+
+            double color_shift = .5 + (v+1.) * 1.0 / (2 * num_vecs);
+
+            auto vectorField = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
+                
+            auto vectorFieldNeg = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
+
+            if ( v % 3 == 0 ) 
+            {
+                vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.2));
+                vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.8));
+            }
+            else if ( v % 3 == 1 ) 
+            {
+                vectorField->setVectorColor(glm::vec3(0.1, color_shift, 0.2));
+                vectorFieldNeg->setVectorColor(glm::vec3(0.9, color_shift, 0.8));
+            }
+            else if ( v % 3 == 2 ) 
+            {
+                vectorField->setVectorColor(glm::vec3(0.1, 0.2, color_shift));
+                vectorFieldNeg->setVectorColor(glm::vec3(0.9, 0.8, color_shift));
+            }
+
+
+            vectorField->setVectorRadius(0.005);
+            vectorFieldNeg->setVectorRadius(0.005);
+        }
+
+
     }
+    
 
 
     

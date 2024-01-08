@@ -152,13 +152,37 @@ void AppState::LogCurrentOptStats()
 {
     // std::ofstream out;
     // out.open("myfile.txt", std::ios::app);
-    std::ofstream energyOut(this->logFolderPath + "/total_energy.txt", std::ios::app);
+    std::ofstream energyOut(this->logFolderPath + "/energy_total.txt", std::ios::app);
     energyOut << this->os->cur_global_objective_val << std::endl;
     energyOut.close();
 
-    std::ofstream gradNormOut(this->logFolderPath + "/max_grad_norm.txt", std::ios::app);
-    gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
-    gradNormOut.close();
+    // std::ofstream gradNormOut(this->logFolderPath + "/energy_smoothness_part.txt", std::ios::app);
+    // gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    // gradNormOut.close();
+
+    // std::ofstream gradNormOut(this->logFolderPath + "/energy_curl_part.txt", std::ios::app);
+    // gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    // gradNormOut.close();
+
+    // std::ofstream gradNormOut(this->logFolderPath + "/energy_remainder.txt", std::ios::app);
+    // gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    // gradNormOut.close();
+
+    // std::ofstream gradNormOut(this->logFolderPath + "/max_grad_norm.txt", std::ios::app);
+    // gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    // gradNormOut.close();
+
+    // std::ofstream gradNormOut(this->logFolderPath + "/solve_rel_residual.txt", std::ios::app);
+    // gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    // gradNormOut.close();
+
+    // std::ofstream gradNormOut(this->logFolderPath + "/max_grad_norm.txt", std::ios::app);
+    // gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    // gradNormOut.close();
+
+    // std::ofstream gradNormOut(this->logFolderPath + "/max_grad_norm.txt", std::ios::app);
+    // gradNormOut << std::scientific << this->cur_max_gradient_norm << std::endl;
+    // gradNormOut.close();
 
     // ofstream energyOut(this->logFolderPath + "/total_energy.txt", ios::app);
     // energyOut << this.cur_max_gradient_norm() << std::endl;

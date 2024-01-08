@@ -169,7 +169,6 @@ int main(int argc, char **argv) {
   else
   {
     std::cout << "running MiNT 3D in headless mode" << std::endl;
-    hook->appState->headless_mode = true;
   }
 
 
@@ -189,6 +188,8 @@ int main(int argc, char **argv) {
 ////////////////////////////////////////////
 ////////////////////////////////////////////
 ////////////////////////////////////////////
+
+  hook->appState->headless_mode = headless;
 
   std::cout << "directoryPath: " << hook->appState->directoryPath << std::endl;
   hook->reset();
@@ -220,7 +221,14 @@ int main(int argc, char **argv) {
   else
   {
     hook->appState->headless_mode = true;
-    hook->run();
+    // hook->run();
+
+    while(hook->appState->keepSolving)
+    {
+      hook->simulateOneStep();
+      hook->updateRenderGeometry();
+    }
+
   }
 
   return 0;
