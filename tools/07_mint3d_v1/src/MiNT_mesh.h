@@ -76,20 +76,21 @@ public:
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
 
-      // appState->meshName = "disk_v210";
+      appState->meshName = "disk_v210";
       // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
   // appState->meshName = "cylinder_400";
   // appState->meshName = "cylinder3k";
 
-  appState->meshName = "sphere_r0.17";
+  // appState->meshName = "sphere_r0.17";
     // appState->meshName = "sphere_r0.14";
     // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
 
 // appState->meshName = "triangle_notwist_400";
 // appState->meshName = "tetrahedron_200";
+// appState->meshName = "tetrahedron_100";
       // tetrahedron_100
 // parallelogram_exact
 
@@ -212,7 +213,8 @@ public:
           ret_vec.segment<3>(6) = c;
         }
 
-        ret_vec *= 1e-1;
+        ret_vec *= .9999;
+        // ret_vec *= 1e-1;
        
         if ( i < ntets )
         {
@@ -222,7 +224,7 @@ public:
         else
         {
           // ret_vec *= 1e-1;
-          ret_vec.tail(DOFS_PER_ELEMENT - 3) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT - 3) * 1e-4;
+          ret_vec.tail(DOFS_PER_ELEMENT - 3) = Eigen::VectorXd::Random(DOFS_PER_ELEMENT - 3) * 1e-1;
           appState->boundary_frames.row(i - ntets) = ret_vec;
         }
         x.segment<DOFS_PER_ELEMENT>(nvars*i) = ret_vec;

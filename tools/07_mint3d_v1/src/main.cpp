@@ -129,6 +129,8 @@ int main(int argc, char **argv) {
   args::ArgumentParser parser(("This is an example optimization that studies integrability in 2d.\n "
                               "Built on top of an LLM assisted codebase called gpgpt. \n\n\n"
                               ""));
+
+  args::Flag headless(group, "headless_mode", "This will avoid all of the polyscope calls and will immediately run", {'h', "headless"});
   args::Positional<std::string> inDir(parser, "out_dir", "load a directory to restart optimization");
   args::Positional<std::string> inObj(parser, "in_obj", "load a surface mesh to solve if out_dir is empty");
 
@@ -146,16 +148,29 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if(!headless)
+  {
+
+
   // Options
   polyscope::options::autocenterStructures = true;
   polyscope::view::windowWidth = 1024;
   polyscope::view::windowHeight = 1024;
 
-  polyscope::options::autocenterStructures = true;
+  // polyscope::options::autocenterStructures = true;
 // polyscope::options::autoscaleStructures = true;
 
   // Initialize polyscope
-  polyscope::init();
+
+  // polyscope::init("openGL_mock");
+    polyscope::init();
+
+  }
+  else
+  {
+    hook->appState->headless = true;
+  }
+
 
 
 ////////////////////////////////////////////
@@ -189,6 +204,8 @@ int main(int argc, char **argv) {
     hook->reset();
   }
 
+  if(!headless)
+  {
 
   polyscope::state::userCallback = drawGUICallback;
   polyscope::options::programName = "gpgpt - MINT3D";
@@ -196,6 +213,14 @@ int main(int argc, char **argv) {
   polyscope::options::transparencyRenderPasses = 4;
   polyscope::view::resetCameraToHomeView();
   polyscope::show();
+
+
+  }
+  else
+  {
+    hook->appState->headless = true;
+    hook->run();
+  }
 
   return 0;
 }

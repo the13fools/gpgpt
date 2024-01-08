@@ -762,7 +762,7 @@ void Mint3DHook::resetAppState() {
     appState->override_bounds.upper = 1e-5;
     // appState->shouldReload = false;
 
-
+    // appState->opt_step_start_time = std::chrono::high_resolution_clock::now();
 
     // Resetting mesh data
     appState->frames.setZero(appState->T.rows(), 3); // TODO make this generic 
@@ -824,10 +824,26 @@ void Mint3DHook::resetAppState() {
         auto vectorField = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
             
         auto vectorFieldNeg = polyscope::getPointCloud("c_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
-        vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.3));
-        vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.7));
-        vectorField->setVectorRadius(0.01);
-        vectorFieldNeg->setVectorRadius(0.01);
+        if ( v % 3 == 0 ) 
+        {
+            vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.1));
+            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.4, 0.4));
+        }
+        else if ( v % 3 == 1 ) 
+        {
+            vectorField->setVectorColor(glm::vec3(0.1, color_shift, 0.1));
+            vectorFieldNeg->setVectorColor(glm::vec3(0.4, color_shift, 0.4));
+        }
+        else if ( v % 3 == 2 ) 
+        {
+            vectorField->setVectorColor(glm::vec3(0.1, 0.1, color_shift));
+            vectorFieldNeg->setVectorColor(glm::vec3(0.4, 0.4, color_shift));
+        }
+
+
+
+        vectorField->setVectorRadius(0.003);
+        vectorFieldNeg->setVectorRadius(0.003);
     }
 
 
@@ -862,15 +878,31 @@ void Mint3DHook::resetAppState() {
         // Eigen::MatrixXd cur_vec = outputData->frames[v];
         Eigen::MatrixXd cur_vec = Eigen::MatrixXd::Zero(appState->boundary_frames.rows(), 3);
 
-        double color_shift = (v+1.) * 1.0 / num_vecs;
+        double color_shift = .5 + (v+1.) * 1.0 / (2 * num_vecs);
 
         auto vectorField = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field " + std::to_string(v), cur_vec);
             
         auto vectorFieldNeg = polyscope::getPointCloud("surface_vecs")->addVectorQuantity("Vector Field (negative) " + std::to_string(v), (-1.) * cur_vec);
-        vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.3));
-        vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.7));
-        vectorField->setVectorRadius(0.01);
-        vectorFieldNeg->setVectorRadius(0.01);
+
+        if ( v % 3 == 0 ) 
+        {
+            vectorField->setVectorColor(glm::vec3(color_shift, 0.1, 0.2));
+            vectorFieldNeg->setVectorColor(glm::vec3(color_shift, 0.9, 0.8));
+        }
+        else if ( v % 3 == 1 ) 
+        {
+            vectorField->setVectorColor(glm::vec3(0.1, color_shift, 0.2));
+            vectorFieldNeg->setVectorColor(glm::vec3(0.9, color_shift, 0.8));
+        }
+        else if ( v % 3 == 2 ) 
+        {
+            vectorField->setVectorColor(glm::vec3(0.1, 0.2, color_shift));
+            vectorFieldNeg->setVectorColor(glm::vec3(0.9, 0.8, color_shift));
+        }
+
+
+        vectorField->setVectorRadius(0.005);
+        vectorFieldNeg->setVectorRadius(0.005);
     }
 
 
@@ -1018,7 +1050,7 @@ void Mint3DHook::initializeLogFolder() {
     std::filesystem::create_directories(appState->logFolderPath);
 
     std::filesystem::create_directories(appState->logFolderPath + "/outer_iter_ends");
-    std::filesystem::create_directories(appState->logFolderPath + "/outer_iter_starts");
+    // std::filesystem::create_directories(appState->logFolderPath + "/outer_iter_starts");
 
 
     // Inform the user about the log folder creation

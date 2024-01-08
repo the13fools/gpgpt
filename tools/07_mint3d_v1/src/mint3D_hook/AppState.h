@@ -18,6 +18,8 @@
 #include "CubeCover/TetMeshConnectivity.h"
 
 #include <memory>
+
+// #include <chrono>
  
 using Field_View = Views::Field_View;
 
@@ -146,8 +148,9 @@ public:
 
     std::string solveStatus = "STATUS_WAS_NOT_SET";
     std::string problemFileTag = "";
-
-
+    
+    // currently unused, but maybe useful to time stuff later.  
+    // std::chrono::time_point<std::chrono::high_resolution_clock> opt_step_start_time;
 
     // Optimization variables
     std::unique_ptr<Surface> cur_surf; // This initializes some more convenient data structures for building up local energies.
