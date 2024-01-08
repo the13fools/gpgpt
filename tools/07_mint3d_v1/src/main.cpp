@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
                               "Built on top of an LLM assisted codebase called gpgpt. \n\n\n"
                               ""));
 
-  args::Flag headless(group, "headless_mode", "This will avoid all of the polyscope calls and will immediately run", {'h', "headless"});
+  args::Flag headless(parser, "headless_mode", "This will avoid all of the polyscope calls and will immediately run", {'h', "headless"});
   args::Positional<std::string> inDir(parser, "out_dir", "load a directory to restart optimization");
   args::Positional<std::string> inObj(parser, "in_obj", "load a surface mesh to solve if out_dir is empty");
 
@@ -168,7 +168,8 @@ int main(int argc, char **argv) {
   }
   else
   {
-    hook->appState->headless = true;
+    std::cout << "running MiNT 3D in headless mode" << std::endl;
+    hook->appState->headless_mode = true;
   }
 
 
@@ -218,7 +219,7 @@ int main(int argc, char **argv) {
   }
   else
   {
-    hook->appState->headless = true;
+    hook->appState->headless_mode = true;
     hook->run();
   }
 

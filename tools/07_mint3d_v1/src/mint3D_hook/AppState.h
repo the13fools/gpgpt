@@ -161,6 +161,7 @@ public:
     Eigen::MatrixXd bound_b1; // a bit ugly organization, sorry.  Maybe nicer to have a std::vector of both, can change later 
     Eigen::MatrixXd bound_b2;                 
 
+    bool headless_mode = false;
     bool keepSolving = true;
     int outerLoopIteration = 0;
     double cur_rel_residual = 0;
