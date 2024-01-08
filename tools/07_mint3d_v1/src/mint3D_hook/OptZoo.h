@@ -175,11 +175,11 @@ static void addUnitNormTerm(ADFunc& func, AppState& appState) {
 
             if (i == 0 )
             {
-                curr_diff *= 10;
+                curr_diff *= 5e1;
             }
             else if (e.w_attenuate > 1e-10)
             {
-                curr_diff *= e.w_attenuate;
+                curr_diff *= e.w_attenuate * 1e1;
                 // curr_diff *= 1e-2;
                 // curr_diff = T(0);
                 // continue;

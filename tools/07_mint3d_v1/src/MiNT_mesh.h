@@ -57,7 +57,9 @@ public:
       appState->config->w_attenuate = 1.;
       appState->config->w_smooth = 1e0;
       appState->config->w_bound = 1e2;
-      appState->config->w_curl = 1e-4; //7e-10; // this is off for the first outer iter 
+      // appState->config->w_curl = 1e-4; //7e-10; // this is off for the first outer iter 
+      appState->config->w_curl = 1e3; //7e-10; // this is off for the first outer iter 
+
     }
 
     virtual void drawGUI()
@@ -76,7 +78,7 @@ public:
       // appState->meshName = "circle_irreg";
       // appState->meshName = "circle_irreg_20000";
 
-      appState->meshName = "disk_v210";
+      // appState->meshName = "disk_v210";
       // appState->meshName = "disk_v623";
       // appState->meshName = "disk_v1000";
       // appState->meshName = "disk_3480_tets";
@@ -84,7 +86,7 @@ public:
   // appState->meshName = "cylinder3k";
 
   // appState->meshName = "sphere_r0.17";
-    // appState->meshName = "sphere_r0.14";
+    appState->meshName = "sphere_r0.14";
     // appState->meshName = "sphere_r0.10";
         // appState->meshName = "sphere_r0.05";
 
